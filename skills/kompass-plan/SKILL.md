@@ -7,6 +7,8 @@ description: Plan a project or phase with Kompass Skills — brief, deep module 
 
 Planning is where most of the time goes. A unit built from a clear module map and an approved mockup rarely needs a repair unit; a unit built from a guess often does. Take the time here.
 
+**Start from the latest main.** The plugin's session-start check brings a clean copy up to date with GitHub by itself. If it reports uncommitted work, save that on a dated backup branch first, then update; never discard it, and never ask the operator to pull.
+
 ## Who does what
 
 You plan on **Opus**: the brief, the module map, the architecture, the decisions and the self-check are judgement work. Hand broad reading of an existing codebase to `kompass-searcher` (**Haiku**), one bounded question at a time. Once you have specified a mockup exactly (its variants, states, data and tokens), you may hand the HTML to `kompass-builder` (**Sonnet**), then check it against your specification yourself.

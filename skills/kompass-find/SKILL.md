@@ -7,6 +7,8 @@ description: Find what was done, when and why in a Kompass project — which uni
 
 Every unit leaves the same trail: the unit file (brief, hand-over and log), the hand-over and walkthrough feedback of its sequence (`sequences/S-NN-….md`), decision records, a branch named `kompass/WU-NNNN-…`, commits starting `WU-NNNN:`, and a pull request whose body is the hand-over. Search the trail before reading code at length.
 
+**Start from the latest main.** The plugin's session-start check brings a clean copy up to date with GitHub by itself. If it reports uncommitted work, save that on a dated backup branch first, then update; never discard it, and never ask the operator to pull.
+
 Hand broad sweeps (many files, many units, long history) to `kompass-searcher` (**Haiku**), one bounded question at a time. Keep the judgement of what the evidence means for yourself.
 
 ## Common questions

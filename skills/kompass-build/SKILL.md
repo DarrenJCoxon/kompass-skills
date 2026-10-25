@@ -24,7 +24,7 @@ If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kom
 
 ## 1. Start
 
-- Work in your own copy of the project (a git worktree) on a branch named `kompass/WU-NNNN-<slug>`, freshly cut from the latest main.
+- Work in your own copy of the project (a git worktree) on a branch named `kompass/WU-NNNN-<slug>`, cut from a fresh fetch of `origin/main`, never from whatever a local copy happens to hold.
 - Set the unit's `status: building` on the branch and add a log line: `<date time> started`.
 
 ## 2. Build

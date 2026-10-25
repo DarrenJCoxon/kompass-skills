@@ -56,6 +56,10 @@ A unit file has two halves.
 
 The pull request body repeats the hand-over, and every commit message starts with the unit id, so `git log --grep WU-0007` finds it all.
 
+## Nobody pulls by hand
+
+GitHub holds the real copy of the code. The runner fetches main before every unit. On your Mac, the plugin checks at the start of every session in a Kompass project and brings a clean copy up to date with GitHub by itself. If the copy has uncommitted work (sometimes another session's), it saves that on a backup branch before updating, and never throws it away. Walkthroughs start the app on the latest main. You never need to remember where the source of truth is.
+
 ## Where the runner runs
 
 The runner lives on the Hetzner box, in its own container beside the CI runners (`runner/`), so sequences build overnight with your Mac closed. It works only from what is merged on main, and it needs two tokens you paste into the box yourself: one for Claude Code and one for GitHub.
@@ -92,4 +96,5 @@ A unit blocked for any other reason is parked with a written reason, and the run
 - `assets/kompass-tokens.json`: Kompass Education design tokens for the planning page
 - `runner/`: the container that runs sequences on the Hetzner box
 - `.claude-plugin/`: plugin and marketplace manifests, so the skills install with `/plugin`
+- `hooks/`: the session-start check that keeps your copy on the latest main (`scripts/sync-main.sh`)
 - `example/`: a small worked example with a rendered planning page

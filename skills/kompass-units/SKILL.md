@@ -7,6 +7,8 @@ description: Write Kompass work units from an approved plan — one short brief 
 
 A work unit is the brief a fresh agent builds from, with no other memory. Write it so that agent needs nothing else: the plan, the module map, the unit and the previous hand-overs.
 
+**Start from the latest main.** The plugin's session-start check brings a clean copy up to date with GitHub by itself. If it reports uncommitted work, save that on a dated backup branch first, then update; never discard it, and never ask the operator to pull.
+
 Write units on **Opus**: cutting work and naming the proving tests is judgement work. Use `kompass-searcher` (**Haiku**) to find owners, callers and existing tests for the pointers.
 
 Create each unit from `templates/unit.md` as `docs/kompass/units/WU-NNNN-<short-slug>.md`. Number units in the order they should be built. Keep the brief to about one page; the detail lives in the module map, decisions and mockups it points to.

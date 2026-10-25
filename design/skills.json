@@ -185,6 +185,7 @@
     }
   },
   "safety": [
+    "Nobody pulls by hand: the runner fetches main before every unit, and on your Mac every session in a Kompass project starts by bringing your copy up to date with GitHub, backing up any uncommitted work first.",
     "Main only takes changes through pull requests, with one required CI check.",
     "Each pull request is re-tested on top of the latest main before it merges.",
     "Pull requests merge automatically once green.",
