@@ -67,11 +67,13 @@ Then set `status: delivered`, add `pr:` once the pull request exists, and add a 
 
 - Commit with messages starting `WU-NNNN:`. Push the branch.
 - Open the pull request titled `WU-NNNN: <title>`, with the hand-over as its body. Post the review verdict as a comment headed `Kompass review: APPROVE`.
-- Set it to merge automatically when the required check is green. Bring it up to date with main if GitHub asks.
+- Set it to merge automatically when the required check is green, deleting the branch on GitHub when it merges (`gh pr merge --auto --merge --delete-branch`). Bring it up to date with main if GitHub asks.
 - Watch CI. If it fails, read the failure and fix the cause honestly; a fix to your own code needs a re-review. If CI fails three times for one cause, raise your effort and rethink. If it is still red, park the unit.
 - Re-render the planning page on the branch before the final push, so main always carries a current page.
 
 The unit is done when the pull request has merged. Its `delivered` status then reaches main with the code.
+
+**Then remove your worktree at once.** Leave it, and from the main checkout run `bash <kompass-skills>/scripts/reclaim-worktrees.sh`, which removes every worktree whose work is merged and keeps anything with uncommitted files. A finished unit never leaves a copy of the project on disk.
 
 ## Parking a unit
 

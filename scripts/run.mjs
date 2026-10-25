@@ -6,9 +6,11 @@
 // usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 2] [--model opus] [--claude claude]
 import { execFileSync, spawn } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { awaitingWalkthrough, currentSequence, nextUnit, openUnitIds, readSequences, readUnits, sequenceComplete, source } from './lib/records.mjs';
 
+const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const dir = resolve(args.find((a) => !a.startsWith('--')) ?? 'docs/kompass');
 const opt = (name, fallback) => { const i = args.indexOf(name); return i < 0 ? fallback : args[i + 1]; };
@@ -60,6 +62,7 @@ function startNext() {
   active.set(unit.id, child);
   child.on('exit', (code) => {
     active.delete(unit.id);
+    try { log(execFileSync('bash', [join(here, 'reclaim-worktrees.sh')], { cwd: root, encoding: 'utf8' }).trim() || 'no merged worktrees to remove'); } catch (e) { log(`worktree clean-up failed: ${e.message}`); }
     const after = mainUnits().find((u) => u.id === unit.id);
     log(`end ${unit.id}: session exit ${code}, status on main ${after?.status ?? 'missing'}`);
     if (after && !['delivered', 'parked'].includes(after.status) && !openUnitIds(root).includes(unit.id) && attempts.get(unit.id) >= maxAttempts) {

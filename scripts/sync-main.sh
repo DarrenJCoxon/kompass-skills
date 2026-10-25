@@ -5,6 +5,7 @@
 set -u
 
 root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+# (reclaim-worktrees.sh runs after this, from the same hook)
 [ -d "$root/docs/kompass" ] || exit 0
 cd "$root" || exit 0
 

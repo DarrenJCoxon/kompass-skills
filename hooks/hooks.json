@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/sync-main.sh\"",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/sync-main.sh\"; bash \"${CLAUDE_PLUGIN_ROOT}/scripts/reclaim-worktrees.sh\"",
             "timeout": 30
           }
         ]

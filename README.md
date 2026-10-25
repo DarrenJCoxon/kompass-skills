@@ -60,6 +60,14 @@ The pull request body repeats the hand-over, and every commit message starts wit
 
 GitHub holds the real copy of the code. The runner fetches main before every unit. On your Mac, the plugin checks at the start of every session in a Kompass project and brings a clean copy up to date with GitHub by itself. If the copy has uncommitted work (sometimes another session's), it saves that on a backup branch before updating, and never throws it away. Walkthroughs start the app on the latest main. You never need to remember where the source of truth is.
 
+## Finished worktrees are removed
+
+Each unit is built in its own worktree, a separate copy of the project. As soon as its work is merged, that copy goes:
+- the unit removes its worktree as its last step, and the branch is deleted on GitHub when it merges;
+- every session in a Kompass project, and the runner after every unit, removes any worktree whose work is already on main.
+
+A worktree that still holds uncommitted or untracked files is kept and reported, never deleted.
+
 ## Where the runner runs
 
 The runner lives on the Hetzner box, in its own container beside the CI runners (`runner/`), so sequences build overnight with your Mac closed. It works only from what is merged on main, and it needs two tokens you paste into the box yourself: one for Claude Code and one for GitHub.
