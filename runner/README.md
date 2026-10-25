@@ -15,14 +15,14 @@ These tokens are yours to create and paste in; no agent handles them.
 ## Running a sequence
 
 ```
-docker compose run -d --name kompass-layerware runner DarrenJCoxon/layerware --hours 8
-docker logs -f kompass-layerware
+docker compose run -d --name kompass-tertia runner DarrenJCoxon/tertia --hours 8
+docker logs -f kompass-tertia
 ```
 
 The runner fetches main, builds the current sequence one unit at a time (each in a fresh session on Opus), writes the sequence hand-over, and stops. You do the walkthrough, your feedback is recorded, and the next run starts the next sequence.
 
 - **Stop after the current unit:** create `docs/kompass/STOP` on main.
-- **Stop at once:** `docker stop kompass-layerware`. The unit in progress keeps its branch.
+- **Stop at once:** `docker stop kompass-tertia`. The unit in progress keeps its branch.
 
 ## Updating the skills
 
