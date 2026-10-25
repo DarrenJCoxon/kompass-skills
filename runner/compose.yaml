@@ -1,0 +1,27 @@
+# Kompass runner on the Hetzner box. Build once, then start a sequence for a repository:
+#
+#   docker compose build
+#   docker compose run -d --name kompass-layerware runner DarrenJCoxon/layerware --hours 8
+#   docker logs -f kompass-layerware          # follow progress
+#   docker stop kompass-layerware             # stop at once (the unit in progress keeps its branch)
+#
+# Secrets live in runner/.env on the box only (see .env.example); never commit them.
+name: kompass
+
+services:
+  runner:
+    build:
+      context: ..
+      dockerfile: runner/Dockerfile
+    image: kompass-runner:local
+    env_file: .env
+    restart: "no"
+    volumes:
+      - work:/work
+      - claude-state:/home/kompass/.claude/projects
+
+volumes:
+  work:
+    name: kompass-work
+  claude-state:
+    name: kompass-claude-state

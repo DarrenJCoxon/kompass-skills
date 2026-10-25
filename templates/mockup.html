@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Short name of the screen or decision</title>
+<meta name="kompass:decision" content="D-000">
+<meta name="kompass:status" content="proposed">
+<meta name="kompass:chosen" content="">
+<meta name="kompass:summary" content="One sentence on what this mockup decides.">
+<!-- Link the project's canonical design tokens; never copy colours or fonts into a mockup. -->
+<link rel="stylesheet" href="../../../src/styles/tokens.css">
+<style>
+  /* Mockup frame: the bar at the top switches variant and state; the page below is the design. */
+  body { margin: 0; font-family: var(--font-sans, system-ui, sans-serif); background: var(--white); color: var(--ink); }
+  .kbar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 10px 16px; background: var(--mist); border-bottom: 1px solid var(--line); font-size: 12px; }
+  .kbar b { font-weight: 600; }
+  .kbar [role=group] { display: flex; gap: 4px; flex-wrap: wrap; }
+  .kbar button { min-height: 32px; border: 0; border-radius: 100px; padding: 4px 12px; background: var(--white); font: inherit; cursor: pointer; }
+  .kbar button[aria-pressed=true] { background: var(--ink); color: var(--white); }
+  [data-variant-only], [data-state-only] { display: none; }
+  .sample { font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body data-variant="a" data-state="full">
+<div class="kbar">
+  <b>Mockup</b>
+  <div role="group" aria-label="Variant" data-switch="variant">
+    <button type="button" data-value="a" aria-pressed="true">A: first option</button>
+    <button type="button" data-value="b" aria-pressed="false">B: second option</button>
+  </div>
+  <div role="group" aria-label="State" data-switch="state">
+    <button type="button" data-value="empty" aria-pressed="false">Empty</button>
+    <button type="button" data-value="loading" aria-pressed="false">Loading</button>
+    <button type="button" data-value="error" aria-pressed="false">Error</button>
+    <button type="button" data-value="full" aria-pressed="true">Full</button>
+  </div>
+  <span class="sample">Sample data</span>
+</div>
+
+<main>
+  <section data-variant-only="a"><!-- Variant A design --></section>
+  <section data-variant-only="b"><!-- Variant B design --></section>
+  <div data-state-only="empty"><!-- Empty state --></div>
+  <div data-state-only="error"><!-- Error state --></div>
+</main>
+
+<script>
+  // Shows elements marked data-variant-only / data-state-only that match the chosen buttons.
+  const show = () => {
+    const v = document.body.dataset.variant, s = document.body.dataset.state;
+    document.querySelectorAll('[data-variant-only]').forEach((el) => { el.style.display = el.dataset.variantOnly.split(' ').includes(v) ? '' : 'none'; });
+    document.querySelectorAll('[data-state-only]').forEach((el) => { el.style.display = el.dataset.stateOnly.split(' ').includes(s) ? '' : 'none'; });
+  };
+  document.querySelectorAll('[data-switch]').forEach((group) => group.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    group.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    document.body.dataset[group.dataset.switch] = b.dataset.value; show();
+  }));
+  show();
+</script>
+</body>
+</html>

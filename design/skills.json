@@ -1,0 +1,201 @@
+{
+  "intro": "Kompass Skills plan a project properly, then build it in sequences of work units that run back to back without pausing. Every unit and every sequence ends with a written hand-over saved with the code, so the next agent picks up from the record and never from a session's memory.",
+  "order": [
+    "kompass-plan",
+    "kompass-units",
+    "kompass-run",
+    "kompass-build",
+    "kompass-find"
+  ],
+  "lifecycle": [
+    {
+      "step": "Plan",
+      "skill": "kompass-plan",
+      "what": "Brief, module map, architecture, UI mockups you click through, decisions. One approval."
+    },
+    {
+      "step": "Write units",
+      "skill": "kompass-units",
+      "what": "One-page briefs grouped into sequences, each ending at a point you can walk through."
+    },
+    {
+      "step": "Build a sequence",
+      "skill": "kompass-run",
+      "what": "Units built back to back, each in a fresh session with kompass-build."
+    },
+    {
+      "step": "Sequence hand-over",
+      "skill": "kompass-run",
+      "what": "What was achieved, what is parked, and walkthrough steps for you."
+    },
+    {
+      "step": "Your walkthrough",
+      "skill": "kompass-run",
+      "what": "You try it; your words and any problems are recorded. Problems become the next sequence's first units."
+    },
+    {
+      "step": "Next sequence",
+      "skill": "kompass-run",
+      "what": "Starts from the hand-over and your recorded walkthrough."
+    }
+  ],
+  "skills": {
+    "kompass-plan": {
+      "plain": "Plans a project or phase with you, before any code is written.",
+      "when": "Start of a project or phase; re-planning; reviewing the plan.",
+      "reads": [
+        "Your brief and answers",
+        "The existing code, for a project already under way",
+        "The project's design tokens, for mockups"
+      ],
+      "produces": [
+        "Brief and approval record",
+        "Module map: purpose, front door, owned files, rules with their tests",
+        "Architecture with diagrams of each key journey",
+        "Interactive mockups for each UI decision",
+        "Decision records",
+        "Sequences: where each walkthrough falls",
+        "The planning page"
+      ],
+      "stops": [
+        "Only for your answers and your one approval"
+      ],
+      "questions": [
+        "For Layerware, should the module map start from the existing LiteBench architecture document, or be rewritten fresh?",
+        "How do you want to review mockups: one decision at a time in chat, or a review session over the whole set?",
+        "Should every UI decision get a mockup, or only those with real alternatives?"
+      ]
+    },
+    "kompass-units": {
+      "plain": "Turns the approved plan into short work-unit briefs, grouped into sequences.",
+      "when": "After plan approval; whenever a new unit, defect or follow-up is needed.",
+      "reads": [
+        "The approved plan, module map, decisions and mockups",
+        "Walkthrough feedback, for problems to fix first"
+      ],
+      "produces": [
+        "One-page unit briefs: outcome, criteria with proving tests, owned files, out of scope, dependencies",
+        "Sequence files with each sequence's goal and units"
+      ],
+      "stops": [
+        "Never; new units on an approved plan need no approval unless they change the outcome"
+      ],
+      "questions": [
+        "What is the right size for a unit: about half a day of agent work?",
+        "Should units keep Layerware's WU numbering, continuing from WU-0130?",
+        "Should open LiteBench units be carried over, or re-planned?"
+      ]
+    },
+    "kompass-build": {
+      "plain": "Builds one unit from start to finish and writes its hand-over.",
+      "when": "For one unit, usually started by kompass-run.",
+      "reads": [
+        "Plan and module map",
+        "The latest sequence hand-over and your walkthrough feedback",
+        "The unit brief",
+        "Hand-overs of the units it depends on and the last two delivered",
+        "Its decisions and mockup"
+      ],
+      "produces": [
+        "Failing test first, then the fix in the owning module",
+        "Independent review on the pull request",
+        "Merged code once CI is green",
+        "The unit hand-over: what changed, tests, review findings, decisions, known issues, a note for the next unit, evidence"
+      ],
+      "stops": [
+        "A locked file",
+        "A cause that cannot be proven",
+        "A change to the approved outcome",
+        "A destructive data change",
+        "An irreversible outside action"
+      ],
+      "questions": [
+        "How many CI attempts on one cause before a unit is parked: three?",
+        "Should browser tests run locally for every UI unit, or only for screens the mockup covers?",
+        "Should the review verdict be enforced by a CI check, or trusted?"
+      ]
+    },
+    "kompass-run": {
+      "plain": "Runs a whole sequence unattended, hands it over for your walkthrough, then records what you found.",
+      "when": "\"Run\", \"continue\", \"build the next sequence\", \"hand over sequence N\", \"record the walkthrough\".",
+      "reads": [
+        "Unit statuses on main",
+        "The previous sequence's walkthrough record"
+      ],
+      "produces": [
+        "Units built back to back in fresh sessions",
+        "Parked units with written reasons",
+        "The sequence hand-over with walkthrough steps",
+        "Your walkthrough feedback, recorded with your words",
+        "New units for problems you found"
+      ],
+      "stops": [
+        "At the end of every sequence, for your walkthrough",
+        "When the repository's safety settings are missing"
+      ],
+      "questions": [
+        "How should you hear that a sequence is ready to walk through: a phone notification, an email, or the planning page?",
+        "Should two units run at once by default when they share no files?"
+      ],
+      "decided": [
+        "The runner lives on the Hetzner box, in its own container. Darren: \"runner has to sit on hetzner. - that's what we built it for\"."
+      ]
+    },
+    "kompass-find": {
+      "plain": "Finds what was done, when and why, when something breaks later.",
+      "when": "Before writing a defect unit; whenever an agent needs project history.",
+      "reads": [
+        "Unit and sequence hand-overs",
+        "Decision records and the module map",
+        "Git history (commits start with the unit id) and pull requests"
+      ],
+      "produces": [
+        "The unit or units involved, with the hand-over or decision lines that explain them"
+      ],
+      "stops": [
+        "Never"
+      ],
+      "questions": [
+        "Is plain text search enough, or do we want an index like LiteBench's search?"
+      ]
+    }
+  },
+  "agents": {
+    "kompass-builder": {
+      "plain": "Writes the code for one bounded piece of a unit, test first, inside its owned files.",
+      "questions": [
+        "Should a builder pushed to high effort stay on Sonnet, or should a second failure at high effort move the piece to Opus?"
+      ],
+      "why": "Coding from a precise brief: Sonnet writes good code quickly and costs far less, so it does the bulk of the typing."
+    },
+    "kompass-reviewer": {
+      "plain": "Checks a unit's changes independently and approves or asks for changes, on correctness, privacy, evidence and ownership.",
+      "questions": [
+        "Which other kinds of unit, beyond privacy, figures and access, should always get a high-effort review?"
+      ],
+      "why": "Adversarial checking: a second Opus, in a fresh context, with no stake in the code it reviews."
+    },
+    "kompass-searcher": {
+      "plain": "Answers one bounded search or research question across the code, the Kompass records, git history or the web, and returns pointers with short excerpts.",
+      "why": "Searching and reading at volume: Haiku is fast and cheap, so wide sweeps cost little and keep the coordinator's context clean.",
+      "questions": [
+        "Should it also do outside research (other products, library documentation), or should that stay with Opus?"
+      ]
+    }
+  },
+  "safety": [
+    "Main only takes changes through pull requests, with one required CI check.",
+    "Each pull request is re-tested on top of the latest main before it merges.",
+    "Pull requests merge automatically once green.",
+    "CI runs the full tests, the two tripwires (locked files; switched-off tests) and the scanners, whichever tool wrote the code.",
+    "The destructive-command guard on your Mac stays as a backstop."
+  ],
+  "coordinator": {
+    "name": "Coordinator",
+    "model": "opus",
+    "effort": "medium",
+    "plain": "The main session in every skill. It plans, writes units, decides each build's approach, briefs the helpers, judges what they return and writes every hand-over.",
+    "why": "Judgement and adversarial thinking: Opus is strongest at deciding what to build and spotting what is wrong."
+  },
+  "effortRule": "Every model runs at medium effort by default and is pushed to high effort when the work needs it: when one cause fails twice, when a builder fails twice on the same test, and for reviews of units that touch privacy, figures or access."
+}

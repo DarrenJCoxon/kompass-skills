@@ -1,0 +1,4 @@
+runner/.env
+node_modules/
+.kompass/
+.DS_Store

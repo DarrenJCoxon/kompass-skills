@@ -1,0 +1,11 @@
+{
+  "name": "kompass",
+  "owner": { "name": "Kompass Solutions" },
+  "plugins": [
+    {
+      "name": "kompass",
+      "source": "./",
+      "description": "Kompass Skills: plan with modules, architecture and interactive mockups on one planning page, then build work units in sequences with written hand-overs."
+    }
+  ]
+}

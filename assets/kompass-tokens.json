@@ -1,0 +1,141 @@
+{
+  "name": "Kompass Education",
+  "version": 1,
+  "meta": {
+    "source": "Approved Kompass Education and Kompass Learning previews (kompass-learn-refined, kompass-edu-wordmark), 24 October 2026"
+  },
+  "color": {
+    "note": "Light only: every approved surface sets color-scheme light. Values are the preview's own oklch; hex equivalents are in the usage notes.",
+    "themes": [{ "id": "light", "name": "Light" }],
+    "tokens": [
+      { "name": "white", "value": "oklch(100% 0 0)", "usage": "#ffffff. Page background and longer reading. Also text reversed on `ink` (18.5:1)." },
+      { "name": "mist", "value": "oklch(96% 0.002 260)", "usage": "#f1f2f3. Grey cards on white: course cards, featured course, syllabus, recommendation cards, filter chips, the preview bar and the selected sidebar item." },
+      { "name": "mist-hover", "value": "oklch(89.84% 0.0023 260)", "usage": "#dcdddf. Hover on an unpressed filter chip (mist mixed with 8% ink)." },
+      { "name": "line", "value": "oklch(87% 0.004 260)", "usage": "#d3d4d7. Hairline rules: header and footer borders, module dividers, mini-cover rule, search underline, progress track. Also the border of secondary buttons, selects and text areas, where it is 1.5:1 on white: below the 3:1 control-border floor, kept exactly as approved." },
+      { "name": "muted", "value": "oklch(46% 0.008 260)", "usage": "#55585d. Secondary text: meta rows, course card descriptions, captions, placeholders, lesson durations. 7.1:1 on `white`, 6.3:1 on `mist`, 6.2:1 on the soft tints." },
+      { "name": "ink", "value": "oklch(19% 0.006 260)", "usage": "#121417. All headings and reading text on `white`, `mist` and the soft tints (16:1 and above), and on `coral` (5.2:1). Fill for primary buttons, pressed chips, the avatar, the video frame and the reversed wordmark plate." },
+      { "name": "ink-hover", "value": "oklch(28.72% 0.0053 260)", "usage": "#292b2d. Hover on a primary button (ink mixed with 12% white). `white` text on it reads 14.3:1." },
+      { "name": "coral", "value": "oklch(65% 0.2 30)", "usage": "#f0503d. The brand colour, used with restraint: the wordmark plate, the featured AI Essentials cover, the primary button's disc, the current-nav underline, outcome bullets and the Educators audience. Text on it is `ink` (5.2:1), never white. Not a text colour on white (3.5:1)." },
+      { "name": "coral-soft", "value": "oklch(95.8% 0.024 30)", "usage": "#ffece8. Coral at 12% on white: the Educators selected-lesson tint and finish panel. `ink` and `muted` text read on it." },
+      { "name": "educators", "value": "{coral}", "usage": "Educators audience (Teaching with AI): label dot, opened course cover, play button, progress fill, completion icons and the selected lesson marker." },
+      { "name": "educators-soft", "value": "{coral-soft}", "usage": "Educators soft tint behind the selected lesson and the finish panel." },
+      { "name": "leaders", "value": "oklch(60% 0.2 270)", "usage": "#5471f5. Leaders audience (Leading AI): label dot, opened course cover, lesson controls. Lettering on it is `cover-ink` (5.1:1); `ink` reaches only 4.5:1, so keep `ink` to 24px and above here." },
+      { "name": "leaders-soft", "value": "oklch(95.2% 0.024 270)", "usage": "#e9efff. Leaders soft tint behind the selected lesson and the finish panel." },
+      { "name": "builders", "value": "oklch(59% 0.12 175)", "usage": "#009479. Builders audience (Building with AI): label dot, opened course cover, lesson controls. Lettering on it is `cover-ink` (5.5:1) or `ink` (4.8:1)." },
+      { "name": "builders-soft", "value": "oklch(95.08% 0.0144 175)", "usage": "#e5f2ee. Builders soft tint behind the selected lesson and the finish panel." },
+      { "name": "cover-ink", "value": "oklch(0% 0 0)", "usage": "#000000. Black lettering on the coloured cover of an opened course, so small captions stay readable on every audience colour (5.1:1 and above)." },
+      { "name": "video-caption", "value": "oklch(77.32% 0.0017 260)", "usage": "#b4b5b6. Small hint text inside the `ink` video frame (white mixed with 28% ink), 9:1 on `ink`." }
+    ]
+  },
+  "type": {
+    "fonts": [],
+    "families": { "sans": "Onest, Arial, sans-serif" },
+    "groups": [
+      {
+        "name": "Wordmark",
+        "family": "sans",
+        "styles": [
+          { "name": "wordmark", "fontSize": "29px", "lineHeight": 1, "fontWeight": 600, "letterSpacing": "-0.035em", "sample": "kompass", "usage": "Header lockup, first word: kompass in Onest 600. Followed after a 0.10em gap, on the same baseline, by `wordmark-word`." },
+          { "name": "wordmark-word", "fontSize": "29px", "lineHeight": 1, "fontWeight": 400, "letterSpacing": "-0.035em", "sample": "education", "usage": "Header lockup, companion word in the lighter Onest 400: education, learning or solutions. Always lowercase, on one line with `wordmark`." },
+          { "name": "wordmark-sm", "fontSize": "20px", "lineHeight": 1, "fontWeight": 600, "letterSpacing": "-0.035em", "sample": "kompass", "usage": "Lockup on course covers, first word at 600; 18px inside the video frame." },
+          { "name": "wordmark-sm-word", "fontSize": "20px", "lineHeight": 1, "fontWeight": 400, "letterSpacing": "-0.035em", "sample": "learning", "usage": "Lockup on course covers, companion word at 400." },
+          { "name": "app-icon", "fontSize": "36px", "lineHeight": 1, "fontWeight": 600, "letterSpacing": "-0.035em", "sample": "ke", "usage": "The ke square icon at 64px; 20px type at 32px and 13px at 20px." }
+        ]
+      },
+      {
+        "name": "Display",
+        "family": "sans",
+        "styles": [
+          { "name": "cover-title", "fontSize": "64px", "lineHeight": 1.04, "fontWeight": 600, "letterSpacing": "-0.035em", "sample": "AI Essentials.", "usage": "Course cover titles, clamp(2.8rem, 1.6rem + 3cqi, 4rem); 48px on narrow screens." },
+          { "name": "page-title", "fontSize": "48px", "lineHeight": 1.12, "fontWeight": 500, "letterSpacing": "-0.035em", "sample": "Courses for teaching, leading and building.", "usage": "Page h1, clamp(2.1rem, 1.2rem + 3cqi, 3rem), balanced wrapping, about 17ch wide." },
+          { "name": "dashboard-title", "fontSize": "36px", "lineHeight": 1.12, "fontWeight": 500, "letterSpacing": "-0.035em", "sample": "Pick up where you left off.", "usage": "My learning h1; 31px on narrow screens." },
+          { "name": "mini-cover", "fontSize": "34px", "lineHeight": 1.08, "fontWeight": 500, "letterSpacing": "-0.035em", "sample": "School AI Lead.", "usage": "Short title on a catalogue card's grey thumbnail." },
+          { "name": "promo-title", "fontSize": "37px", "lineHeight": 1.15, "fontWeight": 500, "letterSpacing": "-0.03em", "sample": "AI Essentials.", "usage": "Main-site course cover and promotional panels on `mist`." }
+        ]
+      },
+      {
+        "name": "Headings",
+        "family": "sans",
+        "styles": [
+          { "name": "heading-lg", "fontSize": "28px", "lineHeight": 1.2, "fontWeight": 500, "letterSpacing": "-0.025em", "sample": "AI Essentials for Educators", "usage": "Featured and continue-card h2 (1.3 leading on two lines), lesson h1." },
+          { "name": "heading-md", "fontSize": "26px", "lineHeight": 1.3, "fontWeight": 500, "letterSpacing": "-0.025em", "sample": "Inside the course", "usage": "Section h2 on course and dashboard pages." },
+          { "name": "heading-sm", "fontSize": "20px", "lineHeight": 1.45, "fontWeight": 500, "letterSpacing": "0", "sample": "Becoming Your School’s AI Lead", "usage": "Recommendation card titles." },
+          { "name": "heading-xs", "fontSize": "18px", "lineHeight": 1.45, "fontWeight": 500, "letterSpacing": "-0.015em", "sample": "Coding with AI for Beginners", "usage": "Course card h3 and the syllabus heading." }
+        ]
+      },
+      {
+        "name": "Body",
+        "family": "sans",
+        "styles": [
+          { "name": "reading", "fontSize": "16px", "lineHeight": 1.85, "fontWeight": 400, "sample": "Get to know Gemini Notebook before working through curriculum planning.", "usage": "Lesson and course descriptions, at most 65ch." },
+          { "name": "body", "fontSize": "16px", "lineHeight": 1.65, "fontWeight": 400, "sample": "Find practical ways to use AI in your work.", "usage": "Default text; never below 16px in inputs." },
+          { "name": "body-sm", "fontSize": "14px", "lineHeight": 1.75, "fontWeight": 400, "sample": "Plan and build a full stack chatbot application with Claude Code.", "usage": "Course card descriptions in `muted`, dropdown links, footers." }
+        ]
+      },
+      {
+        "name": "Interface",
+        "family": "sans",
+        "styles": [
+          { "name": "label", "fontSize": "13px", "lineHeight": 1.5, "fontWeight": 500, "sample": "Explore the free course", "usage": "Buttons, header navigation, sidebar items." },
+          { "name": "caption", "fontSize": "12px", "lineHeight": 1.5, "fontWeight": 400, "sample": "3 modules · 52 minutes · Beginner", "usage": "Meta rows, audience labels (500), progress labels, filter chips (500)." },
+          { "name": "micro", "fontSize": "11px", "lineHeight": 1.5, "fontWeight": 400, "sample": "For educators", "usage": "Mini-cover kicker, video duration and hint, plate captions." }
+        ]
+      }
+    ]
+  },
+  "spacing": {
+    "note": "The previews use exact pixel values rather than a stepped scale; these are the recurring ones.",
+    "tokens": [
+      { "name": "space-6", "value": "6px", "usage": "Gap between filter chips." },
+      { "name": "space-8", "value": "8px", "usage": "Icon-to-label gap, meta row gap, breadcrumb gap." },
+      { "name": "space-12", "value": "12px", "usage": "Header wrap gap, gap between wordmark plates." },
+      { "name": "space-16", "value": "16px", "usage": "Gap inside feature copy, meta row column gap, sidebar group spacing." },
+      { "name": "space-18", "value": "18px", "usage": "Gap inside a course card; filter row bottom padding." },
+      { "name": "space-22", "value": "22px", "usage": "Course card padding and catalogue grid gap." },
+      { "name": "space-24", "value": "24px", "usage": "Recommendation card padding; space under page intros." },
+      { "name": "space-32", "value": "32px", "usage": "Main top padding, featured course bottom margin, continue-card padding." },
+      { "name": "space-40", "value": "40px", "usage": "Section padding and margin above each ruled section; feature copy padding at full width." },
+      { "name": "gutter-min", "value": "20px", "usage": "Page side gutter on narrow screens: clamp(20px, 3.8cqi, 46px)." },
+      { "name": "gutter-max", "value": "46px", "usage": "Page side gutter at full width." }
+    ]
+  },
+  "radius": {
+    "tokens": [
+      { "name": "radius-4", "value": "4px", "usage": "ke icon at 20px." },
+      { "name": "radius-7", "value": "7px", "usage": "ke icon at 32px." },
+      { "name": "radius-8", "value": "8px", "usage": "Selects, sidebar items, syllabus lesson rows." },
+      { "name": "radius-10", "value": "10px", "usage": "Text areas." },
+      { "name": "radius-12", "value": "12px", "usage": "Course cards, syllabus, video frame, opened course cover, finish panel, wordmark plates." },
+      { "name": "radius-14", "value": "14px", "usage": "Featured course and continue cards; ke icon at 64px." },
+      { "name": "radius-pill", "value": "100px", "usage": "Buttons, filter chips, the outlined sign-in link." },
+      { "name": "radius-round", "value": "50%", "usage": "Audience dots, the button disc, the play button, the avatar, lesson status circles." }
+    ]
+  },
+  "size": {
+    "tokens": [
+      { "name": "target", "value": "44px", "usage": "Minimum height of every control and link row." },
+      { "name": "button-height", "value": "46px", "usage": "Primary and secondary button height." },
+      { "name": "button-disc", "value": "32px", "usage": "Coloured disc at the end of a primary button; 29px in the main-site header CTA." },
+      { "name": "play", "value": "40px", "usage": "Play button in the video frame." },
+      { "name": "avatar", "value": "34px", "usage": "Learner initial." },
+      { "name": "audience-dot", "value": "11px", "usage": "Dot before an audience label; 9px inside a filter chip." },
+      { "name": "rail", "value": "184px", "usage": "Open app sidebar width." },
+      { "name": "rail-collapsed", "value": "64px", "usage": "Collapsed app sidebar: icons only, accessible names kept." },
+      { "name": "syllabus", "value": "260px", "usage": "Course contents column beside the lesson." },
+      { "name": "focus-width", "value": "3px", "usage": "Focus outline: 3px solid `ink` (white inside the video frame), offset 4px." },
+      { "name": "focus-offset", "value": "4px", "usage": "Gap between a control and its focus outline." },
+      { "name": "progress", "value": "5px", "usage": "Progress bar height." }
+    ]
+  },
+  "opacity": {
+    "tokens": [
+      { "name": "pressed", "value": "0.68", "usage": "Buttons, links and summaries while pressed." },
+      { "name": "disabled", "value": "0.5", "usage": "Disabled buttons." }
+    ]
+  },
+  "shadow": {
+    "tokens": [
+      { "name": "shadow-dropdown", "value": "0 18px 24px rgba(18, 20, 23, 0.07)", "usage": "The main-site navigation dropdown panel, the only shadow in the system." }
+    ]
+  }
+}

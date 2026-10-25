@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kompass Skills</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap">
+<style>
+/* Generated from Kompass Education tokens.json by Kompass Skills. Do not edit; change the JSON. */
+:root {
+  --white: oklch(100% 0 0);
+  --mist: oklch(96% 0.002 260);
+  --mist-hover: oklch(89.84% 0.0023 260);
+  --line: oklch(87% 0.004 260);
+  --muted: oklch(46% 0.008 260);
+  --ink: oklch(19% 0.006 260);
+  --ink-hover: oklch(28.72% 0.0053 260);
+  --coral: oklch(65% 0.2 30);
+  --coral-soft: oklch(95.8% 0.024 30);
+  --educators: oklch(65% 0.2 30);
+  --educators-soft: oklch(95.8% 0.024 30);
+  --leaders: oklch(60% 0.2 270);
+  --leaders-soft: oklch(95.2% 0.024 270);
+  --builders: oklch(59% 0.12 175);
+  --builders-soft: oklch(95.08% 0.0144 175);
+  --cover-ink: oklch(0% 0 0);
+  --video-caption: oklch(77.32% 0.0017 260);
+  --font-sans: Onest, Arial, sans-serif;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-22: 22px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --gutter-min: 20px;
+  --gutter-max: 46px;
+  --radius-4: 4px;
+  --radius-7: 7px;
+  --radius-8: 8px;
+  --radius-10: 10px;
+  --radius-12: 12px;
+  --radius-14: 14px;
+  --radius-pill: 100px;
+  --radius-round: 50%;
+  --target: 44px;
+  --button-height: 46px;
+  --button-disc: 32px;
+  --play: 40px;
+  --avatar: 34px;
+  --audience-dot: 11px;
+  --rail: 184px;
+  --rail-collapsed: 64px;
+  --syllabus: 260px;
+  --focus-width: 3px;
+  --focus-offset: 4px;
+  --progress: 5px;
+  --pressed: 0.68;
+  --disabled: 0.5;
+  --shadow-dropdown: 0 18px 24px rgba(18, 20, 23, 0.07);
+}
+
+/* Kompass planning page. Every colour, radius and size comes from the generated tokens above. */
+*,*::before,*::after{box-sizing:border-box;min-inline-size:0}
+html{scroll-padding-top:84px}
+body{margin:0;background:var(--white);color:var(--ink);font-family:var(--font-sans);font-size:16px;line-height:1.65;font-synthesis:none}
+a{color:inherit;text-underline-offset:4px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em;background:var(--mist);padding:1px 5px;border-radius:var(--radius-4)}
+pre{background:var(--mist);padding:14px;border-radius:var(--radius-8);overflow-x:auto}
+pre code{background:none;padding:0}
+pre.mermaid{background:var(--white);border:1px solid var(--line);text-align:center}
+:focus-visible{outline:var(--focus-width) solid var(--ink);outline-offset:var(--focus-offset)}
+.sr{position:absolute;inline-size:1px;block-size:1px;overflow:clip;clip-path:inset(50%);white-space:nowrap}
+.muted{color:var(--muted)}
+.wrap{max-inline-size:1180px;margin-inline:auto;padding-inline:max(var(--gutter-min),env(safe-area-inset-left,0px)) max(var(--gutter-min),env(safe-area-inset-right,0px))}
+@media(min-width:900px){.wrap{padding-inline:var(--gutter-max)}}
+
+.top{border-block-end:1px solid var(--line)}
+.top-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-block:20px}
+.logo{display:inline-flex;align-items:baseline;gap:.10em;font-size:23px;line-height:1;letter-spacing:-.035em}
+.logo b{font-weight:600}.logo span{font-weight:400}
+.rendered{font-size:12px;color:var(--muted)}
+
+.hero{padding-block:var(--space-40) var(--space-24);display:grid;gap:10px}
+.kicker{margin:0;font-size:12px;font-weight:500;color:var(--muted)}
+h1{margin:0;font-size:clamp(2.1rem,1.2rem + 3vw,3rem);font-weight:500;line-height:1.12;letter-spacing:-.035em;text-wrap:balance}
+.phase{margin:0;font-size:18px;color:var(--muted);max-inline-size:60ch}
+.progress{max-inline-size:420px;margin-block-start:14px}
+.progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-block-end:8px}
+progress{display:block;appearance:none;border:0;inline-size:100%;block-size:var(--progress);background:var(--line)}
+progress::-webkit-progress-bar{background:var(--line)}
+progress::-webkit-progress-value{background:var(--coral)}
+progress::-moz-progress-bar{background:var(--coral)}
+.counts{display:flex;flex-wrap:wrap;gap:6px 14px;margin:12px 0 0;font-size:12px;color:var(--muted)}
+
+.tabs{position:sticky;top:0;z-index:5;display:flex;align-items:center;flex-wrap:wrap;gap:4px 22px;padding-block:8px;background:var(--white);border-block-end:1px solid var(--line)}
+.tabs a{display:inline-flex;align-items:center;min-block-size:var(--target);font-size:13px;font-weight:500;text-decoration:none}
+.tabs a:hover{color:var(--muted)}
+.tabs a[aria-current=true]{text-decoration:underline;text-decoration-color:var(--coral);text-decoration-thickness:2px;text-underline-offset:9px}
+.search{margin-inline-start:auto;display:flex;align-items:center;border-block-end:1px solid var(--line);inline-size:min(100%,280px)}
+.search input{inline-size:100%;min-block-size:var(--target);border:0;background:none;font:inherit;font-size:16px}
+.search input::placeholder{color:var(--muted)}
+
+.sec{padding-block:var(--space-40) 0}
+.sec>h2{margin:0 0 6px;font-size:26px;font-weight:500;line-height:1.3;letter-spacing:-.025em}
+.lead{margin:0 0 var(--space-22);color:var(--muted);max-inline-size:70ch}
+h3{margin:0;font-size:18px;font-weight:500;line-height:1.45;letter-spacing:-.015em}
+h4{margin:0 0 6px;font-size:13px;font-weight:500;color:var(--muted)}
+.card{background:var(--mist);border-radius:var(--radius-12);padding:var(--space-22)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:var(--space-18)}
+.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:var(--radius-pill);padding:1px 8px}
+
+#overview{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:var(--space-32);align-items:start}
+@media(max-width:860px){#overview{grid-template-columns:1fr}}
+.intro{display:grid;gap:var(--space-24)}
+.intro-block{max-inline-size:68ch}
+.intro-block p,.intro-block li{line-height:1.85}
+.intro-block ul,.intro-block ol{padding-inline-start:20px;margin:6px 0 0}
+.approval{background:var(--mist);border-radius:var(--radius-14);padding:var(--space-24)}
+.approval.is-approved{background:var(--coral-soft)}
+.approval p{margin:8px 0 0}
+
+.module header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-block-end:6px}
+.module p{margin:0 0 12px;color:var(--muted);font-size:14px}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:14px}
+dt{font-size:12px;font-weight:500;color:var(--muted);padding-block-start:2px}
+dd{margin:0;overflow-wrap:anywhere}
+dd ul{margin:0;padding-inline-start:18px}
+
+.prose{max-inline-size:none}
+.prose>*:first-child{margin-block-start:0}
+.prose h3,.prose h4,.prose h5{margin-block:22px 8px;font-size:18px;font-weight:500;color:var(--ink)}
+.prose ul,.prose ol{padding-inline-start:20px}
+.table{overflow-x:auto}
+table{border-collapse:collapse;inline-size:100%;font-size:14px}
+th,td{text-align:start;padding:8px 10px;border-block-end:1px solid var(--line);vertical-align:top}
+th{font-size:12px;font-weight:500;color:var(--muted)}
+
+.mockup{display:grid;gap:14px;margin-block-end:var(--space-18)}
+.mockup header{display:flex;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
+.mockup header p{margin:4px 0 0;color:var(--muted);font-size:14px;max-inline-size:62ch}
+.mock-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;font-size:12px}
+.mockup iframe{inline-size:100%;block-size:640px;border:1px solid var(--line);border-radius:var(--radius-12);background:var(--white)}
+
+.item{padding:0;margin-block-end:10px}
+.item summary{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:6px 14px;min-block-size:64px;padding:12px var(--space-22);cursor:pointer;list-style:none}
+.item summary::-webkit-details-marker{display:none}
+.item summary:hover{background:var(--mist-hover);border-radius:var(--radius-12)}
+.item .id{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.item .order{font-size:12px;color:var(--muted);inline-size:1.6em;text-align:end;font-variant-numeric:tabular-nums}
+.item .title{font-size:16px;font-weight:500}
+.item .when{font-size:12px;color:var(--muted)}
+#decisions .item summary{grid-template-columns:auto minmax(0,1fr) auto}
+.item>.prose,.unit-body{padding:4px var(--space-22) var(--space-22)}
+.answer{font-weight:500}
+.seq-head{margin:var(--space-24) 0 10px;font-size:13px;font-weight:500;color:var(--muted)}
+.seq-head a{color:var(--ink)}
+.sequence.is-now{box-shadow:inset 3px 0 0 var(--coral)}
+.u-walkthrough{background:var(--white);border:0;border-radius:var(--radius-12);padding:16px 18px;margin-block:10px}
+@media(max-width:640px){.item summary{grid-template-columns:auto minmax(0,1fr) auto}.item summary .order{display:none}}
+
+.filters{display:flex;flex-wrap:wrap;gap:var(--space-6);margin-block-end:var(--space-18)}
+.filters button{min-block-size:var(--target);border:0;border-radius:var(--radius-pill);padding:8px 15px;background:var(--mist);font:inherit;font-size:12px;font-weight:500;cursor:pointer}
+.filters button:hover{background:var(--mist-hover)}
+.filters button[aria-pressed=true]{background:var(--ink);color:var(--white)}
+
+.status{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:500;white-space:nowrap}
+.status::before{content:'';inline-size:var(--audience-dot);block-size:var(--audience-dot);border-radius:var(--radius-round);border:1.5px solid var(--muted);background:transparent}
+.status[data-status=building]::before{background:var(--ink);border-color:var(--ink)}
+.status[data-status=delivered]::before{background:var(--coral);border-color:var(--coral)}
+.status[data-status=parked]::before{border-style:dashed;border-color:var(--ink)}
+
+.facts{background:var(--white);border-radius:var(--radius-8);padding:14px;margin-block-end:16px}
+.u-sec{padding-block:10px;border-block-start:1px solid var(--line)}
+.u-sec ul,.u-sec ol{padding-inline-start:20px;margin:4px 0}
+.u-sec p{margin:4px 0}
+.u-hand-over{background:var(--coral-soft);border:0;border-radius:var(--radius-12);padding:16px 18px;margin-block:10px}
+.u-pending p{color:var(--muted)}
+.u-log li{font-size:13px;color:var(--muted)}
+li.check{list-style:none;display:flex;gap:10px;margin-inline-start:-20px}
+li.check .box{flex:none;inline-size:16px;block-size:16px;margin-block-start:4px;border:1.5px solid var(--muted);border-radius:var(--radius-4)}
+li.check.done .box{background:var(--ink);border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--white)}
+
+.handover header{display:flex;justify-content:space-between;align-items:center;margin-block-end:4px}
+.handover p{font-size:14px;margin:8px 0 0}
+.handover .next{background:var(--white);border-radius:var(--radius-8);padding:10px 12px}
+
+.foot{padding-block:var(--space-40);margin-block-start:var(--space-40);border-block-start:1px solid var(--line);font-size:12px;color:var(--muted)}
+@media(max-width:640px){
+ .tabs{flex-wrap:nowrap;overflow-x:auto;gap:18px;scrollbar-width:none}
+ .tabs a{flex:none}
+ .search{position:static;flex:none;inline-size:200px}
+ dl{grid-template-columns:1fr;gap:2px}
+ dd{margin-block-end:8px}
+ .mockup iframe{block-size:560px}
+}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;counter-reset:s;margin-block:var(--space-22) 0}
+.flow li{list-style:none;counter-increment:s;background:var(--mist);border-radius:var(--radius-12);padding:16px;position:relative}
+.flow li::before{content:counter(s);display:grid;place-items:center;inline-size:26px;block-size:26px;border-radius:var(--radius-round);background:var(--ink);color:var(--white);font-size:12px;font-weight:500;margin-block-end:10px}
+.flow li:nth-child(5)::before{background:var(--coral);color:var(--ink)}
+.flow b{display:block;font-weight:500;margin-block-end:4px}
+.flow span{font-size:13px;color:var(--muted);line-height:1.6;display:block}
+.flow code{font-size:11px}
+.skill{display:grid;gap:14px;margin-block-end:var(--space-22)}
+.skill header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px 18px}
+.skill h3{font-size:24px;letter-spacing:-.02em}
+.skill .plain{font-size:18px;margin:0;max-inline-size:60ch}
+.skill .when{margin:0;font-size:14px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
+.cols>div{background:var(--white);border-radius:var(--radius-8);padding:14px 16px}
+.cols ul{margin:0;padding-inline-start:18px;font-size:14px}
+.cols li{margin-block-end:4px}
+.steps{display:flex;flex-wrap:wrap;gap:6px}
+.steps span{font-size:12px;background:var(--white);border-radius:var(--radius-pill);padding:4px 10px}
+.questions{background:var(--coral-soft);border-radius:var(--radius-12);padding:14px 18px}
+.questions ol{margin:6px 0 0;padding-inline-start:20px;font-size:14px}
+.questions li{margin-block-end:6px}
+.desc{font-size:13px;color:var(--muted);margin:0}
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:var(--space-18)}
+.role{margin:0}
+.role h3{font-size:20px}
+.model{font-size:12px;font-weight:500;background:var(--white);border-radius:var(--radius-pill);padding:4px 12px}
+.role[data-model=opus] .model{background:var(--ink);color:var(--white)}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap top-row"><span class="logo"><b>kompass</b><span>solutions</span></span><span class="rendered">Draft 0.1 · generated from the skill files</span></div></header>
+<main class="wrap">
+  <div class="hero">
+    <p class="kicker">How work gets planned, built and handed over</p>
+    <h1>Kompass Skills</h1>
+    <p class="phase">Kompass Skills plan a project properly, then build it in sequences of work units that run back to back without pausing. Every unit and every sequence ends with a written hand-over saved with the code, so the next agent picks up from the record and never from a session's memory.</p>
+  </div>
+  <nav class="tabs" aria-label="Sections">
+    <a href="#lifecycle">How it fits together</a>
+    <a href="#kompass-plan">plan</a><a href="#kompass-units">units</a><a href="#kompass-run">run</a><a href="#kompass-build">build</a><a href="#kompass-find">find</a>
+    <a href="#agents">Who does what</a><a href="#safety">Safety</a>
+  </nav>
+
+  <section id="lifecycle" class="sec">
+    <h2>How it fits together</h2>
+    <p class="lead">Plan once, then build sequence after sequence. Each sequence ends with a written hand-over and your walkthrough, and the next one starts from that record.</p>
+    <ol class="flow"><li><b>Plan</b><span>Brief, module map, architecture, UI mockups you click through, decisions. One approval.</span><span><code>kompass-plan</code></span></li><li><b>Write units</b><span>One-page briefs grouped into sequences, each ending at a point you can walk through.</span><span><code>kompass-units</code></span></li><li><b>Build a sequence</b><span>Units built back to back, each in a fresh session with kompass-build.</span><span><code>kompass-run</code></span></li><li><b>Sequence hand-over</b><span>What was achieved, what is parked, and walkthrough steps for you.</span><span><code>kompass-run</code></span></li><li><b>Your walkthrough</b><span>You try it; your words and any problems are recorded. Problems become the next sequence's first units.</span><span><code>kompass-run</code></span></li><li><b>Next sequence</b><span>Starts from the hand-over and your recorded walkthrough.</span><span><code>kompass-run</code></span></li></ol>
+  </section>
+
+  <section class="sec">
+    <h2>The skills</h2>
+    <p class="lead">Each skill is a short instruction file an agent follows. Questions in coral are open: they are what we decide next.</p>
+    <article class="card skill" id="kompass-plan">
+      <header><h3>kompass-plan</h3><span class="tag">104 lines</span></header>
+      <p class="plain">Plans a project or phase with you, before any code is written.</p>
+      <p class="when"><strong>Use when:</strong> Start of a project or phase; re-planning; reviewing the plan.</p>
+      <div class="cols">
+        <div><h4>Reads</h4><ul><li>Your brief and answers</li><li>The existing code, for a project already under way</li><li>The project's design tokens, for mockups</li></ul></div>
+        <div><h4>Leaves behind</h4><ul><li>Brief and approval record</li><li>Module map: purpose, front door, owned files, rules with their tests</li><li>Architecture with diagrams of each key journey</li><li>Interactive mockups for each UI decision</li><li>Decision records</li><li>Sequences: where each walkthrough falls</li><li>The planning page</li></ul></div>
+        <div><h4>Stops for you</h4><ul><li>Only for your answers and your one approval</li></ul></div>
+      </div>
+      <div><h4>How it works</h4><div class="steps"><span>Who does what</span><span>Stage 1: Brief (`plan.md`)</span><span>Stage 2: Module map (`modules.md`)</span><span>Stage 3: Architecture (`architecture.md`)</span><span>Stage 4: UI and UX decisions (`mockups/`)</span><span>Stage 5: Sequences</span><span>Stage 6: Self-check</span><span>Stage 7: One approval</span><span>Changing an approved plan</span><span>Speaking to the operator</span></div></div>
+      <p class="desc"><strong>What the agent is told it is for:</strong> Plan a project or phase with Kompass Skills — brief, deep module map, architecture, UI/UX decisions with interactive HTML mockups, decision records and the canonical planning page, ending in one approval. Use at the start of a project or phase, or when the operator wants to plan, re-plan or review the plan.</p>
+      
+      <div class="questions"><h4>Open design questions</h4><ol><li>For Layerware, should the module map start from the existing LiteBench architecture document, or be rewritten fresh?</li><li>How do you want to review mockups: one decision at a time in chat, or a review session over the whole set?</li><li>Should every UI decision get a mockup, or only those with real alternatives?</li></ol></div>
+    </article><article class="card skill" id="kompass-units">
+      <header><h3>kompass-units</h3><span class="tag">64 lines</span></header>
+      <p class="plain">Turns the approved plan into short work-unit briefs, grouped into sequences.</p>
+      <p class="when"><strong>Use when:</strong> After plan approval; whenever a new unit, defect or follow-up is needed.</p>
+      <div class="cols">
+        <div><h4>Reads</h4><ul><li>The approved plan, module map, decisions and mockups</li><li>Walkthrough feedback, for problems to fix first</li></ul></div>
+        <div><h4>Leaves behind</h4><ul><li>One-page unit briefs: outcome, criteria with proving tests, owned files, out of scope, dependencies</li><li>Sequence files with each sequence's goal and units</li></ul></div>
+        <div><h4>Stops for you</h4><ul><li>Never; new units on an approved plan need no approval unless they change the outcome</li></ul></div>
+      </div>
+      <div><h4>How it works</h4><div class="steps"><span>What every unit has</span><span>How to cut units</span><span>Sequences</span><span>Defects and follow-ups</span><span>Self-check, then render</span></div></div>
+      <p class="desc"><strong>What the agent is told it is for:</strong> Write Kompass work units from an approved plan — one short brief per piece of work, in order, with criteria, proving tests, owned files and dependencies. Use after kompass-plan is approved, or when a new unit, defect unit or follow-up is needed.</p>
+      
+      <div class="questions"><h4>Open design questions</h4><ol><li>What is the right size for a unit: about half a day of agent work?</li><li>Should units keep Layerware's WU numbering, continuing from WU-0130?</li><li>Should open LiteBench units be carried over, or re-planned?</li></ol></div>
+    </article><article class="card skill" id="kompass-run">
+      <header><h3>kompass-run</h3><span class="tag">71 lines</span></header>
+      <p class="plain">Runs a whole sequence unattended, hands it over for your walkthrough, then records what you found.</p>
+      <p class="when"><strong>Use when:</strong> &quot;Run&quot;, &quot;continue&quot;, &quot;build the next sequence&quot;, &quot;hand over sequence N&quot;, &quot;record the walkthrough&quot;.</p>
+      <div class="cols">
+        <div><h4>Reads</h4><ul><li>Unit statuses on main</li><li>The previous sequence's walkthrough record</li></ul></div>
+        <div><h4>Leaves behind</h4><ul><li>Units built back to back in fresh sessions</li><li>Parked units with written reasons</li><li>The sequence hand-over with walkthrough steps</li><li>Your walkthrough feedback, recorded with your words</li><li>New units for problems you found</li></ul></div>
+        <div><h4>Stops for you</h4><ul><li>At the end of every sequence, for your walkthrough</li><li>When the repository's safety settings are missing</li></ul></div>
+      </div>
+      <div><h4>How it works</h4><div class="steps"><span>Who does what</span><span>Start a sequence</span><span>Hand over a sequence (&quot;hand over sequence N&quot;)</span><span>Record the walkthrough (&quot;record the walkthrough&quot;)</span><span>While it runs</span><span>Stopping early</span></div></div>
+      <p class="desc"><strong>What the agent is told it is for:</strong> Run a sequence of approved Kompass work units back to back without pausing, each in a fresh session; at the end of the sequence write the hand-over for the operator's walkthrough, and after the walkthrough record their feedback so the next sequence picks up where this one left off. Use for &quot;run&quot;, &quot;continue&quot;, &quot;build the next sequence&quot;, &quot;hand over sequence N&quot; or &quot;record the walkthrough&quot;.</p>
+      <div class="cols"><div><h4>Decided</h4><ul><li>The runner lives on the Hetzner box, in its own container. Darren: &quot;runner has to sit on hetzner. - that's what we built it for&quot;.</li></ul></div></div>
+      <div class="questions"><h4>Open design questions</h4><ol><li>How should you hear that a sequence is ready to walk through: a phone notification, an email, or the planning page?</li><li>Should two units run at once by default when they share no files?</li></ol></div>
+    </article><article class="card skill" id="kompass-build">
+      <header><h3>kompass-build</h3><span class="tag">91 lines</span></header>
+      <p class="plain">Builds one unit from start to finish and writes its hand-over.</p>
+      <p class="when"><strong>Use when:</strong> For one unit, usually started by kompass-run.</p>
+      <div class="cols">
+        <div><h4>Reads</h4><ul><li>Plan and module map</li><li>The latest sequence hand-over and your walkthrough feedback</li><li>The unit brief</li><li>Hand-overs of the units it depends on and the last two delivered</li><li>Its decisions and mockup</li></ul></div>
+        <div><h4>Leaves behind</h4><ul><li>Failing test first, then the fix in the owning module</li><li>Independent review on the pull request</li><li>Merged code once CI is green</li><li>The unit hand-over: what changed, tests, review findings, decisions, known issues, a note for the next unit, evidence</li></ul></div>
+        <div><h4>Stops for you</h4><ul><li>A locked file</li><li>A cause that cannot be proven</li><li>A change to the approved outcome</li><li>A destructive data change</li><li>An irreversible outside action</li></ul></div>
+      </div>
+      <div><h4>How it works</h4><div class="steps"><span>Who does what</span><span>1. Start</span><span>2. Build</span><span>3. Check locally</span><span>4. Review</span><span>5. Write the hand-over</span><span>6. Deliver</span><span>Parking a unit</span><span>Stops for the operator</span><span>Reporting</span></div></div>
+      <p class="desc"><strong>What the agent is told it is for:</strong> Build one Kompass work unit end to end — failing test first, build in the owning module, local checks, independent review, pull request, CI, merge and the written hand-over. Use for &quot;build WU-NNNN&quot;, &quot;build the next unit&quot;, or when kompass-run starts a unit.</p>
+      
+      <div class="questions"><h4>Open design questions</h4><ol><li>How many CI attempts on one cause before a unit is parked: three?</li><li>Should browser tests run locally for every UI unit, or only for screens the mockup covers?</li><li>Should the review verdict be enforced by a CI check, or trusted?</li></ol></div>
+    </article><article class="card skill" id="kompass-find">
+      <header><h3>kompass-find</h3><span class="tag">46 lines</span></header>
+      <p class="plain">Finds what was done, when and why, when something breaks later.</p>
+      <p class="when"><strong>Use when:</strong> Before writing a defect unit; whenever an agent needs project history.</p>
+      <div class="cols">
+        <div><h4>Reads</h4><ul><li>Unit and sequence hand-overs</li><li>Decision records and the module map</li><li>Git history (commits start with the unit id) and pull requests</li></ul></div>
+        <div><h4>Leaves behind</h4><ul><li>The unit or units involved, with the hand-over or decision lines that explain them</li></ul></div>
+        <div><h4>Stops for you</h4><ul><li>Never</li></ul></div>
+      </div>
+      <div><h4>How it works</h4><div class="steps"><span>Common questions</span><span>Reporting what you found</span></div></div>
+      <p class="desc"><strong>What the agent is told it is for:</strong> Find what was done, when and why in a Kompass project — which unit changed a file or behaviour, its hand-over, review and decisions — to diagnose a defect or answer &quot;what happened to X&quot;. Use before writing a defect unit and whenever an agent needs project history.</p>
+      
+      <div class="questions"><h4>Open design questions</h4><ol><li>Is plain text search enough, or do we want an index like LiteBench's search?</li></ol></div>
+    </article>
+  </section>
+
+  <section id="agents" class="sec">
+    <h2>Who does what</h2>
+    <p class="lead">Each model does the work it is best at. Every model runs at medium effort by default and is pushed to high effort when the work needs it: when one cause fails twice, when a builder fails twice on the same test, and for reviews of units that touch privacy, figures or access. Models are named by family, so each role moves to the newest model of its family on its own.</p>
+    <div class="roles"><article class="card skill role" data-model="opus">
+      <header><h3>Coordinator</h3><span class="model">Opus · medium effort</span></header>
+      <p class="plain">The main session in every skill. It plans, writes units, decides each build's approach, briefs the helpers, judges what they return and writes every hand-over.</p>
+      <p class="when"><strong>Why this model:</strong> Judgement and adversarial thinking: Opus is strongest at deciding what to build and spotting what is wrong.</p>
+      
+    </article><article class="card skill role" data-model="sonnet">
+      <header><h3>kompass-builder</h3><span class="model">Sonnet · medium effort</span></header>
+      <p class="plain">Writes the code for one bounded piece of a unit, test first, inside its owned files.</p>
+      <p class="when"><strong>Why this model:</strong> Coding from a precise brief: Sonnet writes good code quickly and costs far less, so it does the bulk of the typing.</p>
+      <div class="questions"><h4>Open design questions</h4><ol><li>Should a builder pushed to high effort stay on Sonnet, or should a second failure at high effort move the piece to Opus?</li></ol></div>
+    </article><article class="card skill role" data-model="opus">
+      <header><h3>kompass-reviewer</h3><span class="model">Opus · medium effort</span></header>
+      <p class="plain">Checks a unit's changes independently and approves or asks for changes, on correctness, privacy, evidence and ownership.</p>
+      <p class="when"><strong>Why this model:</strong> Adversarial checking: a second Opus, in a fresh context, with no stake in the code it reviews.</p>
+      <div class="questions"><h4>Open design questions</h4><ol><li>Which other kinds of unit, beyond privacy, figures and access, should always get a high-effort review?</li></ol></div>
+    </article><article class="card skill role" data-model="haiku">
+      <header><h3>kompass-searcher</h3><span class="model">Haiku · medium effort</span></header>
+      <p class="plain">Answers one bounded search or research question across the code, the Kompass records, git history or the web, and returns pointers with short excerpts.</p>
+      <p class="when"><strong>Why this model:</strong> Searching and reading at volume: Haiku is fast and cheap, so wide sweeps cost little and keep the coordinator's context clean.</p>
+      <div class="questions"><h4>Open design questions</h4><ol><li>Should it also do outside research (other products, library documentation), or should that stay with Opus?</li></ol></div>
+    </article></div>
+  </section>
+
+  <section id="safety" class="sec">
+    <h2>What keeps it safe</h2>
+    <p class="lead">Safety lives in GitHub and CI, where it holds whichever tool writes the code. Nothing else blocks on your Mac.</p>
+    <div class="card"><ul><li>Main only takes changes through pull requests, with one required CI check.</li><li>Each pull request is re-tested on top of the latest main before it merges.</li><li>Pull requests merge automatically once green.</li><li>CI runs the full tests, the two tripwires (locked files; switched-off tests) and the scanners, whichever tool wrote the code.</li><li>The destructive-command guard on your Mac stays as a backstop.</li></ul></div>
+  </section>
+</main>
+<footer class="wrap foot">Generated by Kompass Skills from the skill and agent files and <code>design/skills.json</code>.</footer>
+</body>
+</html>

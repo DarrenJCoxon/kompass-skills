@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kompass Learning plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap">
+<style>
+/* Generated from Kompass Education tokens.json by Kompass Skills. Do not edit; change the JSON. */
+:root {
+  --white: oklch(100% 0 0);
+  --mist: oklch(96% 0.002 260);
+  --mist-hover: oklch(89.84% 0.0023 260);
+  --line: oklch(87% 0.004 260);
+  --muted: oklch(46% 0.008 260);
+  --ink: oklch(19% 0.006 260);
+  --ink-hover: oklch(28.72% 0.0053 260);
+  --coral: oklch(65% 0.2 30);
+  --coral-soft: oklch(95.8% 0.024 30);
+  --educators: oklch(65% 0.2 30);
+  --educators-soft: oklch(95.8% 0.024 30);
+  --leaders: oklch(60% 0.2 270);
+  --leaders-soft: oklch(95.2% 0.024 270);
+  --builders: oklch(59% 0.12 175);
+  --builders-soft: oklch(95.08% 0.0144 175);
+  --cover-ink: oklch(0% 0 0);
+  --video-caption: oklch(77.32% 0.0017 260);
+  --font-sans: Onest, Arial, sans-serif;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-22: 22px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --gutter-min: 20px;
+  --gutter-max: 46px;
+  --radius-4: 4px;
+  --radius-7: 7px;
+  --radius-8: 8px;
+  --radius-10: 10px;
+  --radius-12: 12px;
+  --radius-14: 14px;
+  --radius-pill: 100px;
+  --radius-round: 50%;
+  --target: 44px;
+  --button-height: 46px;
+  --button-disc: 32px;
+  --play: 40px;
+  --avatar: 34px;
+  --audience-dot: 11px;
+  --rail: 184px;
+  --rail-collapsed: 64px;
+  --syllabus: 260px;
+  --focus-width: 3px;
+  --focus-offset: 4px;
+  --progress: 5px;
+  --pressed: 0.68;
+  --disabled: 0.5;
+  --shadow-dropdown: 0 18px 24px rgba(18, 20, 23, 0.07);
+}
+
+/* Kompass planning page. Every colour, radius and size comes from the generated tokens above. */
+*,*::before,*::after{box-sizing:border-box;min-inline-size:0}
+html{scroll-padding-top:84px}
+body{margin:0;background:var(--white);color:var(--ink);font-family:var(--font-sans);font-size:16px;line-height:1.65;font-synthesis:none}
+a{color:inherit;text-underline-offset:4px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em;background:var(--mist);padding:1px 5px;border-radius:var(--radius-4)}
+pre{background:var(--mist);padding:14px;border-radius:var(--radius-8);overflow-x:auto}
+pre code{background:none;padding:0}
+pre.mermaid{background:var(--white);border:1px solid var(--line);text-align:center}
+:focus-visible{outline:var(--focus-width) solid var(--ink);outline-offset:var(--focus-offset)}
+.sr{position:absolute;inline-size:1px;block-size:1px;overflow:clip;clip-path:inset(50%);white-space:nowrap}
+.muted{color:var(--muted)}
+.wrap{max-inline-size:1180px;margin-inline:auto;padding-inline:max(var(--gutter-min),env(safe-area-inset-left,0px)) max(var(--gutter-min),env(safe-area-inset-right,0px))}
+@media(min-width:900px){.wrap{padding-inline:var(--gutter-max)}}
+
+.top{border-block-end:1px solid var(--line)}
+.top-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-block:20px}
+.logo{display:inline-flex;align-items:baseline;gap:.10em;font-size:23px;line-height:1;letter-spacing:-.035em}
+.logo b{font-weight:600}.logo span{font-weight:400}
+.rendered{font-size:12px;color:var(--muted)}
+
+.hero{padding-block:var(--space-40) var(--space-24);display:grid;gap:10px}
+.kicker{margin:0;font-size:12px;font-weight:500;color:var(--muted)}
+h1{margin:0;font-size:clamp(2.1rem,1.2rem + 3vw,3rem);font-weight:500;line-height:1.12;letter-spacing:-.035em;text-wrap:balance}
+.phase{margin:0;font-size:18px;color:var(--muted);max-inline-size:60ch}
+.progress{max-inline-size:420px;margin-block-start:14px}
+.progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-block-end:8px}
+progress{display:block;appearance:none;border:0;inline-size:100%;block-size:var(--progress);background:var(--line)}
+progress::-webkit-progress-bar{background:var(--line)}
+progress::-webkit-progress-value{background:var(--coral)}
+progress::-moz-progress-bar{background:var(--coral)}
+.counts{display:flex;flex-wrap:wrap;gap:6px 14px;margin:12px 0 0;font-size:12px;color:var(--muted)}
+
+.tabs{position:sticky;top:0;z-index:5;display:flex;align-items:center;flex-wrap:wrap;gap:4px 22px;padding-block:8px;background:var(--white);border-block-end:1px solid var(--line)}
+.tabs a{display:inline-flex;align-items:center;min-block-size:var(--target);font-size:13px;font-weight:500;text-decoration:none}
+.tabs a:hover{color:var(--muted)}
+.tabs a[aria-current=true]{text-decoration:underline;text-decoration-color:var(--coral);text-decoration-thickness:2px;text-underline-offset:9px}
+.search{margin-inline-start:auto;display:flex;align-items:center;border-block-end:1px solid var(--line);inline-size:min(100%,280px)}
+.search input{inline-size:100%;min-block-size:var(--target);border:0;background:none;font:inherit;font-size:16px}
+.search input::placeholder{color:var(--muted)}
+
+.sec{padding-block:var(--space-40) 0}
+.sec>h2{margin:0 0 6px;font-size:26px;font-weight:500;line-height:1.3;letter-spacing:-.025em}
+.lead{margin:0 0 var(--space-22);color:var(--muted);max-inline-size:70ch}
+h3{margin:0;font-size:18px;font-weight:500;line-height:1.45;letter-spacing:-.015em}
+h4{margin:0 0 6px;font-size:13px;font-weight:500;color:var(--muted)}
+.card{background:var(--mist);border-radius:var(--radius-12);padding:var(--space-22)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:var(--space-18)}
+.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:var(--radius-pill);padding:1px 8px}
+
+#overview{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:var(--space-32);align-items:start}
+@media(max-width:860px){#overview{grid-template-columns:1fr}}
+.intro{display:grid;gap:var(--space-24)}
+.intro-block{max-inline-size:68ch}
+.intro-block p,.intro-block li{line-height:1.85}
+.intro-block ul,.intro-block ol{padding-inline-start:20px;margin:6px 0 0}
+.approval{background:var(--mist);border-radius:var(--radius-14);padding:var(--space-24)}
+.approval.is-approved{background:var(--coral-soft)}
+.approval p{margin:8px 0 0}
+
+.module header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-block-end:6px}
+.module p{margin:0 0 12px;color:var(--muted);font-size:14px}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:14px}
+dt{font-size:12px;font-weight:500;color:var(--muted);padding-block-start:2px}
+dd{margin:0;overflow-wrap:anywhere}
+dd ul{margin:0;padding-inline-start:18px}
+
+.prose{max-inline-size:none}
+.prose>*:first-child{margin-block-start:0}
+.prose h3,.prose h4,.prose h5{margin-block:22px 8px;font-size:18px;font-weight:500;color:var(--ink)}
+.prose ul,.prose ol{padding-inline-start:20px}
+.table{overflow-x:auto}
+table{border-collapse:collapse;inline-size:100%;font-size:14px}
+th,td{text-align:start;padding:8px 10px;border-block-end:1px solid var(--line);vertical-align:top}
+th{font-size:12px;font-weight:500;color:var(--muted)}
+
+.mockup{display:grid;gap:14px;margin-block-end:var(--space-18)}
+.mockup header{display:flex;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
+.mockup header p{margin:4px 0 0;color:var(--muted);font-size:14px;max-inline-size:62ch}
+.mock-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;font-size:12px}
+.mockup iframe{inline-size:100%;block-size:640px;border:1px solid var(--line);border-radius:var(--radius-12);background:var(--white)}
+
+.item{padding:0;margin-block-end:10px}
+.item summary{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:6px 14px;min-block-size:64px;padding:12px var(--space-22);cursor:pointer;list-style:none}
+.item summary::-webkit-details-marker{display:none}
+.item summary:hover{background:var(--mist-hover);border-radius:var(--radius-12)}
+.item .id{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.item .order{font-size:12px;color:var(--muted);inline-size:1.6em;text-align:end;font-variant-numeric:tabular-nums}
+.item .title{font-size:16px;font-weight:500}
+.item .when{font-size:12px;color:var(--muted)}
+#decisions .item summary{grid-template-columns:auto minmax(0,1fr) auto}
+.item>.prose,.unit-body{padding:4px var(--space-22) var(--space-22)}
+.answer{font-weight:500}
+.seq-head{margin:var(--space-24) 0 10px;font-size:13px;font-weight:500;color:var(--muted)}
+.seq-head a{color:var(--ink)}
+.sequence.is-now{box-shadow:inset 3px 0 0 var(--coral)}
+.u-walkthrough{background:var(--white);border:0;border-radius:var(--radius-12);padding:16px 18px;margin-block:10px}
+@media(max-width:640px){.item summary{grid-template-columns:auto minmax(0,1fr) auto}.item summary .order{display:none}}
+
+.filters{display:flex;flex-wrap:wrap;gap:var(--space-6);margin-block-end:var(--space-18)}
+.filters button{min-block-size:var(--target);border:0;border-radius:var(--radius-pill);padding:8px 15px;background:var(--mist);font:inherit;font-size:12px;font-weight:500;cursor:pointer}
+.filters button:hover{background:var(--mist-hover)}
+.filters button[aria-pressed=true]{background:var(--ink);color:var(--white)}
+
+.status{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:500;white-space:nowrap}
+.status::before{content:'';inline-size:var(--audience-dot);block-size:var(--audience-dot);border-radius:var(--radius-round);border:1.5px solid var(--muted);background:transparent}
+.status[data-status=building]::before{background:var(--ink);border-color:var(--ink)}
+.status[data-status=delivered]::before{background:var(--coral);border-color:var(--coral)}
+.status[data-status=parked]::before{border-style:dashed;border-color:var(--ink)}
+
+.facts{background:var(--white);border-radius:var(--radius-8);padding:14px;margin-block-end:16px}
+.u-sec{padding-block:10px;border-block-start:1px solid var(--line)}
+.u-sec ul,.u-sec ol{padding-inline-start:20px;margin:4px 0}
+.u-sec p{margin:4px 0}
+.u-hand-over{background:var(--coral-soft);border:0;border-radius:var(--radius-12);padding:16px 18px;margin-block:10px}
+.u-pending p{color:var(--muted)}
+.u-log li{font-size:13px;color:var(--muted)}
+li.check{list-style:none;display:flex;gap:10px;margin-inline-start:-20px}
+li.check .box{flex:none;inline-size:16px;block-size:16px;margin-block-start:4px;border:1.5px solid var(--muted);border-radius:var(--radius-4)}
+li.check.done .box{background:var(--ink);border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--white)}
+
+.handover header{display:flex;justify-content:space-between;align-items:center;margin-block-end:4px}
+.handover p{font-size:14px;margin:8px 0 0}
+.handover .next{background:var(--white);border-radius:var(--radius-8);padding:10px 12px}
+
+.foot{padding-block:var(--space-40);margin-block-start:var(--space-40);border-block-start:1px solid var(--line);font-size:12px;color:var(--muted)}
+@media(max-width:640px){
+ .tabs{flex-wrap:nowrap;overflow-x:auto;gap:18px;scrollbar-width:none}
+ .tabs a{flex:none}
+ .search{position:static;flex:none;inline-size:200px}
+ dl{grid-template-columns:1fr;gap:2px}
+ dd{margin-block-end:8px}
+ .mockup iframe{block-size:560px}
+}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-row">
+    <span class="logo"><b>kompass</b><span>solutions</span></span>
+    <span class="rendered">Planning page · rendered 2026-10-25 from the project records</span>
+  </div>
+</header>
+<main class="wrap">
+  <div class="hero">
+    <p class="kicker">Phase 2 · approved · sequence 2 of 2</p>
+    <h1>Kompass Learning</h1>
+    <p class="phase">Lesson notes: learners keep notes beside each lesson, find them again and take them away</p>
+    <div class="progress">
+      <div class="progress-label"><span>2 of 6 units delivered</span><span>33%</span></div>
+      <progress max="6" value="2">33%</progress>
+      <p class="counts"><span class="status" data-status="waiting">Waiting</span> 2 <span class="status" data-status="building">Building</span> 1 <span class="status" data-status="delivered">Delivered</span> 2 <span class="status" data-status="parked">Parked</span> 1</p>
+    </div>
+  </div>
+  <nav class="tabs" aria-label="Sections">
+    <a href="#overview">Overview</a><a href="#modules">Modules</a><a href="#architecture">Architecture</a><a href="#ui">UI decisions</a><a href="#decisions">Decisions</a><a href="#sequences">Sequences</a><a href="#units">Work units</a><a href="#handovers">Hand-overs</a>
+    <label class="search"><span class="sr">Search the plan</span><input id="q" type="search" placeholder="Search units, decisions, modules"></label>
+  </nav>
+  
+<section id="overview" class="sec">
+  <div class="intro">
+    <div class="intro-block"><h3>What this will achieve</h3><p>Teachers working through a course can write notes beside each lesson without leaving the video. They can find any note again later and download their notes for a course to keep or share with colleagues.</p></div><div class="intro-block"><h3>Who it is for</h3><p>Teachers and school staff learning at their own pace, often in short sessions between lessons, sometimes on a phone.</p></div><div class="intro-block"><h3>Done looks like</h3><ul><li>A learner types a note beside a lesson, leaves, comes back the next day and finds it exactly as they left it.</li><li>A learner searches &quot;rubric&quot; and sees every note that mentions it, each linked to its lesson.</li><li>A learner downloads all their notes for a course as one tidy document.</li><li>Notes work on a phone without covering the video.</li></ul></div><div class="intro-block"><h3>Not in this phase</h3><ul><li>Sharing notes with other learners inside the site.</li><li>Notes on individual moments in a video.</li></ul></div><div class="intro-block"><h3>How it will work, in plain English</h3><p>Notes belong to one learner and one lesson and are saved as the learner types. They sit in a panel beside the lesson, chosen by mockup, so the video stays visible. Search looks only at the learner's own notes. Downloading builds one document from the saved notes, in lesson order. Each part is a separate module with a small front door, so search and download never reach into how notes are stored.</p></div><div class="intro-block"><h3>Phases</h3><ol><li><strong>Courses and lessons:</strong> delivered.</li><li><strong>This phase:</strong> lesson notes.</li><li><strong>Next:</strong> certificates on finishing a course.</li></ol></div>
+  </div>
+  <aside class="approval is-approved">
+    <h3>Approval</h3>
+    <p>Approved on 20 October 2026. Operator (example): &quot;yes, approved — notes in the side panel, go ahead&quot;.</p>
+  </aside>
+</section>
+<section id="modules" class="sec">
+  <h2>Modules</h2>
+  <p class="lead">Each module hides its work behind a small front door. Other modules may only call what is listed there.</p>
+  <div class="grid">
+  <article class="card module" id="module-notes-store" data-search>
+      <header><h3>notes-store</h3></header>
+      <p>Saves and loads one learner's note for one lesson; the only module that touches stored notes.</p>
+      <dl>
+        <dt>Front door</dt><dd><div><code>saveNote(learner, lesson, text) → savedAt</code></div><div><code>loadNote(learner, lesson) → note</code></div><div><code>listNotes(learner, course) → notes in lesson order</code></div></dd>
+        <dt>Owns</dt><dd><code>src/notes/store/**</code>, <code>db/migrations/*_notes.sql</code></dd>
+        <dt>Depends on</dt><dd>courses</dd>
+        <dt>Must always be true</dt><dd><ul><li>A learner can only read or change their own notes — proved by <code>src/notes/store/access.test.ts</code></li><li>A save that fails never loses text already typed — proved by <code>src/notes/store/save.test.ts</code></li></ul></dd>
+        <dt>Units</dt><dd><a href="#WU-0001">WU-0001</a> <span class="status" data-status="delivered">Delivered</span></dd>
+      </dl>
+    </article><article class="card module" id="module-notes-search" data-search>
+      <header><h3>notes-search</h3></header>
+      <p>Finds a learner's notes by words they contain.</p>
+      <dl>
+        <dt>Front door</dt><dd><div><code>searchNotes(learner, query) → matches with lesson and snippet</code></div></dd>
+        <dt>Owns</dt><dd><code>src/notes/search/**</code></dd>
+        <dt>Depends on</dt><dd>notes-store</dd>
+        <dt>Must always be true</dt><dd><ul><li>Results only ever include the searching learner's notes — proved by <code>src/notes/search/scope.test.ts</code></li></ul></dd>
+        <dt>Units</dt><dd><a href="#WU-0003">WU-0003</a> <span class="status" data-status="waiting">Waiting</span></dd>
+      </dl>
+    </article><article class="card module" id="module-lesson-workspace" data-search>
+      <header><h3>lesson-workspace</h3><span class="tag">changed in this phase</span></header>
+      <p>The lesson screen: video, course contents and the notes panel.</p>
+      <dl>
+        <dt>Front door</dt><dd><div><code>&lt;LessonWorkspace course lesson /&gt;</code></div></dd>
+        <dt>Owns</dt><dd><code>src/learning/lesson/**</code>, <code>e2e/lesson-notes.spec.ts</code></dd>
+        <dt>Depends on</dt><dd>notes-store, notes-search, courses</dd>
+        <dt>Must always be true</dt><dd><ul><li>The video is never covered by notes at any width — proved by <code>e2e/lesson-notes.spec.ts</code></li></ul></dd>
+        <dt>Units</dt><dd><a href="#WU-0002">WU-0002</a> <span class="status" data-status="delivered">Delivered</span> <a href="#WU-0005">WU-0005</a> <span class="status" data-status="parked">Parked</span> <a href="#WU-0006">WU-0006</a> <span class="status" data-status="building">Building</span></dd>
+      </dl>
+    </article><article class="card module" id="module-notes-export" data-search>
+      <header><h3>notes-export</h3></header>
+      <p>Builds one downloadable document of a learner's notes for a course.</p>
+      <dl>
+        <dt>Front door</dt><dd><div><code>exportNotes(learner, course, format) → file</code></div></dd>
+        <dt>Owns</dt><dd><code>src/notes/export/**</code></dd>
+        <dt>Depends on</dt><dd>notes-store</dd>
+        <dt>Must always be true</dt><dd><ul><li>The document lists lessons in course order with each note exactly as saved — proved by <code>src/notes/export/export.test.ts</code></li></ul></dd>
+        <dt>Units</dt><dd><a href="#WU-0004">WU-0004</a> <span class="status" data-status="waiting">Waiting</span></dd>
+      </dl>
+    </article>
+  </div>
+</section>
+<section id="architecture" class="sec">
+  <h2>Architecture</h2>
+  <div class="prose card"><h3>Journey: writing a note during a lesson</h3>
+<p>The learner types beside the video; the note saves itself.</p>
+<pre class="mermaid">sequenceDiagram
+  actor Learner
+  Learner-&gt;&gt;lesson-workspace: types in the notes panel
+  lesson-workspace-&gt;&gt;notes-store: saveNote(learner, lesson, text)
+  notes-store--&gt;&gt;lesson-workspace: savedAt
+  lesson-workspace--&gt;&gt;Learner: &quot;Saved just now&quot;</pre>
+<ul><li><strong>Stored:</strong> one row per learner and lesson in the existing learning database.</li><li><strong>Checked:</strong> notes-store checks the learner owns the note on every read and write.</li><li><strong>Leaves the system:</strong> nothing; notes are never sent to an AI model in this phase.</li><li><strong>When it fails:</strong> the text stays in the panel and on the device, the panel says it could not save, and it tries again.</li></ul>
+<h3>Journey: finding a note again</h3>
+<pre class="mermaid">flowchart LR
+  Search[Search box] --&gt; notes-search --&gt; notes-store
+  notes-search --&gt; Results[Matches with lesson and snippet]
+  Results --&gt; Lesson[Opens the lesson with the note]</pre>
+<h3>Data model</h3>
+<div class="table"><table><thead><tr><th>Record</th><th>Holds</th><th>Belongs to</th></tr></thead><tbody><tr><td>Note</td><td>text, saved at, lesson</td><td>one learner</td></tr><tr><td>Lesson</td><td>title, order</td><td>one course</td></tr></tbody></table></div></div>
+</section>
+<section id="ui" class="sec">
+  <h2>UI decisions</h2>
+  <p class="lead">Interactive mockups. Switch between the variants in each one; the approved variant is what units build against.</p>
+  <article class="card mockup" data-search>
+    <header>
+      <div><h3>Where notes sit on the lesson screen</h3><p>Notes below the video, or as a tab beside course contents. Try typing, switch states, and view at phone width.</p></div>
+      <div class="mock-meta"><span class="status" data-status="delivered">Approved: B, side panel tab</span>
+        <span>Decision <a href="#D-001">D-001</a></span>
+        <a href="mockups/lesson-notes.html" target="_blank" rel="noopener">Open full size</a></div>
+    </header>
+    <iframe src="mockups/lesson-notes.html" title="Where notes sit on the lesson screen" loading="lazy"></iframe>
+  </article>
+</section>
+<section id="decisions" class="sec">
+  <h2>Decisions</h2>
+  <details class="card item" id="D-001" data-search>
+    <summary><span class="id">D-001</span><span class="title">Where notes sit on the lesson screen</span><span class="when">2026-10-19</span></summary>
+    <div class="prose"><p class="answer">A tab in the side panel (variant B). Operator (example): &quot;B — the video has to stay in view&quot;.</p><h3>Question</h3>
+<p>Notes must be close to the video without hiding it, on desktop and on a phone.</p>
+<h3>Options</h3>
+<ol><li><strong>Below the video.</strong> Simple, but learners scroll away from the video to type, and on a phone the notes sit far down the page.</li><li><strong>A tab in the side panel, beside course contents.</strong> The video stays in view while typing; on a phone the panel opens as a sheet under the video.</li></ol>
+<h3>Decision</h3>
+<p>A tab in the side panel (variant B). Operator (example): &quot;B — the video has to stay in view&quot;.</p>
+<h3>Why</h3>
+<p>Learners take notes while watching. Variant B keeps the video visible at every width and reuses the existing side panel, so there is no new layout to learn.</p>
+<h3>Consequences</h3>
+<p>lesson-workspace gains a Notes tab beside Contents. The phone layout needs a sheet that never covers the video.</p></div>
+  </details><details class="card item" id="D-002" data-search>
+    <summary><span class="id">D-002</span><span class="title">Notes save as the learner types</span><span class="when">2026-10-19</span></summary>
+    <div class="prose"><p class="answer">Save as they type, one second after the learner pauses.</p><h3>Question</h3>
+<p>Should learners press Save, or should notes save themselves?</p>
+<h3>Options</h3>
+<ol><li><strong>A Save button.</strong> Clear, but notes are lost when learners forget.</li><li><strong>Save as they type</strong>, a moment after they pause, with a quiet &quot;Saved&quot; line.</li></ol>
+<h3>Decision</h3>
+<p>Save as they type, one second after the learner pauses.</p>
+<h3>Why</h3>
+<p>Sessions are short and often interrupted. A forgotten Save would lose exactly the notes learners care about.</p>
+<h3>Consequences</h3>
+<p>notes-store must accept frequent small saves, and the panel must show when a save failed.</p></div>
+  </details>
+</section>
+<section id="sequences" class="sec">
+  <h2>Sequences</h2>
+  <p class="lead">Each sequence ends at a point you can walk through. Its hand-over and your walkthrough feedback are where the next sequence starts.</p>
+  <details class="card item sequence" id="S-01" data-search >
+      <summary><span class="id">S-01</span><span class="title">Notes save and show beside the lesson</span><span class="status" data-status="delivered">Walked through</span></summary>
+      <div class="unit-body">
+        <section class="u-sec"><h4>Goal</h4><p>A learner can open any lesson, write a note in the side panel while the video stays in view, leave, and find the note exactly as they left it, on desktop and on a phone.</p></section>
+        <section class="u-sec"><h4>Units · 2 of 3 delivered</h4><p><a href="#WU-0001">WU-0001</a> <span class="status" data-status="delivered">Delivered</span> &nbsp; <a href="#WU-0002">WU-0002</a> <span class="status" data-status="delivered">Delivered</span> &nbsp; <a href="#WU-0005">WU-0005</a> <span class="status" data-status="parked">Parked</span></p></section>
+        <section class="u-sec u-hand-over"><h4>Sequence hand-over</h4><ul><li><strong>What was achieved:</strong> Notes are stored per learner and lesson, and only their owner can reach them (WU-0001). The lesson screen has a Notes tab beside Contents that saves as the learner types and says when a save failed (WU-0002).</li><li><strong>Parked, and the decision each needs:</strong> WU-0005. The reported loss when switching lessons quickly could not be reproduced in 40 runs. Has any learner reported it, and on which device?</li><li><strong>State of main:</strong> green; last CI run passed on the WU-0002 merge; planning page current.</li><li><strong>Walkthrough steps:</strong></li><li>Sign in as the sample learner and open AI Essentials for Educators, module 2, lesson 2. The Notes tab sits beside Contents and the video stays visible.</li><li>Type a sentence and pause. &quot;Saved just now&quot; appears within a second.</li><li>Go to another lesson and back. The note is exactly as you left it.</li><li>Repeat on a phone. The notes open below the video and never cover it.</li><li><strong>Known issues:</strong> the saved line always says &quot;just now&quot;, even hours later.</li><li><strong>Where the next sequence starts:</strong> search and download. Both read notes only through notes-store's <code>listNotes</code>; read the WU-0001 and WU-0002 hand-overs first.</li></ul></section>
+        <section class="u-sec u-walkthrough"><h4>Walkthrough</h4><ul><li><strong>2026-10-21, operator (example):</strong> &quot;Works well on my laptop and phone. The 'Saved just now' line should show the time once it's not just now. Haven't seen the lost-typing problem myself.&quot;</li><li>Steps 1 to 4: all worked as described.</li><li>New unit at the start of sequence 2: WU-0006 (the saved line shows the time).</li><li>WU-0005 stays parked until a learner reports it.</li></ul></section>
+      </div>
+    </details><details class="card item sequence is-now" id="S-02" data-search open>
+      <summary><span class="id">S-02</span><span class="title">Find notes again and take them away <span class="tag">building now</span></span><span class="status" data-status="waiting">Planned</span></summary>
+      <div class="unit-body">
+        <section class="u-sec"><h4>Goal</h4><p>A learner can search their notes and open the lesson behind any match, and download all their notes for a course as one document. The walkthrough fix from sequence 1 comes first.</p></section>
+        <section class="u-sec"><h4>Units · 0 of 3 delivered</h4><p><a href="#WU-0003">WU-0003</a> <span class="status" data-status="waiting">Waiting</span> &nbsp; <a href="#WU-0004">WU-0004</a> <span class="status" data-status="waiting">Waiting</span> &nbsp; <a href="#WU-0006">WU-0006</a> <span class="status" data-status="building">Building</span></p></section>
+        <section class="u-sec u-hand-over"><h4>Sequence hand-over</h4><p><em>Written when every unit in the sequence is delivered or parked.</em></p></section>
+        
+      </div>
+    </details>
+</section>
+<section id="units" class="sec">
+  <h2>Work units</h2>
+  <div class="filters" role="group" aria-label="Show units by status">
+    <button type="button" aria-pressed="true" data-filter="all">All 6</button>
+    <button type="button" aria-pressed="false" data-filter="waiting">Waiting 2</button><button type="button" aria-pressed="false" data-filter="building">Building 1</button><button type="button" aria-pressed="false" data-filter="delivered">Delivered 2</button><button type="button" aria-pressed="false" data-filter="parked">Parked 1</button>
+  </div>
+  <h3 class="seq-head" data-seq-head><a href="#S-01">Sequence 1</a> · Notes save and show beside the lesson</h3><details class="card item unit" id="WU-0001" data-status="delivered" data-search>
+    <summary>
+      <span class="order">1</span>
+      <span class="id">WU-0001</span>
+      <span class="title">Save and load a learner's note for a lesson</span>
+      <span class="status" data-status="delivered">Delivered</span>
+    </summary>
+    <div class="unit-body">
+      <dl class="facts">
+        <dt>Module</dt><dd><a href="#module-notes-store">notes-store</a></dd>
+        <dt>Depends on</dt><dd>nothing</dd>
+        <dt>Owns</dt><dd><code>src/notes/store/**</code> <code>db/migrations/0012_notes.sql</code></dd>
+        
+        <dt>Decisions</dt><dd><a href="#D-002">D-002</a></dd>
+        <dt>Delivered in</dt><dd><a href="https://github.com/example/kompass-learning/pull/41">pull request</a></dd>
+      </dl>
+      <section class="u-sec u-outcome"><h4>Outcome</h4><p>Each learner has one note per lesson that saves and loads through the notes-store front door, and nobody else can read or change it.</p></section><section class="u-sec u-done-looks-like"><h4>Done looks like</h4><ul><li class="check done"><span class="box" aria-label="done"></span><span>A saved note loads back exactly as typed, including line breaks — proved by <code>src/notes/store/save.test.ts</code></span></li><li class="check done"><span class="box" aria-label="done"></span><span>Another learner's request for the note is refused — proved by <code>src/notes/store/access.test.ts</code></span></li><li class="check done"><span class="box" aria-label="done"></span><span>Rapid saves keep the newest text — proved by <code>src/notes/store/save.test.ts</code></span></li></ul></section><section class="u-sec u-not-in-scope"><h4>Not in scope</h4><ul><li>The notes panel on screen (WU-0002).</li><li>Search and export.</li></ul></section><section class="u-sec u-approach"><h4>Approach</h4><p>Add a notes table keyed by learner and lesson, through a generated migration. notes-store exposes <code>saveNote</code>, <code>loadNote</code> and <code>listNotes</code>; every call checks the learner against the session. Saves are last-write-wins on a saved-at time.</p></section><section class="u-sec u-hand-over"><h4>Hand-over</h4><ul><li><strong>What changed:</strong> Learners' notes are now stored, one per lesson, and only their owner can read or change them. Added the <code>notes</code> table and the three notes-store front-door functions.</li><li><strong>Tests:</strong> 3 new test files, 14 tests; all pass. Type-check and lint clean on changed files.</li><li><strong>Review:</strong> APPROVE after 2 rounds. Round 1 found that <code>listNotes</code> did not check the course belonged to the learner's enrolments; fixed with a test.</li><li><strong>Decisions:</strong> none new.</li><li><strong>Known issues and follow-ups:</strong> none.</li><li><strong>For the next unit:</strong> <code>saveNote</code> returns the saved-at time; show it as &quot;Saved just now&quot; rather than re-reading the note. Saves under 1 second apart are merged on the server.</li><li><strong>Evidence:</strong> CI run 1 failed on a migration name clash with an unmerged branch; renamed to 0012 and CI passed.</li></ul></section><section class="u-sec u-log"><h4>Log</h4><ul><li>2026-10-21 09:02 started</li><li>2026-10-21 10:15 review: REQUEST_CHANGES (course scope in listNotes)</li><li>2026-10-21 10:48 review: APPROVE</li><li>2026-10-21 11:06 merged</li></ul></section>
+    </div>
+  </details><details class="card item unit" id="WU-0002" data-status="delivered" data-search>
+    <summary>
+      <span class="order">2</span>
+      <span class="id">WU-0002</span>
+      <span class="title">Notes tab beside the lesson, saving as the learner types</span>
+      <span class="status" data-status="delivered">Delivered</span>
+    </summary>
+    <div class="unit-body">
+      <dl class="facts">
+        <dt>Module</dt><dd><a href="#module-lesson-workspace">lesson-workspace</a></dd>
+        <dt>Depends on</dt><dd><a href="#WU-0001">WU-0001</a></dd>
+        <dt>Owns</dt><dd><code>src/learning/lesson/**</code> <code>e2e/lesson-notes.spec.ts</code></dd>
+        <dt>Mockup</dt><dd><a href="mockups/lesson-notes.html" target="_blank" rel="noopener">mockups/lesson-notes.html</a></dd>
+        <dt>Decisions</dt><dd><a href="#D-001">D-001</a>, <a href="#D-002">D-002</a></dd>
+        <dt>Delivered in</dt><dd><a href="https://github.com/example/kompass-learning/pull/43">pull request</a></dd>
+      </dl>
+      <section class="u-sec u-outcome"><h4>Outcome</h4><p>The lesson screen has a Notes tab beside Contents, as in mockup variant B, that saves as the learner types and shows when it saved or failed.</p></section><section class="u-sec u-done-looks-like"><h4>Done looks like</h4><ul><li class="check done"><span class="box" aria-label="done"></span><span>Typing then pausing for a second saves the note and shows &quot;Saved just now&quot; — proved by <code>e2e/lesson-notes.spec.ts</code></span></li><li class="check done"><span class="box" aria-label="done"></span><span>A failed save keeps the text and says it could not save — proved by <code>e2e/lesson-notes.spec.ts</code></span></li><li class="check done"><span class="box" aria-label="done"></span><span>At phone width the notes sheet never covers the video — proved by <code>e2e/lesson-notes.spec.ts</code></span></li></ul></section><section class="u-sec u-not-in-scope"><h4>Not in scope</h4><ul><li>Search across notes (WU-0003).</li></ul></section><section class="u-sec u-approach"><h4>Approach</h4><p>Add a Notes tab to the existing side panel in lesson-workspace. The text area calls <code>saveNote</code> one second after the learner pauses, and shows the saved-at time. At phone width the panel opens as a sheet below the video.</p></section><section class="u-sec u-hand-over"><h4>Hand-over</h4><ul><li><strong>What changed:</strong> Learners can write notes beside any lesson; they save themselves and survive leaving the page. Notes tab added to the lesson side panel, with a phone sheet below the video.</li><li><strong>Tests:</strong> 1 browser test file, 5 tests; all pass locally and in CI.</li><li><strong>Review:</strong> APPROVE in 1 round.</li><li><strong>Decisions:</strong> none new.</li><li><strong>Known issues and follow-ups:</strong> switching lessons very quickly may drop the last second of typing; written up as WU-0005.</li><li><strong>For the next unit:</strong> the panel's tab list lives in <code>LessonSidePanel</code>; add Search as a third tab there rather than a new panel.</li><li><strong>Evidence:</strong> none failed.</li></ul></section><section class="u-sec u-log"><h4>Log</h4><ul><li>2026-10-21 11:20 started</li><li>2026-10-21 13:05 review: APPROVE</li><li>2026-10-21 13:31 merged</li></ul></section>
+    </div>
+  </details><details class="card item unit" id="WU-0005" data-status="parked" data-search>
+    <summary>
+      <span class="order">3</span>
+      <span class="id">WU-0005</span>
+      <span class="title">Defect: the last second of typing is lost when switching lessons quickly</span>
+      <span class="status" data-status="parked">Parked</span>
+    </summary>
+    <div class="unit-body">
+      <dl class="facts">
+        <dt>Module</dt><dd><a href="#module-lesson-workspace">lesson-workspace</a></dd>
+        <dt>Depends on</dt><dd><a href="#WU-0002">WU-0002</a></dd>
+        <dt>Owns</dt><dd><code>src/learning/lesson/**</code> <code>e2e/lesson-notes.spec.ts</code></dd>
+        
+        <dt>Decisions</dt><dd><a href="#D-002">D-002</a></dd>
+        <dt>Delivered in</dt><dd><a href="https://github.com/example/kompass-learning/pull/44">pull request</a></dd>
+      </dl>
+      <section class="u-sec u-outcome"><h4>Outcome</h4><p>Text typed just before switching lesson is always saved.</p></section><section class="u-sec u-done-looks-like"><h4>Done looks like</h4><ul><li class="check "><span class="box" aria-label="not done"></span><span>Typing then switching lesson within one second keeps the text — proved by <code>e2e/lesson-notes.spec.ts</code></span></li></ul></section><section class="u-sec u-not-in-scope"><h4>Not in scope</h4><ul><li>Changing when saves happen while the learner stays on a lesson.</li></ul></section><section class="u-sec u-approach"><h4>Approach</h4><p>Reproduce first. If confirmed, save immediately when the lesson changes, through <code>saveNote</code>.</p></section><section class="u-sec u-hand-over"><h4>Hand-over</h4><ul><li><strong>Parked:</strong> the loss could not be reproduced in 40 browser runs at desktop and phone widths, so no fix was made. The operator is asked whether any learner has reported it, and on which device.</li><li><strong>What changed:</strong> nothing in the product. Added a browser test that switches lesson 300 ms after typing; it passes.</li><li><strong>Tests:</strong> 1 new browser test; passes.</li><li><strong>Review:</strong> not reviewed, as there is no product change.</li><li><strong>Known issues and follow-ups:</strong> none until there is a report to reproduce.</li><li><strong>For the next unit:</strong> the new test stays as a guard.</li><li><strong>Evidence:</strong> 40 of 40 runs kept the text (log attached to the pull request).</li></ul></section><section class="u-sec u-log"><h4>Log</h4><ul><li>2026-10-21 13:45 started</li><li>2026-10-21 14:30 parked: not reproduced</li></ul></section>
+    </div>
+  </details><h3 class="seq-head" data-seq-head><a href="#S-02">Sequence 2</a> · Find notes again and take them away</h3><details class="card item unit" id="WU-0004" data-status="waiting" data-search>
+    <summary>
+      <span class="order">4</span>
+      <span class="id">WU-0004</span>
+      <span class="title">Download all notes for a course as one document</span>
+      <span class="status" data-status="waiting">Waiting</span>
+    </summary>
+    <div class="unit-body">
+      <dl class="facts">
+        <dt>Module</dt><dd><a href="#module-notes-export">notes-export</a></dd>
+        <dt>Depends on</dt><dd><a href="#WU-0001">WU-0001</a></dd>
+        <dt>Owns</dt><dd><code>src/notes/export/**</code></dd>
+        
+        
+        
+      </dl>
+      <section class="u-sec u-outcome"><h4>Outcome</h4><p>A learner can download their notes for a course as one document, lessons in course order.</p></section><section class="u-sec u-done-looks-like"><h4>Done looks like</h4><ul><li class="check "><span class="box" aria-label="not done"></span><span>The document lists each lesson title with its note exactly as saved — proved by <code>src/notes/export/export.test.ts</code></span></li><li class="check "><span class="box" aria-label="not done"></span><span>Lessons without notes are left out — proved by <code>src/notes/export/export.test.ts</code></span></li></ul></section><section class="u-sec u-not-in-scope"><h4>Not in scope</h4><ul><li>Sharing notes inside the site.</li></ul></section><section class="u-sec u-approach"><h4>Approach</h4><p>notes-export reads <code>listNotes</code> and writes Markdown first; PDF uses the existing document builder.</p></section><section class="u-sec u-pending"><h4>Hand-over</h4><p>Written when the unit is built.</p></section>
+    </div>
+  </details><details class="card item unit" id="WU-0006" data-status="building" data-search>
+    <summary>
+      <span class="order">5</span>
+      <span class="id">WU-0006</span>
+      <span class="title">The saved line shows the time of the last save</span>
+      <span class="status" data-status="building">Building</span>
+    </summary>
+    <div class="unit-body">
+      <dl class="facts">
+        <dt>Module</dt><dd><a href="#module-lesson-workspace">lesson-workspace</a></dd>
+        <dt>Depends on</dt><dd><a href="#WU-0002">WU-0002</a></dd>
+        <dt>Owns</dt><dd><code>src/learning/lesson/NotesPanel.tsx</code> <code>e2e/lesson-notes.spec.ts</code></dd>
+        
+        <dt>Decisions</dt><dd><a href="#D-002">D-002</a></dd>
+        
+      </dl>
+      <section class="u-sec u-outcome"><h4>Outcome</h4><p>After the first minute, the notes panel says when the note was last saved (&quot;Saved at 14:32&quot;) rather than &quot;Saved just now&quot;, as asked for in the sequence 1 walkthrough.</p></section><section class="u-sec u-done-looks-like"><h4>Done looks like</h4><ul><li class="check "><span class="box" aria-label="not done"></span><span>Within a minute of saving the panel says &quot;Saved just now&quot;; after that it says &quot;Saved at&quot; and the time — proved by <code>e2e/lesson-notes.spec.ts</code></span></li></ul></section><section class="u-sec u-not-in-scope"><h4>Not in scope</h4><ul><li>Showing a history of saves.</li></ul></section><section class="u-sec u-approach"><h4>Approach</h4><p>The panel already receives the saved-at time from <code>saveNote</code> (WU-0001 hand-over). Format it with the project's existing time formatter after 60 seconds.</p></section><section class="u-sec u-pending"><h4>Hand-over</h4><p>Written when the unit is built.</p></section><section class="u-sec u-log"><h4>Log</h4><ul><li>2026-10-22 09:05 started</li></ul></section>
+    </div>
+  </details><details class="card item unit" id="WU-0003" data-status="waiting" data-search>
+    <summary>
+      <span class="order">6</span>
+      <span class="id">WU-0003</span>
+      <span class="title">Search across a learner's own notes</span>
+      <span class="status" data-status="waiting">Waiting</span>
+    </summary>
+    <div class="unit-body">
+      <dl class="facts">
+        <dt>Module</dt><dd><a href="#module-notes-search">notes-search</a></dd>
+        <dt>Depends on</dt><dd><a href="#WU-0001">WU-0001</a>, <a href="#WU-0006">WU-0006</a></dd>
+        <dt>Owns</dt><dd><code>src/notes/search/**</code> <code>src/learning/lesson/LessonSidePanel.tsx</code></dd>
+        
+        
+        
+      </dl>
+      <section class="u-sec u-outcome"><h4>Outcome</h4><p>A learner can search their notes by word and open the lesson behind any match.</p></section><section class="u-sec u-done-looks-like"><h4>Done looks like</h4><ul><li class="check "><span class="box" aria-label="not done"></span><span>Searching a word lists every note containing it, with its lesson and a snippet — proved by <code>src/notes/search/search.test.ts</code></span></li><li class="check "><span class="box" aria-label="not done"></span><span>Results never include another learner's notes — proved by <code>src/notes/search/scope.test.ts</code></span></li><li class="check "><span class="box" aria-label="not done"></span><span>Choosing a result opens that lesson with the Notes tab open — proved by <code>e2e/lesson-notes.spec.ts</code></span></li></ul></section><section class="u-sec u-not-in-scope"><h4>Not in scope</h4><ul><li>Searching course content.</li></ul></section><section class="u-sec u-approach"><h4>Approach</h4><p>notes-search reads through <code>listNotes</code> for each enrolled course and matches words case-insensitively. The side panel gains a Search tab, as the WU-0002 hand-over suggested.</p></section><section class="u-sec u-pending"><h4>Hand-over</h4><p>Written when the unit is built.</p></section>
+    </div>
+  </details>
+</section>
+<section id="handovers" class="sec">
+  <h2>Hand-overs</h2>
+  <p class="lead">Latest first. What each unit left for the next one.</p>
+  <div class="grid">
+  <article class="card handover" data-search>
+      <header><a href="#WU-0005" class="id">WU-0005</a><span class="status" data-status="parked">Parked</span></header>
+      <h3>Defect: the last second of typing is lost when switching lessons quickly</h3>
+      <p><strong>Parked:</strong> the loss could not be reproduced in 40 browser runs at desktop and phone widths, so no fix was made. The operator is asked whether any learner has reported it, and on which device.</p>
+      <p>nothing in the product. Added a browser test that switches lesson 300 ms after typing; it passes.</p>
+      <p class="next"><strong>For the next unit:</strong> the new test stays as a guard.</p>
+      <p class="muted"><strong>Known issues:</strong> none until there is a report to reproduce.</p>
+    </article><article class="card handover" data-search>
+      <header><a href="#WU-0002" class="id">WU-0002</a><span class="status" data-status="delivered">Delivered</span></header>
+      <h3>Notes tab beside the lesson, saving as the learner types</h3>
+      
+      <p>Learners can write notes beside any lesson; they save themselves and survive leaving the page. Notes tab added to the lesson side panel, with a phone sheet below the video.</p>
+      <p class="next"><strong>For the next unit:</strong> the panel's tab list lives in <code>LessonSidePanel</code>; add Search as a third tab there rather than a new panel.</p>
+      <p class="muted"><strong>Known issues:</strong> switching lessons very quickly may drop the last second of typing; written up as WU-0005.</p>
+    </article><article class="card handover" data-search>
+      <header><a href="#WU-0001" class="id">WU-0001</a><span class="status" data-status="delivered">Delivered</span></header>
+      <h3>Save and load a learner's note for a lesson</h3>
+      
+      <p>Learners' notes are now stored, one per lesson, and only their owner can read or change them. Added the <code>notes</code> table and the three notes-store front-door functions.</p>
+      <p class="next"><strong>For the next unit:</strong> <code>saveNote</code> returns the saved-at time; show it as &quot;Saved just now&quot; rather than re-reading the note. Saves under 1 second apart are merged on the server.</p>
+      <p class="muted"><strong>Known issues:</strong> none.</p>
+    </article>
+  </div>
+</section>
+  <p id="noresults" class="muted" hidden>Nothing matches that search.</p>
+</main>
+<footer class="wrap foot">Generated by Kompass Skills from <code>docs/kompass</code>. Change the records, then render again; never edit this page by hand.</footer>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+// Planning page behaviour: status filter, search, current-section marker and diagrams.
+(() => {
+  const q = document.getElementById('q');
+  const items = [...document.querySelectorAll('[data-search]')];
+  const filterButtons = [...document.querySelectorAll('[data-filter]')];
+  let status = 'all';
+
+  function apply() {
+    const term = (q?.value || '').trim().toLowerCase();
+    let shown = 0;
+    for (const el of items) {
+      const statusOk = !el.classList.contains('unit') || status === 'all' || el.dataset.status === status;
+      const textOk = !term || el.textContent.toLowerCase().includes(term);
+      el.hidden = !(statusOk && textOk);
+      if (!el.hidden) shown++;
+      if (term && textOk && el.tagName === 'DETAILS') el.open = true;
+    }
+    document.getElementById('noresults').hidden = shown > 0 || !term;
+  }
+
+  filterButtons.forEach((b) => b.addEventListener('click', () => {
+    status = b.dataset.filter;
+    filterButtons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    apply();
+  }));
+  q?.addEventListener('input', apply);
+
+  // Open the unit or decision named in the address (#WU-0003, #D-001).
+  const open = () => { const el = document.getElementById(decodeURIComponent(location.hash.slice(1))); if (el?.tagName === 'DETAILS') el.open = true; };
+  window.addEventListener('hashchange', open);
+  open();
+
+  // Mark the section in view in the tab bar.
+  const tabs = [...document.querySelectorAll('.tabs a')];
+  const secs = tabs.map((a) => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) if (e.isIntersecting) tabs.forEach((a) => a.setAttribute('aria-current', String(a.getAttribute('href') === '#' + e.target.id)));
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    secs.forEach((s) => io.observe(s));
+  }
+
+  if (window.mermaid) { window.mermaid.initialize({ startOnLoad: true, theme: 'neutral', fontFamily: 'Onest, Arial, sans-serif' }); }
+})();
+
+</script>
+</body>
+</html>
