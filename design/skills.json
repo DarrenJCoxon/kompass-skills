@@ -117,7 +117,7 @@
     },
     "kompass-run": {
       "plain": "Runs a whole sequence unattended, hands it over for your walkthrough, then records what you found.",
-      "when": "\"Run\", \"continue\", \"build the next sequence\", \"hand over sequence N\", \"record the walkthrough\".",
+      "when": "\"Run\", \"continue\", \"build the next sequence\", \"hand over sequence N\", \"I'm ready to try it\", \"record the walkthrough\".",
       "reads": [
         "Unit statuses on main",
         "The previous sequence's walkthrough record"
@@ -127,6 +127,7 @@
         "Parked units with written reasons",
         "The sequence hand-over with walkthrough steps",
         "Your walkthrough feedback, recorded with your words",
+        "Your copy brought up to date and the app started for the walkthrough, without you thinking about where the code lives",
         "New units for problems you found"
       ],
       "stops": [

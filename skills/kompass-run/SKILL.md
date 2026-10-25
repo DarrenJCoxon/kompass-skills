@@ -1,6 +1,6 @@
 ---
 name: kompass-run
-description: Run a sequence of approved Kompass work units back to back without pausing, each in a fresh session; at the end of the sequence write the hand-over for the operator's walkthrough, and after the walkthrough record their feedback so the next sequence picks up where this one left off. Use for "run", "continue", "build the next sequence", "hand over sequence N" or "record the walkthrough".
+description: Run a sequence of approved Kompass work units back to back without pausing, each in a fresh session; at the end of the sequence write the hand-over for the operator's walkthrough, and after the walkthrough record their feedback so the next sequence picks up where this one left off. Use for "run", "continue", "build the next sequence", "hand over sequence N", "I'm ready to try it" or "record the walkthrough".
 ---
 
 # Run a sequence
@@ -50,6 +50,16 @@ Write the **Hand-over** in `docs/kompass/sequences/S-NN-….md` from the unit ha
 - **Where the next sequence starts:** its first units, anything they must read first, and any assumption that changed.
 
 Set `status: handed-over`, re-render the planning page, deliver the sequence file in a small pull request titled `S-NN: hand-over`, and give the operator the walkthrough in plain English with a link to the page.
+
+## Prepare the walkthrough ("I'm ready to try it")
+
+The operator never has to think about where the code lives. When they want to try a sequence, do all of this for them on their Mac:
+1. In their usual checkout of the project, check for uncommitted work, which other sessions sometimes leave. If there is any, save it on a dated backup branch and say so; never discard it.
+2. Update the checkout to the latest main from GitHub, where the runner's merged work is.
+3. Start the app the way the project runs it locally, with its sample accounts and data.
+4. Give the walkthrough steps from the sequence hand-over, with the local address to open.
+
+If any step fails, say plainly what failed and what you did; do not start the walkthrough on stale code.
 
 ## Record the walkthrough ("record the walkthrough")
 
