@@ -13,6 +13,14 @@ Write units on **Opus**: cutting work and naming the proving tests is judgement 
 
 Create each unit from `templates/unit.md` as `docs/kompass/units/WU-NNNN-<short-slug>.md`. Number units in the order they should be built. Keep the brief to about one page; the detail lives in the module map, decisions and mockups it points to.
 
+## Carrying over existing units
+
+When units already exist from an earlier plan (LiteBench or other), convert them; do not rewrite them.
+- Keep each unit's **id**, approved outcome and criteria, so history and git log still line up. Rewrite only the format, and the proving-test names if they have moved.
+- The operator decides, unit by unit, what is kept, updated, merged, split or dropped. Record each decision in the unit's log with their words.
+- A done unit is not converted. Its old record stays as history, and Kompass Find searches it.
+- New units start numbering after the highest existing id.
+
 ## What every unit has
 
 Front matter:

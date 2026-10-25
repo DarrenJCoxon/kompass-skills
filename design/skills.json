@@ -41,7 +41,7 @@
   ],
   "skills": {
     "kompass-plan": {
-      "plain": "Plans a project or phase with you, before any code is written.",
+      "plain": "Plans a project or phase together with you, before any code is written. Where plans already exist, it starts by going through them with you and carries the approved work across.",
       "when": "Start of a project or phase; re-planning; reviewing the plan.",
       "reads": [
         "Your brief and answers",
@@ -58,12 +58,14 @@
         "The planning page"
       ],
       "stops": [
-        "Only for your answers and your one approval"
+        "For your answers and decisions as you go, and your one approval at the end. It never records a decision you did not make."
       ],
       "questions": [
-        "For Layerware, should the module map start from the existing LiteBench architecture document, or be rewritten fresh?",
         "How do you want to review mockups: one decision at a time in chat, or a review session over the whole set?",
         "Should every UI decision get a mockup, or only those with real alternatives?"
+      ],
+      "decided": [
+        "Where plans already exist, planning starts by going through them with the operator and carrying the approved work across unchanged. Darren, 25 Oct: \"the whole point here is that we should be working through the existing plans together first\"."
       ]
     },
     "kompass-units": {

@@ -1,9 +1,11 @@
 ---
 name: kompass-plan
-description: Plan a project or phase with Kompass Skills — brief, deep module map, architecture, UI/UX decisions with interactive HTML mockups, decision records and the canonical planning page, ending in one approval. Use at the start of a project or phase, or when the operator wants to plan, re-plan or review the plan.
+description: Plan a project or phase together with the operator — first going through any existing plans and carrying approved work across unchanged, then brief, deep module map, architecture, UI/UX decisions with interactive HTML mockups, decision records and the canonical planning page, ending in one approval. Use at the start of a project or phase, when moving existing plans into Kompass, or when the operator wants to plan, re-plan or review the plan.
 ---
 
 # Kompass planning
+
+**Plan together with the operator.** You propose, show and ask; the operator decides. Record a decision only when the operator has made it in this conversation, or when an existing approval says so, and then quote it. Never fill gaps with your own choices and carry on.
 
 Planning is where most of the time goes. A unit built from a clear module map and an approved mockup rarely needs a repair unit; a unit built from a guess often does. Take the time here.
 
@@ -20,6 +22,18 @@ node <kompass-skills>/scripts/render-plan.mjs docs/kompass
 ```
 
 and give the operator the page. Resume at the first stage that is not done; never redo an accepted stage unless the operator asks.
+
+## Stage 0: Start from what already exists
+
+If the project already has plans (work units, a roadmap, approved mockups or decisions, from LiteBench or anywhere else), this is a **carry-over, not a new plan**. Do this before any other stage:
+
+1. **Show the operator everything that exists,** in plain English. Show it as one table: id, title, status (done, approved but not built, draft, replaced), what it delivers, and the mockups and decisions it follows. Group it by area. Change nothing yet.
+2. **Go through it with the operator, one item or group at a time.** For each, they decide: keep as approved, update, merge with another, split, or drop. Ask; do not assume. Recommend only when they ask what you think.
+3. **Carry approved content across unchanged** into the Kompass records: outcomes, criteria, approved mockups and decisions, with their original approvals quoted. Converting the format is not a licence to re-plan.
+4. **Do not add** modules, decisions, units or scope that were not in the existing plans, unless the operator asks for them or agrees to a gap you point out.
+5. **Only then** fill the stages below that the existing plans do not already cover, together, in the same way.
+
+Record the result in `plan.md` under `## Carried over`: what was kept, changed, merged and dropped, each with the operator's words.
 
 ## Stage 1: Brief (`plan.md`)
 
@@ -58,7 +72,7 @@ For each key journey through the product, show how the modules work together:
 - Where privacy, access and accuracy rules are enforced, and which module owns each.
 - External services and what happens when they fail.
 
-Record each real choice (a storage engine, an API shape, where a check lives) as a decision in `decisions/` using `templates/decision.md`: the options considered, the choice, why, and the date.
+Put each real choice (a storage engine, an API shape, where a check lives) to the operator, with the options and your recommendation. Record it in `decisions/` using `templates/decision.md` only once they have chosen, with the options considered, the choice, why, the date and their words. An existing approved decision is carried over, not re-made.
 
 ## Stage 4: UI and UX decisions (`mockups/`)
 
@@ -98,7 +112,7 @@ Record the approval in `plan.md` under `## Approval`, with the date and the oper
 
 ## Changing an approved plan
 
-A change to the approved outcome needs the operator's yes, recorded the same way. Anything else, such as a new decision, a refined module or a new unit, is recorded and rendered without stopping.
+A change to the approved outcome needs the operator's yes, recorded the same way. So does a new decision, module or unit: show it and ask before recording it. Only wording fixes and corrections that change no decision go in without asking.
 
 ## Speaking to the operator
 
