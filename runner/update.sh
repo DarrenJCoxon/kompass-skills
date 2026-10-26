@@ -6,6 +6,8 @@
 # through a pull request instead. A run already going keeps its image; the next run uses the new one.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# GitHub access: the runner's own token (git asks gh for it), read here and never shown.
+export GH_TOKEN="${GH_TOKEN:-$(grep -m1 '^GH_TOKEN=' runner/.env 2>/dev/null | cut -d= -f2-)}"
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   echo "kompass-skills on the server has local changes; not updating. Bring them into a pull request first:" >&2
   git status --short --untracked-files=no >&2
