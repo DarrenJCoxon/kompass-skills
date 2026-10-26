@@ -29,6 +29,7 @@ COPY --chown=kompass:kompass skills /home/kompass/.claude/skills
 COPY --chown=kompass:kompass agents /home/kompass/.claude/agents
 COPY --chown=kompass:kompass scripts /opt/kompass/scripts
 COPY --chown=kompass:kompass assets /opt/kompass/assets
+COPY --chown=kompass:kompass templates /opt/kompass/templates
 COPY --chown=kompass:kompass runner/entrypoint.sh /opt/kompass/entrypoint.sh
 
 WORKDIR /work
