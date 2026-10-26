@@ -1,11 +1,11 @@
-# Kompass runner on the Hetzner box. Build once, then start a sequence for a repository:
+# Kompass runner. Build once, then start a sequence for a repository with start.sh (see README.md):
 #
 #   docker compose build
-#   docker compose run -d --name kompass-tertia runner DarrenJCoxon/tertia --hours 8
-#   docker logs -f kompass-tertia          # follow progress
-#   docker stop kompass-tertia             # stop at once (the unit in progress keeps its branch)
+#   ./start.sh <owner/repo> --hours 8      # runs as container kompass-<repo>, with notifications
+#   docker logs -f kompass-<repo>          # follow progress
+#   docker stop kompass-<repo>             # stop at once (the unit in progress keeps its branch)
 #
-# Secrets live in runner/.env on the box only (see .env.example); never commit them.
+# Secrets live in runner/.env on the server only (see .env.example); never commit them.
 name: kompass
 
 services:

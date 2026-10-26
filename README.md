@@ -2,7 +2,13 @@
 
 Plan a project properly, then build it one work unit after another without stopping, with every unit written up so the next agent can pick up where the last one left off.
 
-Version 0.1. Install it as a Claude Code plugin from this repository; the runner is set up on the Hetzner box (see `runner/README.md`).
+Version 0.1.
+
+## Getting started
+
+Paste this repository's link into Claude Code in your project and ask it to set up Kompass Skills. It installs the skills, checks your GitHub settings, offers to set up the runner (a small server that keeps building while your laptop is closed) and walks you through each step.
+
+**AI agents:** follow [`SETUP.md`](SETUP.md) with the operator, step by step.
 
 ## The idea in one paragraph
 
@@ -35,7 +41,7 @@ Every model runs at **medium effort by default** and is pushed to **high effort 
 
 ```
 docs/kompass/
-  plan.md            brief, phases, approval record (Darren's words and date)
+  plan.md            brief, phases, approval record (the operator's words and date)
   modules.md         the module map: purpose, front door, owns, depends on, must always be true
   architecture.md    how the modules work together for each key journey, with diagrams
   decisions/         one short record per decision (D-001-….md)
@@ -70,7 +76,7 @@ A worktree that still holds uncommitted or untracked files is kept and reported,
 
 ## Where the runner runs
 
-The runner lives on the Hetzner box, in its own container beside the CI runners (`runner/`), so sequences build overnight with your Mac closed. It works only from what is merged on main, and it needs two tokens you paste into the box yourself: one for Claude Code and one for GitHub.
+The runner lives on a small server (we use Hetzner), in its own container (`runner/`), so sequences build overnight with your laptop closed. It works only from what is merged on main, sends phone notifications as units merge or park, and it needs two tokens you paste into the server yourself: one for Claude Code and one for GitHub.
 
 ## What enforces safety
 
@@ -102,7 +108,7 @@ A unit blocked for any other reason is parked with a written reason, and the run
 - `scripts/render-catalogue.mjs`: builds `catalogue.html`, the skills catalogue, from the skill files and `design/skills.json`
 - `scripts/render-plan.mjs`: builds the planning page; `scripts/next-unit.mjs`: picks the next ready unit; `scripts/run.mjs`: runs units back to back in fresh sessions
 - `assets/kompass-tokens.json`: Kompass Education design tokens for the planning page
-- `runner/`: the container that runs sequences on the Hetzner box
+- `runner/`: the container that runs sequences on the server, with `start.sh` and phone notifications
 - `.claude-plugin/`: plugin and marketplace manifests, so the skills install with `/plugin`
 - `hooks/`: the session-start check that keeps your copy on the latest main (`scripts/sync-main.sh`)
 - `example/`: a small worked example with a rendered planning page

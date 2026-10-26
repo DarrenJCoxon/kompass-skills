@@ -3,7 +3,7 @@ project: Project name
 phase: 1
 phaseTitle: What this phase delivers
 repo: owner/repo
-runner: ops@your-hetzner-box
+runner: kompass-runner
 ---
 
 ## What this will achieve

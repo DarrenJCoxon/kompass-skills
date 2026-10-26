@@ -25,13 +25,13 @@ Check, once:
 - The previous sequence, if any, has its walkthrough recorded (status `walked-through`). If it is `handed-over` and waiting for the operator, say so and stop.
 - The repository has its safety settings: a required check, up-to-date branches before merging, and auto-merge allowed. If any is missing, tell the operator what is missing and stop. Changing repository settings is theirs to approve.
 
-Then start the runner on the Hetzner box, in its own container (see `runner/README.md` in the Kompass Skills repository). The box is named in `plan.md` as `runner:`:
+Then start the runner on its server, in its own container (see `runner/README.md` in the Kompass Skills repository). The server is named in `plan.md` as `runner:`, an SSH host name such as `kompass-runner`. If there is no runner yet, offer to set one up with the operator by following Part 3 of `SETUP.md` in the Kompass Skills repository, or to build units one at a time with `kompass-build` instead.
 
 ```
-ssh <runner> 'cd ~/kompass-skills/runner && docker compose run -d --name kompass-<repo> runner <owner/repo> --hours 8 [--parallel 2]'
+ssh <runner> '~/kompass-skills/runner/start.sh <owner/repo> --hours 8 [--parallel 2]'
 ```
 
-Follow it with `ssh <runner> docker logs -f kompass-<repo>`. The runner fetches main and works only from what is merged, so nothing on your Mac needs to stay open.
+This also starts phone notifications when the server has them set up. Follow the run with `ssh <runner> docker logs -f kompass-<repo>`. The runner fetches main and works only from what is merged, so nothing on your Mac needs to stay open.
 
 The runner builds only the current sequence: the lowest-numbered sequence with units not yet delivered or parked. For each ready unit it starts a fresh `claude -p "/kompass-build WU-NNNN"` session and waits for the unit to merge or be parked. With `--parallel 2`, two units with no dependency between them and no shared files are built at once.
 

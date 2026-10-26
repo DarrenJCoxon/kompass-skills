@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage (on the box): notify.sh CONTAINER   e.g. notify.sh kompass-tertia
+# usage (on the box): notify.sh CONTAINER   e.g. notify.sh kompass-myapp (start.sh starts it)
 # Follows the runner's own log (scripts/run.mjs writes every event there) and sends a phone notification
 # through ntfy when a unit merges, parks or needs a look, and when the run ends. It reads NOTIFY_URL
 # (https://ntfy.sh/<private topic>) from runner/.env; NOTIFY_URL=- prints the notifications instead.
@@ -21,8 +21,10 @@ send() { # title, message
 declare -A titles
 follow() { if [ "$container" = "-" ]; then cat; else docker logs -f "$container" 2>&1; fi; }
 
-follow | while IFS= read -r line; do
-  stamp="${line%% *}" event="${line#* }"
+follow | { ended="" last=""
+while IFS= read -r line; do
+  stamp="${line%% *}" event="${line#* }" last="$line"
+  case "$event" in "run finished: "*|"run not started: "*) ended=1 ;; esac
   case "$event" in
     "start "*)
       id="${event#start }"; id="${id%% *}"
@@ -43,3 +45,6 @@ follow | while IFS= read -r line; do
     "run not started: "*) send "Run did not start" "${event#run not started: }" ;;
   esac
 done
+# The log ended without the runner saying why: it failed to start, crashed, or was stopped.
+if [ -z "$ended" ]; then stamp="$since"; send "Runner stopped" "$container stopped before finishing. Last line: ${last:-none}"; fi
+}
