@@ -20,6 +20,10 @@ RUN useradd --create-home --shell /bin/bash kompass
 USER kompass
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 HOME=/home/kompass
 
+# Session histories live on the claude-state volume. The folder must exist in the image, owned by the
+# runner's user, or Docker creates the mount point as root and every session's history is silently lost.
+RUN mkdir -p /home/kompass/.claude/projects
+
 # The skills and agents, installed for the runner's user so every session finds them.
 COPY --chown=kompass:kompass skills /home/kompass/.claude/skills
 COPY --chown=kompass:kompass agents /home/kompass/.claude/agents

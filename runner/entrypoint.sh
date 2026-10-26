@@ -6,6 +6,8 @@ set -euo pipefail
 repo="${1:?usage: entrypoint.sh OWNER/REPO [--hours N] [--parallel N]}"; shift
 : "${GH_TOKEN:?GH_TOKEN is not set in runner/.env}"
 : "${CLAUDE_CODE_OAUTH_TOKEN:?CLAUDE_CODE_OAUTH_TOKEN is not set in runner/.env (run: claude setup-token)}"
+history="$HOME/.claude/projects"
+[ -w "$history" ] || { echo "Session history folder $history is not writable; see runner/README.md (one-time fix for an old volume)" >&2; exit 1; }
 
 gh auth setup-git
 git config --global user.name "${GIT_AUTHOR_NAME:-Kompass runner}"

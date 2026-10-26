@@ -27,3 +27,11 @@ The runner fetches main, builds the current sequence one unit at a time (each in
 ## Updating the skills
 
 Pull the latest of this repository on the box and run `docker compose build` again.
+
+## Session histories
+
+Each unit session's history is kept on the `kompass-claude-state` volume, so what a session did before it stopped can be read afterwards. A volume created by an image before 26 Oct 2026 belongs to root and the runner refuses to start with it; fix it once with:
+
+```
+docker run --rm -u root --entrypoint chown -v kompass-claude-state:/v kompass-runner:local -R 1001:1001 /v
+```
