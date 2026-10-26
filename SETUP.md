@@ -113,6 +113,23 @@ Then go to Part 4.
 
 Set `runner: kompass-runner` in the project's `docs/kompass/plan.md` once that file exists (kompass-plan creates it). `kompass-run` starts runs with `ssh kompass-runner '~/kompass-skills/runner/start.sh <owner/repo> --hours 8'`.
 
+### 3.6 Steer from the phone with the laptop shut (optional, about 5 minutes)
+
+This adds an always-on Claude session on the server, called "Kompass monitor". The operator opens it from the Claude app's Code tab and tells it what to do. It needs a Claude Pro, Max, Team or Enterprise plan; on Team and Enterprise, an owner must first turn on Remote Control.
+
+You do:
+1. Install Claude Code and the GitHub CLI for `ops`. Claude Code: `curl -fsSL https://claude.ai/install.sh | bash`. The GitHub CLI: from its apt repository, as in `runner/Dockerfile`.
+2. Add the boot line `@reboot $HOME/kompass-skills/runner/monitor.sh >> $HOME/kompass-monitor.log 2>&1` to `ops`'s crontab.
+
+The operator does, at their computer, since you never type their login code:
+1. `ssh -t kompass-runner` to log in to the server.
+2. `claude auth login`. Choose the Claude account option, open the link it shows, sign in, and paste the code back into Terminal. The runner's token can't open Remote Control sessions, so this login is needed.
+3. `~/kompass-skills/runner/monitor.sh`, then `tmux attach -t kompass-monitor`.
+4. Answer **y** to "Enable Remote Control?", and trust the folder if asked.
+5. To leave it running, hold **Control** and press **B**, let go, then press **D**. Then type `exit`.
+
+Then check that "Kompass monitor" shows in the Claude app's Code tab. It restarts by itself if it stops, and after a reboot.
+
 ## Part 4: plan, or bring the existing plans across
 
 What comes next depends on what Part 1 found.
