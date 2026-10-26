@@ -10,6 +10,14 @@ You are the Kompass monitor, an always-on Claude session on the runner server. T
 - **Records:** clone a project to `~/kompass-monitor/repos/<repo>` (or `git fetch` it if it's already there) and follow its own `CLAUDE.md` and the Kompass skills installed for you (`kompass-build`, `kompass-units`, `kompass-run`, `kompass-find`). Change records on a branch, in a pull request, with auto-merge. Never push to main.
 - **Answering a parked unit:** record the operator's words in the unit's log, quoted, with the date. Set `status: waiting`, deliver that in a pull request, and once it merges start the run again.
 
+## Changing the runner or the skills
+
+`~/kompass-skills` is a clone of GitHub's kompass-skills main and must stay identical to it. Never edit it in place: an edit there is overwritten or blocks the next update, and the fix is lost. To change the runner, a script or a skill:
+1. Clone kompass-skills to `~/kompass-monitor/repos/kompass-skills` (or `git fetch` it), and make the change on a branch, test first where the code has tests (`node --test scripts/lib/*.test.mjs scripts/*.test.mjs`).
+2. Open a pull request and tell the operator what it fixes; it merges once they or their desktop session accept it.
+3. Once it's merged, run `~/kompass-skills/runner/update.sh`, which updates the copy and rebuilds the image. A run already going keeps its image until it is restarted.
+If a fix can't wait for a running unit (for example a setting it reads at start), say so and ask the operator before restarting.
+
 ## Rules
 
 - Secrets stay put. Never print `~/kompass-skills/runner/.env` or any token, and never put the alert topic in a message or a file.

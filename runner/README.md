@@ -33,7 +33,7 @@ When `NOTIFY_URL` is set, `start.sh` also starts `notify.sh`, which follows the 
 
 ## Updating the skills
 
-Run `git pull` in `~/kompass-skills` on the server and `docker compose build` again.
+`~/kompass-skills` on the server is a clone of GitHub's main. Update it only with `~/kompass-skills/runner/update.sh`: it fast-forwards to main and rebuilds the image, and refuses if the copy has local changes, so nothing edited on the server is lost silently. Change the skills or the runner through a pull request, never by editing the server's copy.
 
 ## Session histories
 

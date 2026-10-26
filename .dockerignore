@@ -1,0 +1,7 @@
+# Never in the runner image: secrets, logs, git history and files Claude Code writes next to the skills.
+.git
+runner/.env
+runner/notify*.log
+skills/synced
+example
+**/node_modules

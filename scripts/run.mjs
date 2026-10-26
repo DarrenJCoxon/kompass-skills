@@ -5,10 +5,11 @@
 // sequence hand-over for the walkthrough, and the run stops; the next sequence starts after the walkthrough.
 // usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 2] [--model opus] [--claude claude]
 import { execFileSync } from 'node:child_process';
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runLog } from './lib/runlog.mjs';
 import { startSession } from './lib/session.mjs';
 import { awaitingWalkthrough, currentSequence, nextUnit, openUnitIds, readSequences, readUnits, sequenceComplete, source, stalled } from './lib/records.mjs';
 
@@ -23,9 +24,7 @@ const claude = opt('--claude', 'claude');
 const model = opt('--model', 'opus'); // the coordinator; builder, searcher and reviewer models come from their agent files
 
 const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: dir, encoding: 'utf8' }).trim();
-mkdirSync(join(root, '.kompass'), { recursive: true });
-const logFile = join(root, '.kompass', 'run.log');
-const log = (msg) => { const line = `${new Date().toISOString()} ${msg}`; console.log(line); appendFileSync(logFile, line + '\n'); };
+const log = runLog(root);
 
 const deadline = Date.now() + hours * 3600_000;
 const active = new Map(); // id -> child process

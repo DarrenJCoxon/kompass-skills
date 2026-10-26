@@ -20,6 +20,7 @@ If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kom
 - **`kompass-builder` (Sonnet) writes the code** from one bounded brief per piece.
 - **`kompass-searcher` (Haiku) does broad searches:** finding the owner of a behaviour, its callers and its existing tests. Use it instead of reading many files yourself.
 - **`kompass-reviewer` (Opus) checks adversarially,** in its own fresh context, with no part in writing the code.
+- **Stay until every builder and reviewer has reported.** A unit session on the runner is one non-interactive run: never end a turn with a helper still working. Wait for its result, then decide the next step. (On the runner a session that ends its turn waits for working helpers only up to a limit, and anything still running then is stopped; WU-0119 lost a builder mid-job that way.)
 - **Every model runs at medium effort by default.** Push to high when the work needs it: when one cause fails twice, raise your own effort to high to rethink, and send the fix to a fresh builder at high effort with a short defect brief. Give the reviewer high effort for units that touch privacy, figures or access.
 
 ## 1. Start

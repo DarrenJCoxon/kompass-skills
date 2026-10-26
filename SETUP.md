@@ -83,7 +83,7 @@ Then go to Part 4.
    - install Docker (`apt-get update && apt-get install -y docker.io docker-compose-v2 git`);
    - create the user `ops` in the `docker` group, with the same `authorized_keys`;
    - check that `ssh kompass-runner docker ps` works.
-3. As `ops`, clone this repository (`git clone https://github.com/DarrenJCoxon/kompass-skills.git ~/kompass-skills`).
+3. As `ops`, clone this repository (`git clone https://github.com/DarrenJCoxon/kompass-skills.git ~/kompass-skills`). Keep it a clone: it is updated only with `runner/update.sh`, never edited in place.
 4. In `~/kompass-skills/runner`, copy `.env.example` to `.env` and run `chmod 600 .env`. Fill in `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL` from the operator's local `git config`. Add `NOTIFY_URL=https://ntfy.sh/kompass-<random>`, using `openssl rand -hex 10` for the random part.
 5. Build the image with `docker compose build`. It takes a few minutes. The image suits Node projects. For another toolchain, add it to `runner/Dockerfile` first, and tell the operator.
 
