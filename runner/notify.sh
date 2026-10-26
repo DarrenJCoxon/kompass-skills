@@ -12,8 +12,10 @@ NOTIFY_URL="${NOTIFY_URL:-$(grep -m1 '^NOTIFY_URL=' "$here/.env" 2>/dev/null | c
 : "${NOTIFY_URL:?NOTIFY_URL is not set in runner/.env}"
 
 since="$(date -u +%Y-%m-%dT%H:%M:%S)" # earlier lines only teach unit titles, so a restart sends nothing twice
+project="${container#kompass-}" # one topic serves every project on the runner, so each title names its project
 send() { # title, message
   [[ "$stamp" < "$since" ]] && return
+  set -- "$project: $1" "$2"
   if [ "$NOTIFY_URL" = "-" ]; then echo "[$1] $2"; return; fi
   curl -fsS -m 20 -H "Title: $1" -d "$2" "$NOTIFY_URL" >/dev/null || echo "notify failed: $1" >&2
 }
