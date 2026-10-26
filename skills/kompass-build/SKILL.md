@@ -87,6 +87,8 @@ Park when the unit cannot be finished honestly: an unprovable cause, a needed ch
 - Re-render the planning page, then deliver just the unit file and the page in a small pull request titled `WU-NNNN: parked`, so the run does not pick it again.
 - Keep the code branch for later.
 
+Choices about how the work is done are yours, never a reason to park: the scope of a unit (taking a follow-up's change into this unit when that is the honest fix), the order of units, which owned files a fix needs, test tooling, and whether to drop an approach that costs more than it saves. Decide, record the decision with your reasons as a `decisions/` record, update the unit (its `owns`, criteria and log) and carry on. Fold a follow-up unit in by giving this unit its criteria and setting the follow-up's `status: dropped` with a log line naming this unit. When the change reaches a sensitive module (access, privacy, figures), give the reviewer high effort. Park only for the stops listed below.
+
 How a criterion is proved is not the outcome. The outcome is what the product does for the people who use it. If a criterion's proof cannot be made exact (for example a test that scans code for copies, which can never rule out a hand-typed one), do not park and do not keep patching the test. Restate the criterion to what can be proved, keep every behaviour it protects, have the reviewer approve the restatement, record it as a decision, and carry on.
 
 ## Stops for the operator

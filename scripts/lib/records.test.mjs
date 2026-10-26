@@ -29,3 +29,26 @@ test('stalled says why each waiting unit of the sequence cannot start, and what 
 test('stalled is empty when nothing in the sequence is blocked or parked', () => {
   assert.equal(stalled([unit('WU-0001', 1, 'delivered')], 1), '');
 });
+
+// Tertia, 26 Oct 2026: WU-0156 was folded into WU-0119 and WU-0158 was decided against. With no way to
+// record that, an unknown status was read as "waiting" and the runner would have built them again.
+test('a dropped unit is read as dropped and settles its sequence', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { readUnits, source, sequenceComplete, currentSequence } = await import('./records.mjs');
+  const dir = mkdtempSync(join(tmpdir(), 'records-'));
+  mkdirSync(join(dir, 'units'));
+  writeFileSync(join(dir, 'units', 'WU-0001-a.md'), '---\nid: WU-0001\nsequence: 1\nstatus: delivered\n---\n');
+  writeFileSync(join(dir, 'units', 'WU-0002-b.md'), '---\nid: WU-0002\nsequence: 1\nstatus: dropped\n---\n');
+  const read = readUnits(source(dir));
+  rmSync(dir, { recursive: true, force: true });
+  assert.equal(read.find((u) => u.id === 'WU-0002').status, 'dropped');
+  assert.equal(sequenceComplete(read, 1), true);
+  assert.equal(currentSequence(read), null);
+});
+
+test('a unit that depends on a dropped one says so', () => {
+  const units = [unit('WU-0002', 1, 'dropped'), unit('WU-0003', 1, 'waiting', ['WU-0002'])];
+  assert.deepEqual(blockers(units).find((b) => b.id === 'WU-0003').waitingOn, ['WU-0002 (dropped)']);
+});

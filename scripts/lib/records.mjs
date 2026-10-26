@@ -4,7 +4,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 
-export const STATUSES = ['waiting', 'building', 'delivered', 'parked'];
+/** dropped: decided against, or folded into another unit (its log says which); settled like delivered, never built. */
+export const STATUSES = ['waiting', 'building', 'delivered', 'parked', 'dropped'];
 
 /** Splits `---` front matter (flat `key: value` and `key: [a, b]`) from the body. */
 export function parseFrontMatter(source) {
@@ -140,7 +141,7 @@ export function awaitingWalkthrough(sequences) {
   return sequences.find((s) => s.status === 'handed-over')?.number ?? null;
 }
 
-const settled = (u) => u.status === 'delivered' || u.status === 'parked';
+const settled = (u) => u.status === 'delivered' || u.status === 'parked' || u.status === 'dropped';
 
 /** The sequence being built: the lowest-numbered one with units not yet delivered or parked (null when all are settled). */
 export function currentSequence(units) {
@@ -171,7 +172,7 @@ export function nextUnit(units, inProgress = []) {
 /** Why each waiting unit is not ready, for reports. A dependency is marked when it has no unit record or is parked, the two cases only the operator can clear. */
 export function blockers(units) {
   const byId = new Map(units.map((u) => [u.id, u]));
-  const why = (d) => (!byId.has(d) ? `${d} (no unit record)` : byId.get(d).status === 'parked' ? `${d} (parked)` : d);
+  const why = (d) => (!byId.has(d) ? `${d} (no unit record)` : ['parked', 'dropped'].includes(byId.get(d).status) ? `${d} (${byId.get(d).status})` : d);
   return units.filter((u) => u.status === 'waiting').map((u) => ({
     id: u.id,
     sequence: u.sequence,

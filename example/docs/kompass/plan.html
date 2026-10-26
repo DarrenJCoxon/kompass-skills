@@ -172,6 +172,7 @@ th{font-size:12px;font-weight:500;color:var(--muted)}
 .status[data-status=building]::before{background:var(--ink);border-color:var(--ink)}
 .status[data-status=delivered]::before{background:var(--coral);border-color:var(--coral)}
 .status[data-status=parked]::before{border-style:dashed;border-color:var(--ink)}
+.status[data-status=dropped]{opacity:.6;text-decoration:line-through}
 
 .facts{background:var(--white);border-radius:var(--radius-8);padding:14px;margin-block-end:16px}
 .u-sec{padding-block:10px;border-block-start:1px solid var(--line)}
@@ -366,7 +367,7 @@ li.check.done .box{background:var(--ink);border-color:var(--ink);box-shadow:inse
   <h2>Work units</h2>
   <div class="filters" role="group" aria-label="Show units by status">
     <button type="button" aria-pressed="true" data-filter="all">All 6</button>
-    <button type="button" aria-pressed="false" data-filter="waiting">Waiting 2</button><button type="button" aria-pressed="false" data-filter="building">Building 1</button><button type="button" aria-pressed="false" data-filter="delivered">Delivered 2</button><button type="button" aria-pressed="false" data-filter="parked">Parked 1</button>
+    <button type="button" aria-pressed="false" data-filter="waiting">Waiting 2</button><button type="button" aria-pressed="false" data-filter="building">Building 1</button><button type="button" aria-pressed="false" data-filter="delivered">Delivered 2</button><button type="button" aria-pressed="false" data-filter="parked">Parked 1</button><button type="button" aria-pressed="false" data-filter="dropped">Dropped 0</button>
   </div>
   <h3 class="seq-head" data-seq-head><a href="#S-01">Sequence 1</a> · Notes save and show beside the lesson</h3><details class="card item unit" id="WU-0001" data-status="delivered" data-search>
     <summary>

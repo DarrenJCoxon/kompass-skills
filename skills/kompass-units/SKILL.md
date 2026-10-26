@@ -18,6 +18,7 @@ Create each unit from `templates/unit.md` as `docs/kompass/units/WU-NNNN-<short-
 When units already exist from an earlier plan (LiteBench or other), convert them; do not rewrite them.
 - Keep each unit's **id**, approved outcome and criteria, so history and git log still line up. Rewrite only the format, and the proving-test names if they have moved.
 - The operator decides, unit by unit, what is kept, updated, merged, split or dropped. Record each decision in the unit's log with their words.
+- `status:` is `waiting`, `building`, `delivered`, `parked` or `dropped`. A unit decided against, or folded into another, is `dropped`, with a log line saying why and where its work went; it is never built.
 - A done unit is not converted. Its old record stays as history, and Kompass Find searches it.
 - A dependency on a done unit is already met: drop it from `depends:`, and mention it in the brief if the unit builds on that work. `depends:` names only units with a record in `units/`, or the runner waits for them for ever.
 - New units start numbering after the highest existing id.

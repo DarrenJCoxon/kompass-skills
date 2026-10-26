@@ -28,7 +28,7 @@ const brandCss = tokensCss(join(here, '..', 'assets', 'kompass-tokens.json'));
 mkdirSync(join(dir, 'assets'), { recursive: true });
 writeFileSync(join(dir, 'assets', 'kompass-tokens.css'), brandCss);
 
-const STATUS_LABEL = { waiting: 'Waiting', building: 'Building', delivered: 'Delivered', parked: 'Parked' };
+const STATUS_LABEL = { waiting: 'Waiting', building: 'Building', delivered: 'Delivered', parked: 'Parked', dropped: 'Dropped' };
 const count = Object.fromEntries(STATUSES.map((s) => [s, units.filter((u) => u.status === s).length]));
 const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const chip = (status, text = STATUS_LABEL[status] ?? status) => `<span class="status" data-status="${esc(status)}">${esc(text)}</span>`;

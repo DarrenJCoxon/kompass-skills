@@ -107,6 +107,7 @@ th{font-size:12px;font-weight:500;color:var(--muted)}
 .status[data-status=building]::before{background:var(--ink);border-color:var(--ink)}
 .status[data-status=delivered]::before{background:var(--coral);border-color:var(--coral)}
 .status[data-status=parked]::before{border-style:dashed;border-color:var(--ink)}
+.status[data-status=dropped]{opacity:.6;text-decoration:line-through}
 
 .facts{background:var(--white);border-radius:var(--radius-8);padding:14px;margin-block-end:16px}
 .u-sec{padding-block:10px;border-block-start:1px solid var(--line)}
