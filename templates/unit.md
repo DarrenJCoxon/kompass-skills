@@ -37,6 +37,7 @@ _Filled in when the unit is built._
 - **Tests:**
 - **Review:**
 - **Decisions:**
+- **How to try it:**
 - **Known issues and follow-ups:**
 - **For the next unit:**
 - **Evidence:**

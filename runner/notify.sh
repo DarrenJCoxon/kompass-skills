@@ -21,7 +21,7 @@ send() { # title, message
 }
 # A unit session's own words: what it printed since its unit started. Its last message holds any question
 # for the operator, so it goes with the alert and can be read on the phone with the laptop shut.
-said() { local b="$body"; (( ${#b} > 12000 )) && b="…${b: -12000}"; [ -n "$b" ] && printf '\n\n%s' "$b"; }
+said() { local b="$body"; (( ${#b} > 60000 )) && b="…${b: -60000}"; [ -n "$b" ] && printf '\n\n%s' "$b"; }
 
 declare -A titles
 follow() { if [ "$container" = "-" ]; then cat; else docker logs -f "$container" 2>&1; fi; }

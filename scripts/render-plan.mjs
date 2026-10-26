@@ -120,6 +120,7 @@ const sequenceSection = sequences.length ? `
     const done = inSeq.filter((u) => u.status === 'delivered').length;
     const hand = q.sections['Hand-over'];
     const walk = q.sections['Walkthrough'];
+    const guide = q.sections['Walkthrough guide'];
     const isNow = q.number === seqNow;
     return `<details class="card item sequence${isNow ? ' is-now' : ''}" id="${esc(q.id)}" data-search ${isNow || q.status === 'handed-over' ? 'open' : ''}>
       <summary><span class="id">${esc(q.id)}</span><span class="title">${esc(q.title)}${isNow ? ' <span class="tag">building now</span>' : ''}</span>${seqChip(q.status)}</summary>
@@ -127,7 +128,7 @@ const sequenceSection = sequences.length ? `
         ${q.sections['Goal'] ? `<section class="u-sec"><h4>Goal</h4>${markdown(q.sections['Goal'])}</section>` : ''}
         <section class="u-sec"><h4>Units · ${done} of ${inSeq.length} delivered</h4><p>${inSeq.map((u) => `${unitLink(u.id)} ${chip(u.status)}`).join(' &nbsp; ') || 'None yet'}</p></section>
         ${filled(hand) ? `<section class="u-sec u-hand-over"><h4>Sequence hand-over</h4>${markdown(hand)}</section>` : '<section class="u-sec u-pending"><h4>Sequence hand-over</h4><p>Written when every unit in the sequence is delivered or parked.</p></section>'}
-        ${filled(walk) ? `<section class="u-sec u-walkthrough"><h4>Walkthrough</h4>${markdown(walk)}</section>` : (q.status === 'handed-over' ? '<section class="u-sec u-pending"><h4>Walkthrough</h4><p>Waiting for you to try it. The next sequence starts once your feedback is recorded.</p></section>' : '')}
+        ${filled(guide) ? `<section class="u-sec u-walkthrough-guide"><h4>Walkthrough guide</h4>${markdown(guide)}</section>` : ''}${filled(walk) ? `<section class="u-sec u-walkthrough"><h4>Walkthrough</h4>${markdown(walk)}</section>` : (q.status === 'handed-over' ? '<section class="u-sec u-pending"><h4>Walkthrough</h4><p>Waiting for you to try it. The next sequence starts once your feedback is recorded.</p></section>' : '')}
       </div>
     </details>`;
   }).join('')}

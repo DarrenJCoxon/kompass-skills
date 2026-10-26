@@ -45,11 +45,18 @@ Write the **Hand-over** in `docs/kompass/sequences/S-NN-….md` from the unit ha
 - **What was achieved:** each delivered unit in one plain sentence, with what it proves.
 - **Parked, and the decision each needs:** with the evidence, quoted from the unit.
 - **State of main:** green or not, the last CI run, and that the planning page is current.
-- **Walkthrough steps:** numbered steps the operator can follow in the running product, each with what they should see. Use the sample accounts and data the project seeds; never the operator's own logins.
+- **Walkthrough:** points to the walkthrough guide below.
 - **Known issues:** anything the operator might notice that is already known.
 - **Where the next sequence starts:** its first units, anything they must read first, and any assumption that changed.
 
-Set `status: handed-over`, re-render the planning page, deliver the sequence file in a small pull request titled `S-NN: hand-over`, and give the operator the walkthrough in plain English with a link to the page.
+Then write the **Walkthrough guide** section, from the template. A sequence holds several changes, so it covers every one of them, and the operator follows it without asking anything:
+- **Before you start:** how to start the app ("I'm ready to try it"), the address, and which seeded account to use for which part. Check that these accounts and data really exist in the project's seed, and name them exactly.
+- **One part per delivered unit,** in the order that makes sense to try them. Each part says what changed in one sentence, then numbered steps with exact clicks, **You should see** and **It's wrong if**. Build them from each unit's **How to try it**, checked against the merged code: a label or route that changed since gets the new wording.
+- **Check nothing else broke:** a few steps through the areas these units touched that worked before.
+- **Not ready to test:** each parked unit and why. **Known issues:** what the operator might notice that is already known.
+- **Telling us how it went:** each step marked worked, or what they saw instead.
+
+Set `status: handed-over`, re-render the planning page, and deliver the sequence file in a small pull request titled `S-NN: hand-over`. Your final message is what reaches the operator's phone: start it with the link to the sequence file on GitHub (`https://github.com/<owner/repo>/blob/main/docs/kompass/sequences/<file>`), then give the whole walkthrough guide, not a summary.
 
 ## Prepare the walkthrough ("I'm ready to try it")
 
