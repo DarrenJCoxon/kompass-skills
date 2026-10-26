@@ -24,6 +24,16 @@ The runner fetches main, builds the current sequence one unit at a time (each in
 - **Stop after the current unit:** create `docs/kompass/STOP` on main.
 - **Stop at once:** `docker stop kompass-tertia`. The unit in progress keeps its branch.
 
+## Phone notifications
+
+`notify.sh` follows a run's log and sends a notification through [ntfy](https://ntfy.sh) when a unit merges, parks or needs a look, and when the run ends or the sequence is handed over. Set `NOTIFY_URL` in `.env`, subscribe to that topic in the ntfy phone app, and start it beside each run:
+
+```
+nohup ./notify.sh kompass-tertia > notify.log 2>&1 < /dev/null &
+```
+
+It stops by itself when the run's container stops. Anyone who knows the topic can read it, so keep the name random; messages carry only unit ids and titles.
+
 ## Updating the skills
 
 Pull the latest of this repository on the box and run `docker compose build` again.
