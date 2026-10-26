@@ -57,7 +57,7 @@ Then write the **Walkthrough guide** section, from the template. A sequence hold
 - **Not ready to test:** each parked unit and why. **Known issues:** what the operator might notice that is already known.
 - **Telling us how it went:** each step marked worked, or what they saw instead.
 
-Set `status: handed-over`, re-render the planning page, and deliver the sequence file in a small pull request titled `S-NN: hand-over`. Your final message is what reaches the operator's phone: start it with the link to the sequence file on GitHub (`https://github.com/<owner/repo>/blob/main/docs/kompass/sequences/<file>`), then give the whole walkthrough guide, not a summary.
+Set `status: handed-over`, re-render the planning page, and deliver the sequence file in a small pull request titled `S-NN: hand-over`, landed with `scripts/merge-when-green.sh` as units are. Your final message is what reaches the operator's phone: start it with the link to the sequence file on GitHub (`https://github.com/<owner/repo>/blob/main/docs/kompass/sequences/<file>`), then give the whole walkthrough guide, not a summary.
 
 ## Prepare the walkthrough ("I'm ready to try it")
 

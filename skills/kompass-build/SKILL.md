@@ -71,7 +71,7 @@ Then set `status: delivered`, add `pr:` once the pull request exists, and add a 
 
 - Commit with messages starting `WU-NNNN:`. Push the branch.
 - Open the pull request titled `WU-NNNN: <title>`, with the hand-over as its body. Post the review verdict as a comment headed `Kompass review: APPROVE`.
-- Set it to merge automatically when the required check is green, deleting the branch on GitHub when it merges (`gh pr merge --auto --merge --delete-branch`). Bring it up to date with main if GitHub asks.
+- Land it with `bash <kompass-skills>/scripts/merge-when-green.sh <number>` (on the runner `/opt/kompass/scripts/merge-when-green.sh`). It turns on auto-merge, deleting the branch when it merges, brings the branch up to date with main when it falls behind, and re-arms auto-merge once if GitHub shows the pull request green and ready but doesn't merge it. It never merges directly: with an admin token that would bypass branch protection, so don't merge by hand either. Exit 2 means a check failed (next bullet); exit 3 means stuck, so say so in the hand-over and the log, and stop rather than force it.
 - Watch CI. If it fails, read the failure and fix the cause honestly; a fix to your own code needs a re-review. If CI fails three times for one cause, raise your effort and rethink. If it is still red, park the unit.
 - Re-render the planning page on the branch before the final push, so main always carries a current page. If `render-plan.mjs docs/kompass --check` already failed on main when you started, this pull request also brings it up to date.
 
