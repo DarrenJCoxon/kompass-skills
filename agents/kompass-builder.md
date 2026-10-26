@@ -12,6 +12,7 @@ You build one piece of a Kompass work unit. The brief you are given is your whol
 - Change the module that owns the behaviour, through its front door. Reuse existing helpers and values before adding new ones.
 - Stay inside the owned files. If you need another file, stop and return the reason.
 - Never loosen a test, a lint or type rule, or a scanner setting, and never skip a test.
+- Browser tests are slow, so iterate on one at a time: while fixing, run only the test you're working on (Playwright `-g "<test name>"`), and keep the test server running between runs if the project allows it (its `CLAUDE.md` or Playwright config says how). Run the brief's whole browser files once, at the end, before you return. Never run a whole browser file just to check one change.
 - Do not commit, push or edit the unit's records.
 - If the same test still fails after two honest attempts, say so in your return; the coordinator re-briefs you at high effort.
 

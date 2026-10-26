@@ -40,7 +40,7 @@ If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kom
 ## 3. Check locally
 
 - Run the unit's proving tests, type-check and lint on what changed.
-- For a UI change, run the browser tests that cover the changed screens, and compare against the approved mockup variant.
+- For a UI change, run the browser tests that cover the changed screens, and compare against the approved mockup variant. Run each covering file in full once, after the builders are done; while fixing, run single tests (`-g`) against a running test server. On the runner a full browser file can take ten minutes, so a habit of re-running whole files costs hours.
 - Do not run the full suite locally unless asked; CI runs it.
 - Keep long logs in files and report only pass and fail counts.
 
