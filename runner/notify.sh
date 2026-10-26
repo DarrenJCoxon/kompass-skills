@@ -17,37 +17,44 @@ send() { # title, message
   [[ "$stamp" < "$since" ]] && return
   set -- "$project: $1" "$2"
   if [ "$NOTIFY_URL" = "-" ]; then echo "[$1] $2"; return; fi
-  curl -fsS -m 20 -H "Title: $1" -d "$2" "$NOTIFY_URL" >/dev/null || echo "notify failed: $1" >&2
+  curl -fsS -m 20 -H "Title: $1" -H "Markdown: yes" --data-binary "$2" "$NOTIFY_URL" >/dev/null || echo "notify failed: $1" >&2
 }
+# A unit session's own words: what it printed since its unit started. Its last message holds any question
+# for the operator, so it goes with the alert and can be read on the phone with the laptop shut.
+said() { local b="$body"; (( ${#b} > 12000 )) && b="…${b: -12000}"; [ -n "$b" ] && printf '\n\n%s' "$b"; }
 
 declare -A titles
 follow() { if [ "$container" = "-" ]; then cat; else docker logs -f "$container" 2>&1; fi; }
 
-follow | { ended="" last=""
+follow | { ended="" last="" body=""
 while IFS= read -r line; do
-  stamp="${line%% *}" event="${line#* }" last="$line"
+  last="$line"
+  # Runner events start with a timestamp; every other line is a session's own output.
+  if [[ ! "$line" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then body+="$line"$'\n'; continue; fi
+  stamp="${line%% *}" event="${line#* }"
   case "$event" in "run finished: "*|"run not started: "*) ended=1 ;; esac
   case "$event" in
     "start "*)
       id="${event#start }"; id="${id%% *}"
-      titles[$id]="${event#*: }" ;;
+      titles[$id]="${event#*: }" body="" ;;
     "end "*)
       id="${event#end }"; id="${id%%:*}"
       status="${event##*status on main }"
       case "$status" in
-        delivered) send "Merged: $id" "${titles[$id]:-$id}" ;;
-        parked) send "Parked: $id" "${titles[$id]:-$id} - its decision is in the unit file" ;;
+        delivered) send "Merged: $id" "${titles[$id]:-$id}$(said)" ;;
+        parked) send "Parked: $id" "${titles[$id]:-$id}$(said)" ;;
       esac ;;
     "skip "*)
       id="${event#skip }"; id="${id%%:*}"
-      send "Needs a look: $id" "${titles[$id]:-$id} - not delivered after two sessions" ;;
-    "run finished: "*"hand-over session exit 0"*) send "Sequence handed over" "Ready for your walkthrough: ${event#run finished: }" ;;
-    "run finished: "*"hand-over session exit"*) send "Hand-over failed" "${event#run finished: }" ;;
+      send "Needs a look: $id" "${titles[$id]:-$id} - not delivered after two sessions$(said)" ;;
+    "hand over sequence "*) body="" ;;
+    "run finished: "*"hand-over session exit 0"*) send "Sequence handed over" "Ready for your walkthrough: ${event#run finished: }$(said)" ;;
+    "run finished: "*"hand-over session exit"*) send "Hand-over failed" "${event#run finished: }$(said)" ;;
     "run finished: "*"not complete"*) send "Stopped, needs you" "${event#run finished: }" ;;
     "run finished: "*) send "Run finished" "${event#run finished: }" ;;
     "run not started: "*) send "Run did not start" "${event#run not started: }" ;;
   esac
 done
 # The log ended without the runner saying why: it failed to start, crashed, or was stopped.
-if [ -z "$ended" ]; then stamp="$since"; send "Runner stopped" "$container stopped before finishing. Last line: ${last:-none}"; fi
+if [ -z "$ended" ]; then stamp="$since"; send "Runner stopped" "$container stopped before finishing. Last line: ${last:-none}$(said)"; fi
 }
