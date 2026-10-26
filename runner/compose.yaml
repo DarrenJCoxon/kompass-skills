@@ -15,6 +15,10 @@ services:
       dockerfile: runner/Dockerfile
     image: kompass-runner:local
     env_file: .env
+    environment:
+      # A unit session that ends its turn while a builder is still working waits for it, up to 2 hours.
+      # Claude Code's default stops background helpers after 10 minutes, which cut WU-0119's builder off mid-job.
+      CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS: "7200000"
     restart: "no"
     volumes:
       - work:/work

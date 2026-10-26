@@ -45,6 +45,9 @@ while IFS= read -r line; do
         parked) send "Parked: $id" "${titles[$id]:-$id}$(said)" ;;
       esac ;;
     "plan page out of date"*) send "Planning page out of date" "${event}" ;;
+    "retry "*)
+      id="${event#retry }"; id="${id%%:*}"
+      send "Retrying: $id" "${titles[$id]:-$id} - ${event#*: }$(said)" ;;
     "skip "*)
       id="${event#skip }"; id="${id%%:*}"
       send "Needs a look: $id" "${titles[$id]:-$id} - not delivered after two sessions$(said)" ;;

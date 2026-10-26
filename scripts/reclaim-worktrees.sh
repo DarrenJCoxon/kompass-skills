@@ -46,5 +46,5 @@ done < <(git -C "$main_tree" worktree list --porcelain; echo)
 
 [ "$dry" = 1 ] || git -C "$main_tree" worktree prune
 [ "$removed" -gt 0 ] && echo "Kompass: $([ "$dry" = 1 ] && echo "would remove" || echo "removed") $removed merged worktree(s)."
-for k in "${kept[@]}"; do echo "Kompass: kept $k. Save anything needed from it, then it can go."; done
+for k in ${kept[@]+"${kept[@]}"}; do echo "Kompass: kept $k. Save anything needed from it, then it can go."; done
 exit 0

@@ -4,11 +4,12 @@
 // A run builds one sequence. When every unit in it is delivered or parked, a fresh session writes the
 // sequence hand-over for the walkthrough, and the run stops; the next sequence starts after the walkthrough.
 // usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 2] [--model opus] [--claude claude]
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { startSession } from './lib/session.mjs';
 import { awaitingWalkthrough, currentSequence, nextUnit, openUnitIds, readSequences, readUnits, sequenceComplete, source, stalled } from './lib/records.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -44,8 +45,8 @@ function handOver() {
   const written = readSequences(source(dir, 'origin/main')).some((s) => s.number === sequence && s.status === 'handed-over');
   if (!done || written) return finish(done ? `sequence ${sequence} already handed over` : `sequence ${sequence} not complete: ${stalled(units, sequence) || 'no unit is ready'}`);
   log(`hand over sequence ${sequence}`);
-  const child = spawn(claude, ['-p', `/kompass-run hand over sequence ${sequence}`, '--model', model, '--permission-mode', 'bypassPermissions'], { cwd: root, stdio: ['ignore', 'inherit', 'inherit'] });
-  child.on('exit', (code) => finish(`sequence ${sequence} hand-over session exit ${code}`));
+  const child = startSession(claude, ['-p', `/kompass-run hand over sequence ${sequence}`, '--model', model, '--permission-mode', 'bypassPermissions'], { cwd: root });
+  child.on('ended', (code) => finish(`sequence ${sequence} hand-over session exit ${code}`));
 }
 
 /** True when main's planning page matches its records (render-plan --check over a copy of main), so a stale page is never silent. */
@@ -70,17 +71,20 @@ function startNext() {
   if (!unit || unit.sequence !== sequence) return false;
   attempts.set(unit.id, (attempts.get(unit.id) ?? 0) + 1);
   log(`start ${unit.id} (attempt ${attempts.get(unit.id)}): ${unit.title}`);
-  const child = spawn(claude, ['-p', `/kompass-build ${unit.id}`, '--model', model, '--permission-mode', 'bypassPermissions'], { cwd: root, stdio: ['ignore', 'inherit', 'inherit'] });
+  const child = startSession(claude, ['-p', `/kompass-build ${unit.id}`, '--model', model, '--permission-mode', 'bypassPermissions'], { cwd: root });
   active.set(unit.id, child);
-  child.on('exit', (code) => {
+  child.on('ended', (code) => {
     active.delete(unit.id);
     try { log(execFileSync('bash', [join(here, 'reclaim-worktrees.sh')], { cwd: root, encoding: 'utf8' }).trim() || 'no merged worktrees to remove'); } catch (e) { log(`worktree clean-up failed: ${e.message}`); }
     const after = mainUnits().find((u) => u.id === unit.id);
     log(`end ${unit.id}: session exit ${code}, status on main ${after?.status ?? 'missing'}`);
     if (!planCurrent()) log(`plan page out of date on main after ${unit.id}: the next session re-renders it`);
-    if (after && !['delivered', 'parked'].includes(after.status) && !openUnitIds(root).includes(unit.id) && attempts.get(unit.id) >= maxAttempts) {
+    const unfinished = after && !['delivered', 'parked'].includes(after.status) && !openUnitIds(root).includes(unit.id);
+    if (unfinished && attempts.get(unit.id) >= maxAttempts) {
       skipped.add(unit.id);
       log(`skip ${unit.id}: not delivered or parked after ${maxAttempts} sessions; needs a look`);
+    } else if (unfinished) {
+      log(`retry ${unit.id}: the session ended with the unit ${after.status}; attempt ${attempts.get(unit.id) + 1} of ${maxAttempts} starts from its branch`);
     }
     tick();
   });
