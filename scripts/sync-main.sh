@@ -6,10 +6,12 @@ set -u
 
 root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 # (reclaim-worktrees.sh runs after this, from the same hook)
-[ -d "$root/docs/kompass" ] || exit 0
 cd "$root" || exit 0
-
-if ! git fetch --quiet origin main 2>/dev/null; then
+# A copy last updated before Kompass arrived has no docs/kompass yet, so ask GitHub's main as well.
+if [ ! -d docs/kompass ]; then
+  git fetch --quiet origin main 2>/dev/null || exit 0
+  git cat-file -e origin/main:docs/kompass 2>/dev/null || exit 0
+elif ! git fetch --quiet origin main 2>/dev/null; then
   echo "Kompass: could not reach GitHub to check for newer work on main. Say so before relying on this copy."
   exit 0
 fi
