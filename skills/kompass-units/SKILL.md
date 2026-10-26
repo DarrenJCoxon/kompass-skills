@@ -43,6 +43,7 @@ Body:
 - **One capability per unit,** usually inside one module. Prefer fewer, complete units to many fragments.
 - **A front-door change is its own unit,** first in line: it changes the front door and updates every caller in the same unit, so nothing is left half-moved.
 - **`owns` lists are honest.** Include the tests and callers the unit must touch. A builder that needs a file outside `owns` records why in the log and carries on; it does not need a new unit.
+- **Large files get split first.** If a unit must change a file already over the size limit (5,000 tokens, see `scripts/size-check.mjs`), and the change can't go in a new module beside it, put a unit before it that splits that file along its real seams, behind its existing front door, with no change in behaviour. The split unit's proof is that the existing tests pass unchanged.
 - **Dependencies are real.** A unit depends on another only if it needs that unit's merged code. Units with no dependency between them and no shared files can run at the same time.
 - **UI units point at an approved mockup** and name the variant.
 
