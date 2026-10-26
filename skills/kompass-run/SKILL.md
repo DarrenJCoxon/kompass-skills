@@ -24,7 +24,7 @@ Check, once:
 - `plan.md` has a recorded approval, and main is green.
 - The previous sequence, if any, has its walkthrough recorded (status `walked-through`). If it is `handed-over` and waiting for the operator, say so and stop.
 - The sequence's own **Before this sequence starts** section, if it has one, is done first: it holds steps the operator approved for the coordinator (for example a protected change). Do them, record any approval as the project requires, and only then start the runner. Never give them to a unit session.
-- The repository has its safety settings: a required check, up-to-date branches before merging, and auto-merge allowed. If any is missing, tell the operator what is missing and stop. Changing repository settings is theirs to approve.
+- The repository has its safety settings: a required check, up-to-date branches before merging, auto-merge allowed, and no bypassing for admins. If any is missing, tell the operator what is missing and stop. Changing repository settings is theirs to approve.
 
 Then start the runner on its server, in its own container (see `runner/README.md` in the Kompass Skills repository). The server is named in `plan.md` as `runner:`, an SSH host name such as `kompass-runner`. If there is no runner yet, offer to set one up with the operator by following Part 3 of `SETUP.md` in the Kompass Skills repository, or to build units one at a time with `kompass-build` instead.
 

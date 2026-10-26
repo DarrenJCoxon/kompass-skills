@@ -26,7 +26,8 @@ How to guide them:
 5. Check the repository's safety settings with `gh api` and explain each one in a sentence. All three are needed before any unit merges by itself:
    - main accepts changes only through pull requests, with one required CI check;
    - a pull request must be up to date with main before it merges;
-   - auto-merge is allowed.
+   - auto-merge is allowed;
+   - "Do not allow bypassing the above settings" is on, so the agents' token (often an admin's) can't skip the required check by merging directly.
 
    If the project already has CI, keep its required check as it is, LiteBench's included; never rename or remove a required check during set-up. If it has no CI yet, offer to add a workflow that runs its type-check, lint and tests as one check. Show the exact settings change and make it only after they say yes.
 
