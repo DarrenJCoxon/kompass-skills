@@ -8,7 +8,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { awaitingWalkthrough, currentSequence, nextUnit, openUnitIds, readSequences, readUnits, sequenceComplete, source } from './lib/records.mjs';
+import { awaitingWalkthrough, currentSequence, nextUnit, openUnitIds, readSequences, readUnits, sequenceComplete, source, stalled } from './lib/records.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -41,7 +41,7 @@ function handOver() {
   const units = mainUnits();
   const done = sequenceComplete(units, sequence);
   const written = readSequences(source(dir, 'origin/main')).some((s) => s.number === sequence && s.status === 'handed-over');
-  if (!done || written) return finish(done ? `sequence ${sequence} already handed over` : `sequence ${sequence} not complete`);
+  if (!done || written) return finish(done ? `sequence ${sequence} already handed over` : `sequence ${sequence} not complete: ${stalled(units, sequence) || 'no unit is ready'}`);
   log(`hand over sequence ${sequence}`);
   const child = spawn(claude, ['-p', `/kompass-run hand over sequence ${sequence}`, '--model', model, '--permission-mode', 'bypassPermissions'], { cwd: root, stdio: ['ignore', 'inherit', 'inherit'] });
   child.on('exit', (code) => finish(`sequence ${sequence} hand-over session exit ${code}`));

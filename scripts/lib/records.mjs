@@ -168,11 +168,20 @@ export function nextUnit(units, inProgress = []) {
   ) ?? null;
 }
 
-/** Why each waiting unit is not ready, for reports. */
+/** Why each waiting unit is not ready, for reports. A dependency is marked when it has no unit record or is parked, the two cases only the operator can clear. */
 export function blockers(units) {
   const byId = new Map(units.map((u) => [u.id, u]));
+  const why = (d) => (!byId.has(d) ? `${d} (no unit record)` : byId.get(d).status === 'parked' ? `${d} (parked)` : d);
   return units.filter((u) => u.status === 'waiting').map((u) => ({
     id: u.id,
-    waitingOn: u.depends.filter((d) => byId.get(d)?.status !== 'delivered'),
+    sequence: u.sequence,
+    waitingOn: u.depends.filter((d) => byId.get(d)?.status !== 'delivered').map(why),
   })).filter((b) => b.waitingOn.length);
+}
+
+/** Why sequence `n` cannot go on, in one line for the run log and the operator's phone; empty when nothing in it is blocked or parked. */
+export function stalled(units, n) {
+  const waiting = blockers(units).filter((b) => b.sequence === n).map((b) => `${b.id} waits on ${b.waitingOn.join(', ')}`);
+  const parked = units.filter((u) => u.sequence === n && u.status === 'parked').map((u) => u.id);
+  return [waiting.length && `${waiting.join('; ')}.`, parked.length && `Parked: ${parked.join(', ')}.`].filter(Boolean).join(' ');
 }

@@ -43,6 +43,7 @@ while IFS= read -r line; do
       send "Needs a look: $id" "${titles[$id]:-$id} - not delivered after two sessions" ;;
     "run finished: "*"hand-over session exit 0"*) send "Sequence handed over" "Ready for your walkthrough: ${event#run finished: }" ;;
     "run finished: "*"hand-over session exit"*) send "Hand-over failed" "${event#run finished: }" ;;
+    "run finished: "*"not complete"*) send "Stopped, needs you" "${event#run finished: }" ;;
     "run finished: "*) send "Run finished" "${event#run finished: }" ;;
     "run not started: "*) send "Run did not start" "${event#run not started: }" ;;
   esac

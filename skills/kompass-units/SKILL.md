@@ -19,6 +19,7 @@ When units already exist from an earlier plan (LiteBench or other), convert them
 - Keep each unit's **id**, approved outcome and criteria, so history and git log still line up. Rewrite only the format, and the proving-test names if they have moved.
 - The operator decides, unit by unit, what is kept, updated, merged, split or dropped. Record each decision in the unit's log with their words.
 - A done unit is not converted. Its old record stays as history, and Kompass Find searches it.
+- A dependency on a done unit is already met: drop it from `depends:`, and mention it in the brief if the unit builds on that work. `depends:` names only units with a record in `units/`, or the runner waits for them for ever.
 - New units start numbering after the highest existing id.
 
 ## What every unit has
@@ -61,7 +62,7 @@ Every unit belongs to one sequence from the plan. For each sequence, create `doc
 Check the set once:
 - Every "done looks like" result in the plan is covered by some unit.
 - Every unit's `owns` sits inside its module, or says why not.
-- There are no dependency cycles.
+- There are no dependency cycles, and every id in `depends:` has a unit file in `units/`.
 - Every criterion names its test.
 
 Then render the planning page, so the operator sees the ordered list:

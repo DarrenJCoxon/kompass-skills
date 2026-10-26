@@ -83,9 +83,11 @@ Park when the unit cannot be finished honestly: an unprovable cause, a needed ch
 - Deliver just the unit file in a small pull request titled `WU-NNNN: parked`, so the run does not pick it again.
 - Keep the code branch for later.
 
+How a criterion is proved is not the outcome. The outcome is what the product does for the people who use it. If a criterion's proof cannot be made exact (for example a test that scans code for copies, which can never rule out a hand-typed one), do not park and do not keep patching the test. Restate the criterion to what can be proved, keep every behaviour it protects, have the reviewer approve the restatement, record it as a decision, and carry on.
+
 ## Stops for the operator
 
-Only these stop a unit to wait for the operator: a locked file, an unprovable cause, a change to the approved outcome, a destructive data change, or an irreversible outside action (production deploy, new paid service, the operator's own accounts). Everything else you decide, record in the log and continue.
+Only these stop a unit to wait for the operator: a locked file, an unprovable cause, a change to the approved outcome (what the product does, not how a criterion is proved), a destructive data change, or an irreversible outside action (production deploy, new paid service, the operator's own accounts). Everything else you decide, record in the log and continue.
 
 ## Reporting
 
