@@ -26,6 +26,7 @@ If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kom
 
 - Work in your own copy of the project (a git worktree) on a branch named `kompass/WU-NNNN-<slug>`, cut from a fresh fetch of `origin/main`, never from whatever a local copy happens to hold.
 - Set the unit's `status: building` on the branch and add a log line: `<date time> started`.
+- Check the planning page: `node <skills>/scripts/render-plan.mjs docs/kompass --check`. If it is out of date on main, your pull request brings it up to date (step 6).
 
 ## 2. Build
 
@@ -69,7 +70,7 @@ Then set `status: delivered`, add `pr:` once the pull request exists, and add a 
 - Open the pull request titled `WU-NNNN: <title>`, with the hand-over as its body. Post the review verdict as a comment headed `Kompass review: APPROVE`.
 - Set it to merge automatically when the required check is green, deleting the branch on GitHub when it merges (`gh pr merge --auto --merge --delete-branch`). Bring it up to date with main if GitHub asks.
 - Watch CI. If it fails, read the failure and fix the cause honestly; a fix to your own code needs a re-review. If CI fails three times for one cause, raise your effort and rethink. If it is still red, park the unit.
-- Re-render the planning page on the branch before the final push, so main always carries a current page.
+- Re-render the planning page on the branch before the final push, so main always carries a current page. If `render-plan.mjs docs/kompass --check` already failed on main when you started, this pull request also brings it up to date.
 
 The unit is done when the pull request has merged. Its `delivered` status then reaches main with the code.
 
@@ -80,7 +81,7 @@ The unit is done when the pull request has merged. Its `delivered` status then r
 Park when the unit cannot be finished honestly: an unprovable cause, a needed change to a locked file, a change to the approved outcome, or CI still red after a rethink.
 - Set `status: parked`.
 - Write a **Parked** note in the hand-over: what blocks it, the evidence, and the decision needed from the operator.
-- Deliver just the unit file in a small pull request titled `WU-NNNN: parked`, so the run does not pick it again.
+- Re-render the planning page, then deliver just the unit file and the page in a small pull request titled `WU-NNNN: parked`, so the run does not pick it again.
 - Keep the code branch for later.
 
 How a criterion is proved is not the outcome. The outcome is what the product does for the people who use it. If a criterion's proof cannot be made exact (for example a test that scans code for copies, which can never rule out a hand-typed one), do not park and do not keep patching the test. Restate the criterion to what can be proved, keep every behaviour it protects, have the reviewer approve the restatement, record it as a decision, and carry on.

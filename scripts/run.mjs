@@ -5,8 +5,9 @@
 // sequence hand-over for the walkthrough, and the run stops; the next sequence starts after the walkthrough.
 // usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 2] [--model opus] [--claude claude]
 import { execFileSync, spawn } from 'node:child_process';
-import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { awaitingWalkthrough, currentSequence, nextUnit, openUnitIds, readSequences, readUnits, sequenceComplete, source, stalled } from './lib/records.mjs';
 
@@ -47,6 +48,17 @@ function handOver() {
   child.on('exit', (code) => finish(`sequence ${sequence} hand-over session exit ${code}`));
 }
 
+/** True when main's planning page matches its records (render-plan --check over a copy of main), so a stale page is never silent. */
+function planCurrent() {
+  const tmp = mkdtempSync(join(tmpdir(), 'kompass-plan-'));
+  try {
+    const rel = relative(root, dir);
+    execFileSync('bash', ['-c', 'git archive origin/main "$1" | tar -x -C "$2"', '_', rel, tmp], { cwd: root });
+    execFileSync('node', [join(here, 'render-plan.mjs'), join(tmp, rel), '--check'], { stdio: 'ignore' });
+    return true;
+  } catch { return false; } finally { rmSync(tmp, { recursive: true, force: true }); }
+}
+
 function finish(why) {
   log(`run finished: ${why}${skipped.size ? `; needs a look: ${[...skipped].join(', ')}` : ''}`);
 }
@@ -65,6 +77,7 @@ function startNext() {
     try { log(execFileSync('bash', [join(here, 'reclaim-worktrees.sh')], { cwd: root, encoding: 'utf8' }).trim() || 'no merged worktrees to remove'); } catch (e) { log(`worktree clean-up failed: ${e.message}`); }
     const after = mainUnits().find((u) => u.id === unit.id);
     log(`end ${unit.id}: session exit ${code}, status on main ${after?.status ?? 'missing'}`);
+    if (!planCurrent()) log(`plan page out of date on main after ${unit.id}: the next session re-renders it`);
     if (after && !['delivered', 'parked'].includes(after.status) && !openUnitIds(root).includes(unit.id) && attempts.get(unit.id) >= maxAttempts) {
       skipped.add(unit.id);
       log(`skip ${unit.id}: not delivered or parked after ${maxAttempts} sessions; needs a look`);
