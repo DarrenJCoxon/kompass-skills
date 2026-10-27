@@ -82,6 +82,8 @@ LOCK_STALE_SECONDS=2 start box-tertia DarrenJCoxon/tertia
 sleep 4
 at=$(cat "$LOCK_ROOT"/slot-*/at 2>/dev/null | head -n1)
 [ $(( $(date +%s) - ${at:-0} )) -le 2 ] && ok "the heartbeat refreshes a running job's slot" || no "the heartbeat refreshes a running job's slot"
+at=$(cat "$LOCK_ROOT/job/at" 2>/dev/null)
+[ $(( $(date +%s) - ${at:-0} )) -le 2 ] && ok "and the old lock held for old runners" || no "and the old lock held for old runners"
 finish box-tertia
 
 # The old box-wide lock, held by a runner still on the old image while the box is rebuilt, holds every slot.
@@ -93,29 +95,53 @@ rm -rf "$LOCK_ROOT/job"
 settle
 started box-tertia && ok "it runs once the old lock is released" || no "it runs once the old lock is released"
 
-# The disk guard clears shared files only when no other job is running.
-. "$here/slots.sh"
-RUNNER_NAME=box-tertia slots_alone && ok "a job alone on the box is alone" || no "a job alone on the box is alone"
+# While the box is rebuilt runner by runner, a runner still on the old image only knows /locks/job: while any
+# slot is held, the new hooks keep it held too, so an old runner waits instead of running beside them.
 start box-layerware DarrenJCoxon/tertia
 settle
-RUNNER_NAME=box-tertia slots_alone && no "a job is not alone while another holds a slot" || ok "a job is not alone while another holds a slot"
+[ -d "$LOCK_ROOT/job" ] && ok "while a slot is held, the old lock is held for old runners" || no "while a slot is held, the old lock is held for old runners"
+started box-layerware && ok "the old lock held for the slots does not block new jobs" || no "the old lock held for the slots does not block new jobs"
+finish box-tertia
+[ -d "$LOCK_ROOT/job" ] && ok "it stays held while another slot is held" || no "it stays held while another slot is held"
+finish box-layerware
+[ -d "$LOCK_ROOT/job" ] && no "it is released with the last slot" || ok "it is released with the last slot"
 
-# The disk guard leaves files another running job may be using (a stand-in docker records what it was asked).
+# The disk guard clears shared files only while it has the box to itself, and keeps it while it clears.
+. "$here/slots.sh"
 mkdir -p "$work/bin" "$work/disk/tertia" "$work/disk/learnfolio"
 printf '#!/bin/sh\necho "$*" >> "%s/docker.log"\n' "$work" > "$work/bin/docker"; chmod +x "$work/bin/docker"
-guard() { PATH="$work/bin:$PATH" RUNNER_NAME=box-tertia RUNNER_SLUG=tertia DISK_GUARD_WORK="$work/disk" DISK_GUARD_HIGH=0 \
-  bash "$here/disk-guard.sh" "$1"; }
-: > "$work/docker.log"; out="$(guard before)"
+# guard NAME REPO MODE: the disk guard as NAME's job runs it, with the disk over its limit.
+guard() { PATH="$work/bin:$PATH" RUNNER_NAME="$1" GITHUB_REPOSITORY="$2" RUNNER_SLUG=tertia DISK_GUARD_WORK="$work/disk" \
+  DISK_GUARD_HIGH=0 DISK_GUARD_WAIT_SECONDS="${WAIT:-1}" bash "$here/disk-guard.sh" "$3"; }
+start box-tertia DarrenJCoxon/tertia
+start box-layerware DarrenJCoxon/tertia
+settle
+: > "$work/docker.log"; out="$(guard box-tertia DarrenJCoxon/tertia before)"
 [ -d "$work/disk/learnfolio" ] && ok "the disk guard clears no checkouts while another job runs" || no "the disk guard clears no checkouts while another job runs"
-grep -q "another job is running" <<<"$out" && ok "it says why it did not clear" || no "it says why it did not clear ($out)"
-guard after > /dev/null
-grep -q "^container" "$work/docker.log" && no "after a job, it keeps stopped containers while another job runs" \
-  || ok "after a job, it keeps stopped containers while another job runs"
+grep -q "another job" <<<"$out" && ok "it says why it did not clear" || no "it says why it did not clear ($out)"
+[ -d "$LOCK_ROOT/exclusive-wanted" ] && no "giving up, it stops asking for the box" || ok "giving up, it stops asking for the box"
+guard box-tertia DarrenJCoxon/tertia after > /dev/null
+grep -q "^container" "$work/docker.log" && no "after a sharing job, it keeps stopped containers" || ok "after a sharing job, it keeps stopped containers"
+
+export CI_SLOTS=3   # a free slot, so only the disk guard's wish for the box can hold the next job back
+WAIT=20 guard box-tertia DarrenJCoxon/tertia before > "$work/guard.out" 2>&1 & guard_pid=$!; pids+=("$guard_pid")
+settle
+start box-searchfolio DarrenJCoxon/tertia
+settle
+started box-searchfolio && no "while it waits to clear, a new sharing job waits" || ok "while it waits to clear, a new sharing job waits"
 finish box-layerware
-: > "$work/docker.log"; guard after > /dev/null
-grep -q "^container" "$work/docker.log" && ok "alone on the box, it drops stopped containers" || no "alone on the box, it drops stopped containers"
-guard before > /dev/null
-[ -d "$work/disk/learnfolio" ] && no "alone on the box, a full disk is cleared" || ok "alone on the box, a full disk is cleared"
+wait "$guard_pid"
+[ -d "$work/disk/learnfolio" ] && no "once the other job ends, it clears the disk" || ok "once the other job ends, it clears the disk"
+settle
+started box-searchfolio && ok "the waiting job runs once the clear is done" || no "the waiting job runs once the clear is done"
+finish box-searchfolio
 finish box-tertia
+export CI_SLOTS=2
+
+start box-learnfolio DarrenJCoxon/learnfolio
+settle
+: > "$work/docker.log"; guard box-learnfolio DarrenJCoxon/learnfolio after > /dev/null
+grep -q "^container" "$work/docker.log" && ok "after a job holding every slot, it drops stopped containers" || no "after a job holding every slot, it drops stopped containers"
+finish box-learnfolio
 
 exit $fail
