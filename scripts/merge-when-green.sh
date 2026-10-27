@@ -25,7 +25,12 @@ say() { echo "merge-when-green #$pr: $*"; }
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 top=$(git rev-parse --show-toplevel 2>/dev/null)
-if [ -n "$top" ] && [ -d "$top/docs/kompass" ]; then
+# A pull request that changes only docs/kompass/ (records: a park, a decision, a unit) shares no code files,
+# so it never waits for the units in flight (WU-0159's park waited 40 minutes and held a runner slot).
+changed=$(gh pr diff "$pr" --name-only 2>/dev/null)
+if [ -n "$changed" ] && ! grep -qv '^docs/kompass/' <<<"$changed"; then
+  say "records only; not waiting for the units in flight"
+elif [ -n "$top" ] && [ -d "$top/docs/kompass" ]; then
   held=$(node "$here/in-flight.mjs" --check); code=$?
   if [ "$code" = 3 ]; then say "not landing yet: $(grep '^wait:' <<<"$held" | tr '\n' ' ')"; exit 6; fi
   [ "$code" = 0 ] || say "could not check the units in flight (exit $code); going on"

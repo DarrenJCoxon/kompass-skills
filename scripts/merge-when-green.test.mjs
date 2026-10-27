@@ -154,3 +154,24 @@ test('no run yet on the head commit counts as pending, not as the draft\'s skipp
   assert.doesNotMatch(r.out, /waiting for CI to start/);
   assert.match(r.calls, /pr merge 42 --auto --merge --delete-branch/);
 });
+
+// Tertia, 27 Oct 2026: WU-0159's records-only `parked` pull request waited 40 minutes behind units holding its
+// code files, keeping a runner slot busy. A pull request that changes only docs/kompass/ never waits for them.
+test('a records-only pull request does not wait for the units in flight', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'mwg-rec-'));
+  spawnSync('git', ['init', '-q', dir]);
+  spawnSync('mkdir', ['-p', join(dir, 'docs/kompass')]);
+  writeFileSync(join(dir, 'gh'), `#!/usr/bin/env node
+const fs = require('fs'); const a = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(dir)} + '/calls', a.join(' ') + '\\n');
+if (a[0] === 'pr' && a[1] === 'diff') process.stdout.write('docs/kompass/units/WU-0001-x.md\\n');
+else if (a[0] === 'pr' && a[1] === 'view') process.stdout.write(JSON.stringify({ state: 'MERGED', mergeStateStatus: 'UNKNOWN', headRefName: 'b', headRefOid: 'abc123', isDraft: false }));
+`);
+  chmodSync(join(dir, 'gh'), 0o755);
+  const r = spawnSync('bash', [script, '42'], { cwd: dir, encoding: 'utf8', env: { ...process.env, PATH: `${dir}:${process.env.PATH}`, MWG_POLL: '0' } });
+  const calls = readFileSync(join(dir, 'calls'), 'utf8');
+  rmSync(dir, { recursive: true, force: true });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /records only/);
+  assert.doesNotMatch(calls, /pr list/);
+});
