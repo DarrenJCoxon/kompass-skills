@@ -87,6 +87,11 @@ These are GitHub and CI settings, set once per repository:
 1. Main only accepts changes through pull requests, with one required CI check.
 2. A pull request must be up to date with main before it merges, so units built back to back are always tested together.
 3. Pull requests merge automatically once the check is green.
+
+4. CI runs on a few self-hosted runners, so pushes are batched:
+   - a unit's pull request stays a draft (CI skips drafts) until it is reviewed and ready to land, and goes back to draft while it waits;
+   - the finished unit is pushed once;
+   - records never get a pull request of their own; one planning session's records land together.
 4. CI runs the size check (`scripts/size-check.mjs`: no new file over 5,000 tokens, and no file already over that may grow), type-check, lint, the full tests, the two tripwire tests (locked files unchanged without approval; no switched-off tests), and the secret, code and dependency scanners.
 
 The destructive-command guard on your Mac stays as a backstop against lost work. Nothing else blocks locally.
