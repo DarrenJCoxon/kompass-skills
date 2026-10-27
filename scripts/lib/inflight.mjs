@@ -8,7 +8,11 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseFrontMatter, sharedPaths } from './records.mjs';
 
-const SETTLED = ['delivered', 'parked', 'dropped'];
+// A unit main says is not being built. Without an open pull request its kept branch rests (kompass-build
+// keeps a parked unit's branch on purpose): a done unit's always, a parked or waiting one's unless the unit
+// is `building` again on that branch (resumed).
+const DONE = ['dropped', 'delivered'];
+const PAUSED = ['parked', 'waiting'];
 const RECORD = /^(D-\d+|WU-\d+)/;
 
 /** The project around `dir` (default: docs/kompass at the top of the current checkout), with a quiet git. */
@@ -74,9 +78,12 @@ function unitOf(p, ref, branch, changed) {
   return touched.find((id) => unitAt(p, ref, id)?.data.status === 'building') ?? null;
 }
 
-/** Units in flight: not yet in main, not delivered, parked or dropped on main, and not parked on their own branch. A head with no push for
- * `staleHours` and no pull request, or only its draft `building` one, is marked stale: listed, but it holds
- * nothing back, so a dead session's draft can't hold files for ever. */
+/** Units on heads not yet in main. A unit's head is in flight only while the unit is being worked on: it has
+ * an open pull request, or the unit is `building` on its own branch and not delivered or dropped on main. With
+ * neither, a unit main says is parked, waiting, dropped or delivered (or that is parked on its own branch) is
+ * marked resting: listed, but it holds nothing back. Tertia, 27 Oct 2026: WU-0159's kept branch (`waiting` on main, draft closed) held WU-0177 back.
+ * A head with no push for `staleHours` and no pull request, or only its draft `building` one, is marked stale:
+ * listed, but it holds nothing back, so a dead session's draft can't hold files for ever. */
 export function inFlight(p, { fetch = true, gh = true, staleHours = 24, now = Date.now() } = {}) {
   const { list: all, pullsChecked } = heads(p, { fetch, gh });
   const units = [];
@@ -88,8 +95,9 @@ export function inFlight(p, { fetch = true, gh = true, staleHours = 24, now = Da
     const added = lines(p.git(['diff', '--name-only', '--no-renames', '--diff-filter=A', base, h.ref]));
     const id = unitOf(p, h.ref, h.branch, changed);
     const record = id ? unitAt(p, h.ref, id) : null;
-    if (id && SETTLED.includes(unitAt(p, 'refs/remotes/origin/main', id)?.data.status)) continue;
-    if (record?.data.status === 'parked') continue; // parked on its own branch: not landing, so it holds nothing back
+    const onMain = id ? unitAt(p, 'refs/remotes/origin/main', id)?.data.status : undefined;
+    const resumed = record?.data.status === 'building';
+    const resting = !!id && !h.pr && (DONE.includes(onMain) || (!resumed && (PAUSED.includes(onMain) || record?.data.status === 'parked')));
     const times = lines(p.git(['log', '--format=%at', `${base}..${h.ref}`])).map(Number);
     const updated = Math.max(...times) * 1000;
     units.push({
@@ -98,6 +106,7 @@ export function inFlight(p, { fetch = true, gh = true, staleHours = 24, now = Da
       owns: arr(record?.data.owns), changed, records: recordsIn(p, added),
       started: Math.min(...times) * 1000, updated,
       stale: (!h.pr || h.draft) && now - updated > staleHours * 3600_000,
+      resting, onMain: onMain ?? null,
     });
   }
   units.sort((a, b) => a.started - b.started);
@@ -122,7 +131,7 @@ export function check(p, opts = {}) {
   const started = mine?.started ?? (opts.now ?? Date.now());
   const holds = [...me.owns, ...me.changed];
   const shared = units
-    .filter((u) => u !== mine && !(me.id && u.id === me.id) && !u.stale)
+    .filter((u) => u !== mine && !(me.id && u.id === me.id) && !u.stale && !u.resting)
     .map((u) => ({ unit: u, files: sharedPaths(holds, [...u.owns, ...u.changed]) }))
     .filter((s) => s.files.length);
   const earlier = (u) => u.started < started || (u.started === started && u.branch < (me.branch ?? ''));
