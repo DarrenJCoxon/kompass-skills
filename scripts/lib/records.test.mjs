@@ -30,6 +30,31 @@ test('stalled is empty when nothing in the sequence is blocked or parked', () =>
   assert.equal(stalled([unit('WU-0001', 1, 'delivered')], 1), '');
 });
 
+// Tertia, 27 Oct 2026: a unit now opens a draft `building` pull request when it starts. A draft left by a
+// session that died (crash, time limit) must not stop the runner retrying that unit from its branch.
+test('open pull requests count as units in progress, drafts do not', async () => {
+  const { chmodSync, mkdtempSync, rmSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { openUnitIds } = await import('./records.mjs');
+  const dir = mkdtempSync(join(tmpdir(), 'records-gh-'));
+  const prs = [
+    { headRefName: 'kompass/WU-0001-a', isDraft: false },
+    { headRefName: 'kompass/WU-0002-b', isDraft: true },
+    { headRefName: 'feat/other', isDraft: false },
+  ];
+  // A stand-in gh that returns only the fields asked for with --json, as the real one does.
+  writeFileSync(join(dir, 'gh'), `#!/usr/bin/env node
+const a = process.argv.slice(2); const f = a[a.indexOf('--json') + 1].split(',');
+console.log(JSON.stringify(${JSON.stringify(prs)}.map((p) => Object.fromEntries(f.map((k) => [k, p[k]])))));
+`);
+  chmodSync(join(dir, 'gh'), 0o755);
+  const path = process.env.PATH;
+  process.env.PATH = `${dir}:${path}`;
+  try { assert.deepEqual(openUnitIds(dir), ['WU-0001']); }
+  finally { process.env.PATH = path; rmSync(dir, { recursive: true, force: true }); }
+});
+
 // Tertia, 26 Oct 2026: WU-0156 was folded into WU-0119 and WU-0158 was decided against. With no way to
 // record that, an unknown status was read as "waiting" and the runner would have built them again.
 test('a dropped unit is read as dropped and settles its sequence', async () => {
