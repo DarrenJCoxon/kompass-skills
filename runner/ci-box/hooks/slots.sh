@@ -70,7 +70,12 @@ slots_acquire() {
     if ! slots_held_by_other "$LEGACY"; then
       if slots_shares; then
         if ! slots_held_by_other "$WANT"; then
-          for dir in $(slots_list); do slots_take "$dir" && { slots_hold_legacy; return 0; }; done
+          for dir in $(slots_list); do
+            slots_take "$dir" || continue
+            # A job that took the box between the check above and this slot keeps it: step back.
+            slots_held_by_other "$WANT" && { rm -rf "$dir"; break; }
+            slots_hold_legacy; return 0
+          done
         fi
       elif slots_take "$WANT" >/dev/null; then
         # Take every slot in order, keeping those taken, so two such jobs never hold one each.
@@ -105,9 +110,10 @@ slots_has_all() { local dir; for dir in $(slots_list); do slots_mine "$dir" || r
 
 # slots_refresh: refresh the time of every lock this runner holds (the heartbeat).
 slots_refresh() {
-  local dir
-  for dir in $(slots_list) "$WANT"; do slots_mine "$dir" && slots_stamp "$dir"; done
-  slots_hold_legacy
+  local dir held=0
+  for dir in $(slots_list) "$WANT"; do slots_mine "$dir" && { slots_stamp "$dir"; held=1; }; done
+  [ "$held" = 1 ] && slots_hold_legacy
+  return 0
 }
 
 # slots_release: free every lock this runner holds, and the old lock once no slot is held.
