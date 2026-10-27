@@ -14,10 +14,6 @@ plan approved
   → …
 ```
 
-## Whose words
-
-Quote the operator only word for word, copied from a message they sent in this conversation. Everything an agent decided, concluded or inferred is written as the agent's ("the coordinator decided", "agent's reading"), never as the operator's words, and never under their name or a "(Name, date)" heading. A record of an approval holds the operator's exact words or it isn't an approval. When you summarise what they asked, say it's your reading.
-
 ## Who does what
 
 The runner starts every unit session, and the hand-over session, on **Opus** as coordinator. Inside each unit, `kompass-build` gives the coding to `kompass-builder` (**Sonnet**), searches to `kompass-searcher` (**Haiku**) and review to `kompass-reviewer` (**Opus**). Writing the sequence hand-over and recording the walkthrough stay with Opus: they are what the next sequence relies on.

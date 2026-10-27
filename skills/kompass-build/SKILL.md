@@ -14,10 +14,6 @@ You start with no memory of earlier units. Read, in this order:
 
 If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kompass` and take the id it prints. If it prints nothing, report that no unit is ready, and why.
 
-## Whose words
-
-Quote the operator only word for word, copied from a message they sent in this conversation. Everything an agent decided, concluded or inferred is written as the agent's ("the coordinator decided", "agent's reading"), never as the operator's words, and never under their name or a "(Name, date)" heading. A record of an approval holds the operator's exact words or it isn't an approval. When you summarise what they asked, say it's your reading.
-
 ## Who does what
 
 - **You coordinate on Opus at medium effort:** you read the record, decide the approach, brief the builder, judge the results, and write the hand-over.

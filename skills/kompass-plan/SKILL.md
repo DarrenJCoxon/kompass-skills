@@ -11,10 +11,6 @@ Planning is where most of the time goes. A unit built from a clear module map an
 
 **Start from the latest main.** The plugin's session-start check brings a clean copy up to date with GitHub by itself. If it reports uncommitted work, save that on a dated backup branch first, then update; never discard it, and never ask the operator to pull.
 
-## Whose words
-
-Quote the operator only word for word, copied from a message they sent in this conversation. Everything an agent decided, concluded or inferred is written as the agent's ("the coordinator decided", "agent's reading"), never as the operator's words, and never under their name or a "(Name, date)" heading. A record of an approval holds the operator's exact words or it isn't an approval. When you summarise what they asked, say it's your reading.
-
 ## Who does what
 
 You plan on **Opus**: the brief, the module map, the architecture, the decisions and the self-check are judgement work. Hand broad reading of an existing codebase to `kompass-searcher` (**Haiku**), one bounded question at a time. Once you have specified a mockup exactly (its variants, states, data and tokens), you may hand the HTML to `kompass-builder` (**Sonnet**), then check it against your specification yourself.
