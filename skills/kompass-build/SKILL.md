@@ -5,6 +5,8 @@ description: Build one Kompass work unit end to end — failing test first, buil
 
 # Build one Kompass unit
 
+The same rules hold whether you run on the runner or in an interactive session: the runner and the operator's sessions build at the same time, and they see each other only through pushed branches and pull requests.
+
 You start with no memory of earlier units. Read, in this order:
 1. `docs/kompass/plan.md` (the brief and approval) and `modules.md`
 2. the unit file
@@ -28,7 +30,13 @@ If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kom
 ## 1. Start
 
 - Work in your own copy of the project (a git worktree) on a branch named `kompass/WU-NNNN-<slug>`, cut from a fresh fetch of `origin/main`, never from whatever a local copy happens to hold.
-- Set the unit's `status: building` on the branch and add a log line: `<date time> started`.
+- Set the unit's `status: building` on the branch, add a log line `<date time> started`, commit (`WU-NNNN: started`) and push the branch at once (`git push -u origin HEAD`). That push is how every other builder, the runner and interactive sessions alike, sees this unit is in flight.
+- Then check what else is in flight: `node <kompass-skills>/scripts/in-flight.mjs --check` (on the runner `/opt/kompass/scripts/in-flight.mjs`). It compares this unit's `owns` and changed files with every other unit on a `kompass/*` branch or an open pull request. Exit 3 means a unit that started earlier holds some of the same files: this unit lands after it, never first. Add a log line `<date time> waiting for WU-NNNN to land (shares <files>)`, push, then run `in-flight.mjs --wait` (it returns within ten minutes; run it again while it exits 3, and never end the turn while waiting). When it exits 0, merge `origin/main` into the branch, add a log line `<date time> WU-NNNN landed; merged main`, and start building. Exit 0 at the start means nothing earlier holds these files; it may name later units that will wait on this one.
+
+### Records and numbers
+
+- **Take every new record number from `node <kompass-skills>/scripts/next-id.mjs D` (or `WU`),** never from the highest number on main. It looks at main, every `kompass/*` branch, every open pull request and every local copy, so a number another builder already took is never taken twice.
+- **Push whenever the unit's records change:** a new decision or follow-up unit, a log line, or a change to `owns`. An unpushed record or `owns` change is invisible to the other builders, so they can neither wait for it nor skip its numbers.
 
 ## 2. Build
 
@@ -73,9 +81,10 @@ Then set `status: delivered`, add `pr:` once the pull request exists, and add a 
 
 - Commit with messages starting `WU-NNNN:`. Push the branch.
 - Open the pull request titled `WU-NNNN: <title>`, with the hand-over as its body. Post the review verdict as a comment headed `Kompass review: APPROVE`.
-- Land it with `bash <kompass-skills>/scripts/merge-when-green.sh <number>` (on the runner `/opt/kompass/scripts/merge-when-green.sh`). It turns on auto-merge, deleting the branch when it merges, brings the branch up to date with main when it falls behind, and re-arms auto-merge once if GitHub shows the pull request green and ready but doesn't merge it. It never merges directly: with an admin token that would bypass branch protection, so don't merge by hand either. Exit 2 means a check failed (next bullet); exit 3 means stuck, so say so in the hand-over and the log, and stop rather than force it.
+- Land it with `bash <kompass-skills>/scripts/merge-when-green.sh <number>` (on the runner `/opt/kompass/scripts/merge-when-green.sh`). It turns on auto-merge, deleting the branch when it merges, brings the branch up to date with main when it falls behind, and re-arms auto-merge once if GitHub shows the pull request green and ready but doesn't merge it. It never merges directly: with an admin token that would bypass branch protection, so don't merge by hand either. In a Kompass project it first runs `in-flight.mjs --check`, and exits 6 without turning auto-merge on when a unit that started earlier holds some of the same files. Exit 2 means a check failed (next bullet); exit 3 means stuck, so say so in the hand-over and the log, and stop rather than force it.
 - Watch CI. If it fails, read the failure and fix the cause honestly; a fix to your own code needs a re-review. If CI fails three times for one cause, raise your effort and rethink. If it is still red, park the unit.
 - Records a unit changes: its own unit file, new `decisions/` records and new follow-up units. Never commit `plan.html` (it is made locally) and never edit a sequence file; a unit's events go in its own log.
+- If `merge-when-green.sh` exits 6 (an earlier unit holds the same files): add a log line `<date time> waiting for WU-NNNN to land (shares <files>)`, push, and run `in-flight.mjs --wait` until it exits 0. Then merge `origin/main` into the branch, run the unit's proving tests, type-check, lint and size check again, add a log line `<date time> WU-NNNN landed; merged main, checks <pass counts>`, push and run `merge-when-green.sh` again. The review stays valid unless the merge changed this unit's own code.
 - If `merge-when-green.sh` exits 5 (conflicts with main): merge `origin/main` into the branch, resolve each file on its merits, run the checks again, push, and run the script again. In a project's approvals lock (for example `docs/litebench/protected-checks.json`), keep every approval and fingerprint from both sides, never drop one, then check every fingerprint matches its file and run the project's guard tests. A file deleted on main (for example an old `plan.html`) stays deleted.
 
 The unit is done when the pull request has merged. Its `delivered` status then reaches main with the code.

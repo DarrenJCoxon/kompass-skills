@@ -55,6 +55,8 @@ First check whether they already have one. Run `ssh -o BatchMode=yes -o ConnectT
 
 Then go to Part 4.
 
+**Building alongside the runner.** Tell the operator, in two lines, that they can build units in their own sessions while the runner works: each unit's branch is pushed from its first minute, a unit that shares files with one started earlier waits for it to land, and record numbers come from `scripts/next-id.mjs`, so the two never collide. `runner/README.md` explains it. The runner's GitHub token needs Pull requests read access for this (it already has Read and write).
+
 ## Part 3: set up the runner on a server (about 30 minutes)
 
 ### 3.1 Rent the server
@@ -87,7 +89,7 @@ Then go to Part 4.
    - then lock it down, since it will hold two tokens: in `/etc/ssh/sshd_config` set `PasswordAuthentication no` and `PermitRootLogin no`, restart SSH, and allow only SSH in through the firewall (`ufw allow OpenSSH && ufw --force enable`). Check `ssh kompass-runner` still works before you close the root session.
 3. As `ops`, clone this repository (`git clone https://github.com/DarrenJCoxon/kompass-skills.git ~/kompass-skills`). Keep it a clone: it is updated only with `runner/update.sh`, never edited in place.
 4. In `~/kompass-skills/runner`, copy `.env.example` to `.env` and run `chmod 600 .env`. Fill in `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL` from the operator's local `git config`. Add `NOTIFY_URL=https://ntfy.sh/kompass-<random>`, using `openssl rand -hex 10` for the random part.
-5. Build the image with `docker compose build`. It takes a few minutes. The image suits Node projects. Another toolchain goes into `runner/Dockerfile` through a pull request to kompass-skills (or the operator's fork of it), then `runner/update.sh`; never edit the server's copy in place. Browser tests need nothing extra: the first session installs Playwright's browser (`pnpm exec playwright install chromium`) and it's kept on the `kompass-browsers` volume across restarts.
+5. Build the image with `docker compose build`. (Later updates go through `~/kompass-skills/runner/update.sh`, which pulls with git and rebuilds; never copy files onto the server.) It takes a few minutes. The image suits Node projects. Another toolchain goes into `runner/Dockerfile` through a pull request to kompass-skills (or the operator's fork of it), then `runner/update.sh`; never edit the server's copy in place. Browser tests need nothing extra: the first session installs Playwright's browser (`pnpm exec playwright install chromium`) and it's kept on the `kompass-browsers` volume across restarts.
 
 ### 3.3 The two tokens (the operator does this)
 

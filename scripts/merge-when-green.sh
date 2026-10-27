@@ -5,7 +5,11 @@
 # but it doesn't merge, auto-merge is re-armed once, which is what freed Tertia #138, #139 and #140 on
 # 26 Oct 2026 (cause not visible through GitHub's API). It never merges directly: with an admin token
 # that could bypass branch protection. A pull request with conflicts is reported at once, naming the files.
-# Exits 0 merged, 1 closed, 2 a check failed, 3 stuck, 4 timed out, 5 conflicts with main.
+# In a Kompass project it first runs in-flight.mjs --check from the unit's own copy: a unit that shares files
+# with one that started earlier never lands first (Tertia, 27 Oct 2026: an interactive merge broke 22 of the
+# runner's WU-0148 tests), so it stops before turning auto-merge on.
+# Exits 0 merged, 1 closed, 2 a check failed, 3 stuck, 4 timed out, 5 conflicts with main,
+# 6 an earlier unit holds the same files (wait for it with in-flight.mjs --wait, merge main, check, run again).
 set -uo pipefail
 
 pr="${1:?usage: merge-when-green.sh <pull request number>}"
@@ -13,6 +17,14 @@ poll="${MWG_POLL:-30}"          # seconds between looks
 stuck_polls="${MWG_STUCK_POLLS:-6}" # looks while green and ready before acting (6 x 30 s = 3 minutes)
 max_polls="${MWG_MAX_POLLS:-240}"   # give up after this many looks (2 hours)
 say() { echo "merge-when-green #$pr: $*"; }
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+top=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -n "$top" ] && [ -d "$top/docs/kompass" ]; then
+  held=$(node "$here/in-flight.mjs" --check); code=$?
+  if [ "$code" = 3 ]; then say "not landing yet: $(grep '^wait:' <<<"$held" | tr '\n' ' ')"; exit 6; fi
+  [ "$code" = 0 ] || say "could not check the units in flight (exit $code); going on"
+fi
 
 gh pr merge "$pr" --auto --merge --delete-branch >/dev/null 2>&1 || true
 green=0 rearmed=0 dirty=0

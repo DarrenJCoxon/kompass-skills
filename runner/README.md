@@ -27,6 +27,17 @@ The runner fetches main, builds the current sequence one unit at a time (each in
 - **Stop after the current unit:** create `docs/kompass/STOP` on main.
 - **Stop at once:** `docker stop kompass-<repo>`. The unit in progress keeps its branch.
 
+## Building alongside the runner
+
+You can build units in your own Claude sessions while the runner works; the tooling keeps the two apart, so nobody has to pass messages between them.
+
+- **Every unit is visible from its first minute.** `kompass-build` pushes the unit's branch as soon as it marks the unit `building`, and again whenever its records change. `scripts/in-flight.mjs` lists every unit in flight, from the `kompass/*` branches and open pull requests: its id, branch, status, `owns`, the files it has changed so far and the record numbers it has taken.
+- **The unit that started first lands first.** At the start of a build, and again in `merge-when-green.sh`, a unit is compared with every other unit in flight. If they share files, the one that started later waits for the earlier one to land (`in-flight.mjs --wait`), merges main, runs its checks again and only then lands. The wait goes in its log. `merge-when-green.sh` exits 6 rather than land it first.
+- **One number allocator.** `scripts/next-id.mjs` gives the next free `D-` and `WU-` number across main, every unit branch, every open pull request and every local copy, so the runner and your sessions never take the same number.
+- **Session start says what is in flight.** The plugin's session-start check lists the units in flight on other branches and the files they hold.
+
+A unit branch with no pull request and no push for 24 hours is listed as stale and holds nothing back.
+
 ## Phone notifications
 
 When `NOTIFY_URL` is set, `start.sh` also starts `notify.sh`, which follows the run's log and sends a notification through [ntfy](https://ntfy.sh) when a unit merges, parks or needs a look, and when the run ends or the sequence is handed over. Subscribe to the topic in the ntfy phone app. It stops by itself when the run's container stops. Anyone who knows the topic can read it, so keep the name random; messages carry only unit ids and titles.
@@ -34,6 +45,12 @@ When `NOTIFY_URL` is set, `start.sh` also starts `notify.sh`, which follows the 
 ## Updating the skills
 
 `~/kompass-skills` on the server is a clone of GitHub's main. Update it only with `~/kompass-skills/runner/update.sh`: it fast-forwards to main and rebuilds the image, and refuses if the copy has local changes, so nothing edited on the server is lost silently. Change the skills or the runner through a pull request, never by editing the server's copy.
+
+```
+ssh kompass-runner '~/kompass-skills/runner/update.sh'
+```
+
+A run already going keeps its image (and the scripts and skills baked into it) until it ends; the next run uses the new one. Update the plugin on your own computer at the same time (`claude plugin marketplace update kompass`, then restart Claude Code), so your sessions and the runner follow the same rules.
 
 ## Session histories
 

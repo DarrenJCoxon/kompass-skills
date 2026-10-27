@@ -123,7 +123,10 @@ export function openUnitIds(cwd) {
   } catch { return []; }
 }
 
-const overlaps = (a, b) => a.some((p) => b.some((q) => p === q || p.startsWith(q.replace(/\*+$/, '')) || q.startsWith(p.replace(/\*+$/, ''))));
+const within = (p, q) => p === q || p.startsWith(q.replace(/\*+$/, ''));
+/** The paths in `a` that share files with `b`: the same path, or one a folder (or `dir/*`) holding the other. */
+export const sharedPaths = (a, b) => a.filter((p) => b.some((q) => within(p, q) || within(q, p)));
+const overlaps = (a, b) => sharedPaths(a, b).length > 0;
 
 /** Sequences from sequences/S-NN-….md: a run of units that ends in a walkthrough and a written hand-over. */
 export function readSequences(src) {
