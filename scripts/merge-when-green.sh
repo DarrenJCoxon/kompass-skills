@@ -11,6 +11,8 @@
 # In a Kompass project it first runs in-flight.mjs --check from the unit's own copy: a unit that shares files
 # with one that started earlier never lands first (Tertia, 27 Oct 2026: an interactive merge broke 22 of the
 # runner's WU-0148 tests), so it stops before turning auto-merge on.
+# Checks are read from the head commit's workflow runs and commit statuses, not statusCheckRollup: a fine-grained
+# token cannot read check runs, so asking for it failed every look (Tertia #216 sat green 30+ minutes, 27 Oct 2026).
 # Exits 0 merged, 1 closed, 2 a check failed, 3 stuck, 4 timed out, 5 conflicts with main,
 # 6 an earlier unit holds the same files (wait for it with in-flight.mjs --wait, merge main, check, run again).
 set -uo pipefail
@@ -36,14 +38,24 @@ fi
 
 green=0 rearmed=0 dirty=0 armed=0 readied=0 waited=0
 for ((i = 0; i < max_polls; i++)); do
-  read -r state merge checks head draft < <(gh pr view "$pr" --json state,mergeStateStatus,statusCheckRollup,headRefName,isDraft | node -e '
-    const p = JSON.parse(require("fs").readFileSync(0, "utf8"));
-    const c = p.statusCheckRollup || [];
-    const done = (x) => (x.status ? x.status === "COMPLETED" : x.state !== "PENDING");
-    const bad = (x) => ["FAILURE", "ERROR", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED"].includes(x.conclusion || x.state);
-    const skipped = c.some((x) => (x.conclusion || x.state) === "SKIPPED");
-    const checks = c.some((x) => !done(x)) ? "pending" : c.some(bad) ? "failed" : skipped ? "skipped" : "green";
-    console.log(p.state, p.mergeStateStatus, checks, p.headRefName || "-", p.isDraft ? "draft" : "ready");')
+  pr_json=$(gh pr view "$pr" --json state,mergeStateStatus,headRefName,headRefOid,isDraft)
+  sha=$(node -e 'try { console.log(JSON.parse(require("fs").readFileSync(0, "utf8")).headRefOid || "") } catch { console.log("") }' <<<"$pr_json")
+  runs="" statuses=""
+  if [ -n "$sha" ]; then
+    runs=$(gh api "repos/{owner}/{repo}/actions/runs?head_sha=$sha&per_page=100")
+    statuses=$(gh api "repos/{owner}/{repo}/commits/$sha/statuses?per_page=100")
+  fi
+  read -r state merge checks head draft < <(PR="$pr_json" RUNS="$runs" STATUSES="$statuses" node -e '
+    const j = (v, d) => { try { return JSON.parse(process.env[v]); } catch { return d; } };
+    const p = j("PR", {}), r = j("RUNS", null), s = j("STATUSES", null);
+    // The latest run of each workflow and the latest status of each context count; an older run it replaced does not.
+    const latest = (xs, key) => Object.values(xs.reduce((m, x) => ((m[key(x)]?.id ?? -1) < x.id ? { ...m, [key(x)]: x } : m), {}));
+    const runs = latest(r?.workflow_runs || [], (x) => x.name), sts = latest(Array.isArray(s) ? s : [], (x) => x.context);
+    const bad = ["failure", "cancelled", "timed_out", "action_required", "startup_failure", "stale"];
+    const checks = !r || !Array.isArray(s) || !runs.length || runs.some((x) => x.status !== "completed") || sts.some((x) => x.state === "pending") ? "pending"
+      : runs.some((x) => bad.includes(x.conclusion)) || sts.some((x) => ["failure", "error"].includes(x.state)) ? "failed"
+      : runs.some((x) => x.conclusion === "skipped") ? "skipped" : "green";
+    console.log(p.state || "-", p.mergeStateStatus || "-", checks, p.headRefName || "-", p.isDraft ? "draft" : "ready");')
   case "$state" in
     MERGED) say "merged"; exit 0 ;;
     CLOSED) say "closed without merging"; exit 1 ;;
