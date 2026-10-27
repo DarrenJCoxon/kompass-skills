@@ -116,11 +116,12 @@ export function readMockups(src) {
 }
 
 /** Ids of units with an open pull request on a kompass/WU-… branch (empty when gh is unavailable). A draft (a unit's
- * `building` pull request) doesn't count: one left by a session that died must not stop the unit being retried. */
-export function openUnitIds(cwd) {
+ * `building` pull request) counts only with `drafts: true` (a local "build next", which mustn't take a unit the runner
+ * is building): for the runner, one left by a session that died must not stop the unit being retried. */
+export function openUnitIds(cwd, { drafts = false } = {}) {
   try {
     const out = execFileSync('gh', ['pr', 'list', '--state', 'open', '--json', 'headRefName,isDraft', '--limit', '200'], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-    return JSON.parse(out).filter((p) => !p.isDraft).map((p) => p.headRefName.match(/^kompass\/(WU-\d+)/)?.[1]).filter(Boolean);
+    return JSON.parse(out).filter((p) => drafts || !p.isDraft).map((p) => p.headRefName.match(/^kompass\/(WU-\d+)/)?.[1]).filter(Boolean);
   } catch { return []; }
 }
 

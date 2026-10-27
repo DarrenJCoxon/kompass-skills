@@ -32,7 +32,8 @@ test('stalled is empty when nothing in the sequence is blocked or parked', () =>
 
 // Tertia, 27 Oct 2026: a unit now opens a draft `building` pull request when it starts. A draft left by a
 // session that died (crash, time limit) must not stop the runner retrying that unit from its branch.
-test('open pull requests count as units in progress, drafts do not', async () => {
+// A local "build next" still treats a unit with a draft as taken: the runner may be building it.
+test('open pull requests count as units in progress; drafts count only when asked for', async () => {
   const { chmodSync, mkdtempSync, rmSync, writeFileSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');
   const { join } = await import('node:path');
@@ -51,7 +52,10 @@ console.log(JSON.stringify(${JSON.stringify(prs)}.map((p) => Object.fromEntries(
   chmodSync(join(dir, 'gh'), 0o755);
   const path = process.env.PATH;
   process.env.PATH = `${dir}:${path}`;
-  try { assert.deepEqual(openUnitIds(dir), ['WU-0001']); }
+  try {
+    assert.deepEqual(openUnitIds(dir), ['WU-0001']);
+    assert.deepEqual(openUnitIds(dir, { drafts: true }), ['WU-0001', 'WU-0002']);
+  }
   finally { process.env.PATH = path; rmSync(dir, { recursive: true, force: true }); }
 });
 

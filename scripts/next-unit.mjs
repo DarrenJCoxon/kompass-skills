@@ -10,7 +10,7 @@ const opt = (name) => { const i = args.indexOf(name); return i < 0 ? null : args
 const src = source(dir, opt('--ref'));
 const units = readUnits(src);
 const walkthrough = awaitingWalkthrough(readSequences(src));
-const inProgress = [...(opt('--in-progress')?.split(',').filter(Boolean) ?? []), ...(args.includes('--no-gh') ? [] : openUnitIds(dir))];
+const inProgress = [...(opt('--in-progress')?.split(',').filter(Boolean) ?? []), ...(args.includes('--no-gh') ? [] : openUnitIds(dir, { drafts: true }))];
 const next = walkthrough === null ? nextUnit(units, inProgress) : null;
 
 if (walkthrough !== null) {
