@@ -119,6 +119,21 @@ test('auto-merge waits while the only check is the one skipped on the draft', ()
   assert.doesNotMatch(r.calls, /--auto/);
 });
 
+// Tertia, 27 Oct 2026: WU-0165 (#221) merged with CI never run. Both runs on its head were skipped, and GitHub
+// counts a skipped required check as passing. A skipped check never turns auto-merge on, and turns it off again.
+test('checks still skipped after the wait stop it with auto-merge off, never merging on them', () => {
+  const r = run([{ ...green, runs: skippedCheck }]);
+  assert.equal(r.code, 3, r.out);
+  assert.match(r.out, /skipped/);
+  assert.doesNotMatch(r.calls, /--auto/);
+});
+
+test('a head whose checks turn skipped after auto-merge was on turns auto-merge off', () => {
+  const r = run([pending, { ...green, runs: skippedCheck }]);
+  assert.equal(r.code, 3, r.out);
+  assert.match(r.calls, /pr merge 42 --auto[^]*pr merge 42 --disable-auto/);
+});
+
 test('a pull request already ready is not marked ready again', () => {
   const r = run([pending, merged]);
   assert.doesNotMatch(r.calls, /pr ready/);

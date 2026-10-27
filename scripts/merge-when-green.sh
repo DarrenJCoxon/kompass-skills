@@ -36,7 +36,7 @@ elif [ -n "$top" ] && [ -d "$top/docs/kompass" ]; then
   [ "$code" = 0 ] || say "could not check the units in flight (exit $code); going on"
 fi
 
-green=0 rearmed=0 dirty=0 armed=0 readied=0 waited=0
+green=0 rearmed=0 dirty=0 armed=0 waited=0
 for ((i = 0; i < max_polls; i++)); do
   pr_json=$(gh pr view "$pr" --json state,mergeStateStatus,headRefName,headRefOid,isDraft)
   sha=$(node -e 'try { console.log(JSON.parse(require("fs").readFileSync(0, "utf8")).headRefOid || "") } catch { console.log("") }' <<<"$pr_json")
@@ -62,11 +62,17 @@ for ((i = 0; i < max_polls; i++)); do
   esac
   if [ "$draft" = draft ]; then
     gh pr ready "$pr" >/dev/null 2>&1 || { say "a draft that could not be marked ready; needs a person"; exit 3; }
-    say "draft marked ready for review"; readied=1; sleep "$poll"; continue
+    say "draft marked ready for review"; sleep "$poll"; continue
   fi
-  if [ "$armed" = 0 ] && [ "$readied" = 1 ] && [ "$checks" = skipped ] && [ "$waited" -lt "$stuck_polls" ]; then
-    [ "$waited" = 0 ] && say "waiting for CI to start on the ready pull request"
-    waited=$((waited + 1)); sleep "$poll"; continue
+  # GitHub counts a skipped required check as passing (Tertia WU-0165, #221, merged with CI never run), so a
+  # skipped check never turns auto-merge on, turns it off if it was on, and stops after the wait.
+  if [ "$checks" = skipped ]; then
+    if [ "$armed" = 1 ]; then gh pr merge "$pr" --disable-auto >/dev/null 2>&1; armed=0; say "checks skipped on the head commit; auto-merge turned off"; fi
+    if [ "$waited" -lt "$stuck_polls" ]; then
+      [ "$waited" = 0 ] && say "waiting for CI to start on the ready pull request"
+      waited=$((waited + 1)); sleep "$poll"; continue
+    fi
+    say "CI skipped its checks on the head commit, and a skipped check is never taken as passing. Make CI run (mark it ready, or push), then run this again"; exit 3
   fi
   if [ "$armed" = 0 ]; then gh pr merge "$pr" --auto --merge --delete-branch >/dev/null 2>&1 || true; armed=1; fi
   if [ "$checks" = failed ] && [ "$merge" != CLEAN ]; then say "checks failed; fix the cause"; exit 2; fi
