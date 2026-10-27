@@ -74,7 +74,7 @@ function unitOf(p, ref, branch, changed) {
   return touched.find((id) => unitAt(p, ref, id)?.data.status === 'building') ?? null;
 }
 
-/** Units in flight: not yet in main, and not delivered, parked or dropped on main. A head with no push for
+/** Units in flight: not yet in main, not delivered, parked or dropped on main, and not parked on their own branch. A head with no push for
  * `staleHours` and no pull request, or only its draft `building` one, is marked stale: listed, but it holds
  * nothing back, so a dead session's draft can't hold files for ever. */
 export function inFlight(p, { fetch = true, gh = true, staleHours = 24, now = Date.now() } = {}) {
@@ -89,6 +89,7 @@ export function inFlight(p, { fetch = true, gh = true, staleHours = 24, now = Da
     const id = unitOf(p, h.ref, h.branch, changed);
     const record = id ? unitAt(p, h.ref, id) : null;
     if (id && SETTLED.includes(unitAt(p, 'refs/remotes/origin/main', id)?.data.status)) continue;
+    if (record?.data.status === 'parked') continue; // parked on its own branch: not landing, so it holds nothing back
     const times = lines(p.git(['log', '--format=%at', `${base}..${h.ref}`])).map(Number);
     const updated = Math.max(...times) * 1000;
     units.push({

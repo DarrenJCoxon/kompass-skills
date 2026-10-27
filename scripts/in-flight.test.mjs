@@ -50,6 +50,11 @@ sh(seed, 'git push -q origin main:kompass/WU-0001-done main:kompass/tidy-up');
 sh(seed, 'git checkout -qb kompass/WU-0004-parked && echo p >> src/format.ts && git commit -qam park && git push -q origin HEAD && git checkout -q main', now - 4 * hour);
 // An abandoned branch untouched for three days, with its draft `building` pull request: stale, holds nothing back.
 sh(seed, 'git checkout -qb kompass/WU-0009-abandoned && echo old >> src/format.ts && git commit -qam old && git push -q origin HEAD HEAD:refs/pull/8/head && git checkout -q main', now - 72 * hour);
+// Tertia, 27 Oct 2026: WU-0159 was parked on its own branch (pull request closed, `waiting` on main for another
+// unit) and held WU-0165 back for a day. A unit parked on its branch is not landing, so it holds nothing back.
+put(k(seed, 'units/WU-0006-parked-here.md'), unit(6, 'waiting', ['src/format.ts']));
+sh(seed, 'git add -A && git commit -qm "WU-0006 waiting" && git push -q origin main', now - 5 * hour);
+sh(seed, 'git checkout -qb kompass/WU-0006-parked-here && sed -i.bak s/waiting/parked/ docs/kompass/units/WU-0006-parked-here.md && rm docs/kompass/units/*.bak && echo q >> src/format.ts && git commit -qam parked && git push -q origin HEAD && git checkout -q main', now - hour);
 // A planning session's open pull request, visible only as a pull request head.
 sh(seed, 'git checkout -qb plan-sequence-2', now);
 put(k(seed, 'decisions/D-003-plan.md'), '---\nid: D-003\n---\n');
@@ -107,6 +112,7 @@ test('a unit that started later and shares files must wait for the earlier one',
   assert.equal(r.code, 3, r.out);
   assert.match(r.out, /wait: WU-0002 started earlier and holds src\/format\.ts/);
   assert.doesNotMatch(r.out, /WU-0009/, 'a stale branch holds nothing back');
+  assert.doesNotMatch(r.out, /WU-0006/, 'a unit parked on its own branch holds nothing back');
 });
 
 test('the earlier unit is clear to land, and is told who waits on it once that work is pushed', () => {
