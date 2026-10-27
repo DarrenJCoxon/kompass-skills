@@ -3,7 +3,8 @@
 // checkout's work against them: a unit that shares files with one that started earlier lands after it.
 // usage: in-flight.mjs [docs/kompass] [--json | --check | --wait | --notice] [--stale-hours 24] [--no-gh] [--no-fetch]
 //   (list)     each unit: id, branch, status, owns, files changed against main so far, record numbers taken
-//   --check    exit 0 when nothing earlier shares this checkout's files, 3 when it must wait (and for what)
+//   --check    exit 0 when nothing earlier shares this checkout's files, 3 when it must wait (and for what),
+//              4 when gh could not answer: open pull requests unchecked is not clear
 //   --wait     --check again every --poll seconds (60) until clear, for at most --max-wait minutes (9); exit 0 or 3
 //   --notice   the session-start lines; prints nothing outside a Kompass project or when anything fails
 import { existsSync } from 'node:fs';
@@ -48,18 +49,21 @@ if (args.includes('--check') || args.includes('--wait')) {
   const say = (r) => {
     for (const s of r.after) console.log(`shares ${some(s.files)} with ${name(s.unit)}, which started later and lands after this one`);
     for (const s of r.wait) console.log(`wait: ${name(s.unit)} started earlier and holds ${some(s.files)}; let it land first, then merge origin/main and run the checks again`);
-    if (!r.wait.length) console.log(`clear: nothing in flight that started earlier shares this work's files${noGh(r)}`);
+    if (!r.wait.length && unchecked(r)) console.log('not clear: open pull requests could not be checked (gh did not answer); run this again');
+    else if (!r.wait.length) console.log(`clear: nothing in flight that started earlier shares this work's files${noGh(r)}`);
   };
+  // Tertia, 27 Oct 2026: "clear" while gh could not answer let a unit through unchecked. Not looking is not clear.
+  const unchecked = (r) => opts.gh && !r.pullsChecked;
   let r = check(p, opts);
   if (args.includes('--wait')) {
-    while (r.wait.length && Date.now() + poll < until) {
-      console.log(`waiting for ${r.wait.map((s) => name(s.unit)).join(', ')} (${time(Date.now())} UTC)`);
+    while ((r.wait.length || unchecked(r)) && Date.now() + poll < until) {
+      console.log(r.wait.length ? `waiting for ${r.wait.map((s) => name(s.unit)).join(', ')} (${time(Date.now())} UTC)` : `waiting for gh to answer (${time(Date.now())} UTC)`);
       await new Promise((ok) => setTimeout(ok, poll));
       r = check(p, opts);
     }
   }
   say(r);
-  process.exit(r.wait.length ? 3 : 0);
+  process.exit(r.wait.length ? 3 : unchecked(r) ? 4 : 0);
 }
 
 const r = inFlight(p, opts);
