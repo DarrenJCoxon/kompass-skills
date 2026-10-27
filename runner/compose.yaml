@@ -23,9 +23,13 @@ services:
     volumes:
       - work:/work
       - claude-state:/home/kompass/.claude/projects
+      # Playwright's browser, installed once by the first session that needs it and kept across restarts.
+      - browsers:/home/kompass/.cache/ms-playwright
 
 volumes:
   work:
     name: kompass-work
   claude-state:
     name: kompass-claude-state
+  browsers:
+    name: kompass-browsers
