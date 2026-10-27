@@ -115,6 +115,18 @@ test('a unit that started later and shares files must wait for the earlier one',
   assert.doesNotMatch(r.out, /WU-0006/, 'a unit parked on its own branch holds nothing back');
 });
 
+// Tertia, 27 Oct 2026: --check said "clear" while gh could not answer, so open pull requests went unchecked.
+// Not having looked is not clear: it exits 4, and merge-when-green does not land on it.
+test('when gh cannot answer, the check is not clear', () => {
+  const broken = join(work, 'broken-bin');
+  put(join(broken, 'gh'), '#!/bin/sh\necho "gh: network down" >&2\nexit 1\n');
+  chmodSync(join(broken, 'gh'), 0o755);
+  const r = spawnSync('node', [join(here, 'in-flight.mjs'), '--check'], { cwd: runner, encoding: 'utf8', env: { ...process.env, ...id, PATH: `${broken}:${process.env.PATH}` } });
+  assert.equal(r.status, 4, r.stdout + r.stderr);
+  assert.match(r.stdout, /not clear: open pull requests could not be checked/);
+  assert.doesNotMatch(r.stdout, /^clear/m);
+});
+
 test('the earlier unit is clear to land, and is told who waits on it once that work is pushed', () => {
   sh(laptop, 'git commit -qam "reader needs the format" && git push -q');
   const r = run(runner, 'in-flight.mjs', '--check');

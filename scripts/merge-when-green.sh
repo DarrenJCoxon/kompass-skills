@@ -33,6 +33,7 @@ if [ -n "$changed" ] && ! grep -qv '^docs/kompass/' <<<"$changed"; then
 elif [ -n "$top" ] && [ -d "$top/docs/kompass" ]; then
   held=$(node "$here/in-flight.mjs" --check); code=$?
   if [ "$code" = 3 ]; then say "not landing yet: $(grep '^wait:' <<<"$held" | tr '\n' ' ')"; exit 6; fi
+  if [ "$code" = 4 ]; then say "not landing yet: the units in flight could not be checked (gh did not answer); run this again"; exit 6; fi
   [ "$code" = 0 ] || say "could not check the units in flight (exit $code); going on"
 fi
 
