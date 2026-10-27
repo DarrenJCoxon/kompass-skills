@@ -1,0 +1,67 @@
+#!/usr/bin/env node
+// Lists every Kompass unit in flight (remote kompass/* branches and open pull requests), or checks this
+// checkout's work against them: a unit that shares files with one that started earlier lands after it.
+// usage: in-flight.mjs [docs/kompass] [--json | --check | --wait | --notice] [--stale-hours 24] [--no-gh] [--no-fetch]
+//   (list)     each unit: id, branch, status, owns, files changed against main so far, record numbers taken
+//   --check    exit 0 when nothing earlier shares this checkout's files, 3 when it must wait (and for what)
+//   --wait     --check again every --poll seconds (60) until clear, for at most --max-wait minutes (9); exit 0 or 3
+//   --notice   the session-start lines; prints nothing outside a Kompass project or when anything fails
+import { existsSync } from 'node:fs';
+import { check, inFlight, local, project } from './lib/inflight.mjs';
+
+const args = process.argv.slice(2);
+const opt = (name, fallback) => { const i = args.indexOf(name); return i < 0 ? fallback : args[i + 1]; };
+const values = new Set(['--stale-hours', '--poll', '--max-wait'].map((n) => opt(n, null)).filter(Boolean));
+const dir = args.find((a) => !a.startsWith('--') && !values.has(a));
+const opts = { fetch: !args.includes('--no-fetch'), gh: !args.includes('--no-gh'), staleHours: Number(opt('--stale-hours', 24)) };
+const p = project(dir);
+
+const time = (ms) => new Date(ms).toISOString().slice(0, 16).replace('T', ' ');
+const some = (files, n = 8) => (files.length > n ? `${files.slice(0, n).join(', ')} (+${files.length - n} more)` : files.join(', '));
+const name = (u) => `${u.id ?? u.branch}${u.pr ? ` (PR #${u.pr})` : ''}`;
+const describe = (u) => [
+  `${u.id ?? '(no unit)'}  ${u.status}${u.stale ? ', stale' : ''}  ${u.branch}${u.pr ? `  PR #${u.pr}` : ''}  started ${time(u.started)} UTC`,
+  u.owns.length && `  owns: ${some(u.owns)}`,
+  `  changed so far (${u.changed.length}): ${some(u.changed)}`,
+  u.records.length && `  records taken: ${u.records.join(', ')}`,
+].filter(Boolean).join('\n');
+const noGh = (r) => (r.pullsChecked ? '' : '\n(open pull requests not checked: gh could not answer)');
+
+if (args.includes('--notice')) {
+  try {
+    if (!p || !existsSync(p.docs)) process.exit(0);
+    const me = local(p);
+    const { units } = inFlight(p, opts);
+    const others = units.filter((u) => u.branch !== me.branch && !u.stale);
+    if (!others.length) { console.log('Kompass: no other unit is in flight.'); process.exit(0); }
+    console.log(`Kompass: in flight now (a unit that touches these files lands after them; run in-flight.mjs --check):`);
+    for (const u of others) console.log(`- ${name(u)} ${u.status}, started ${time(u.started)} UTC, holds: ${some([...new Set([...u.owns, ...u.changed])], 10) || 'no files yet'}${u.records.length ? `; records ${u.records.join(', ')}` : ''}`);
+  } catch { /* the notice never blocks a session */ }
+  process.exit(0);
+}
+
+if (!p) { console.error('in-flight: not inside a git repository'); process.exit(1); }
+
+if (args.includes('--check') || args.includes('--wait')) {
+  const poll = Number(opt('--poll', 60)) * 1000;
+  const until = Date.now() + Number(opt('--max-wait', 9)) * 60_000;
+  const say = (r) => {
+    for (const s of r.after) console.log(`shares ${some(s.files)} with ${name(s.unit)}, which started later and lands after this one`);
+    for (const s of r.wait) console.log(`wait: ${name(s.unit)} started earlier and holds ${some(s.files)}; let it land first, then merge origin/main and run the checks again`);
+    if (!r.wait.length) console.log(`clear: nothing in flight that started earlier shares this work's files${noGh(r)}`);
+  };
+  let r = check(p, opts);
+  if (args.includes('--wait')) {
+    while (r.wait.length && Date.now() + poll < until) {
+      console.log(`waiting for ${r.wait.map((s) => name(s.unit)).join(', ')} (${time(Date.now())} UTC)`);
+      await new Promise((ok) => setTimeout(ok, poll));
+      r = check(p, opts);
+    }
+  }
+  say(r);
+  process.exit(r.wait.length ? 3 : 0);
+}
+
+const r = inFlight(p, opts);
+if (args.includes('--json')) console.log(JSON.stringify(r, null, 2));
+else console.log((r.units.length ? r.units.map(describe).join('\n') : 'No unit is in flight.') + noGh(r));

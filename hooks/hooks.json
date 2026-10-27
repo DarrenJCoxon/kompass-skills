@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/sync-main.sh\"; bash \"${CLAUDE_PLUGIN_ROOT}/scripts/reclaim-worktrees.sh\"",
-            "timeout": 30
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/sync-main.sh\"; bash \"${CLAUDE_PLUGIN_ROOT}/scripts/reclaim-worktrees.sh\"; node \"${CLAUDE_PLUGIN_ROOT}/scripts/in-flight.mjs\" --notice",
+            "timeout": 45
           }
         ]
       }

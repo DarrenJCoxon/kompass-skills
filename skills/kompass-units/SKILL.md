@@ -11,7 +11,7 @@ A work unit is the brief a fresh agent builds from, with no other memory. Write 
 
 Write units on **Opus**: cutting work and naming the proving tests is judgement work. Use `kompass-searcher` (**Haiku**) to find owners, callers and existing tests for the pointers.
 
-Create each unit from `templates/unit.md` as `docs/kompass/units/WU-NNNN-<short-slug>.md`. Number units in the order they should be built. Keep the brief to about one page; the detail lives in the module map, decisions and mockups it points to.
+Create each unit from `templates/unit.md` as `docs/kompass/units/WU-NNNN-<short-slug>.md`. Take each new unit's number from `node <kompass-skills>/scripts/next-id.mjs WU` (`--count n` for several), never from the highest number on main: the runner and other sessions may already hold numbers on their branches or open pull requests. Commit and push the new units on their branch at once, so the numbers are seen as taken. Number units in the order they should be built. Keep the brief to about one page; the detail lives in the module map, decisions and mockups it points to.
 
 ## Carrying over existing units
 
@@ -21,7 +21,7 @@ When units already exist from an earlier plan (LiteBench or other), convert them
 - `status:` is `waiting`, `building`, `delivered`, `parked` or `dropped`. A unit decided against, or folded into another, is `dropped`, with a log line saying why and where its work went; it is never built.
 - A done unit is not converted. Its old record stays as history, and Kompass Find searches it.
 - A dependency on a done unit is already met: drop it from `depends:`, and mention it in the brief if the unit builds on that work. `depends:` names only units with a record in `units/`, or the runner waits for them for ever.
-- New units start numbering after the highest existing id.
+- New units take their numbers from `next-id.mjs WU`, which starts after the highest id on main, on every in-flight branch and pull request, and in every local copy.
 
 ## What every unit has
 

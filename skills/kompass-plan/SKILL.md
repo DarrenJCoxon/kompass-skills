@@ -72,7 +72,7 @@ For each key journey through the product, show how the modules work together:
 - Where privacy, access and accuracy rules are enforced, and which module owns each.
 - External services and what happens when they fail.
 
-Put each real choice (a storage engine, an API shape, where a check lives) to the operator, with the options and your recommendation. Record it in `decisions/` using `templates/decision.md` only once they have chosen, with the options considered, the choice, why, the date and their words. An existing approved decision is carried over, not re-made.
+Put each real choice (a storage engine, an API shape, where a check lives) to the operator, with the options and your recommendation. Record it in `decisions/` using `templates/decision.md` only once they have chosen, numbered with `node <kompass-skills>/scripts/next-id.mjs D` (never from the highest number on main: the runner and other sessions take numbers on their branches too), and push it at once, with the options considered, the choice, why, the date and their words. An existing approved decision is carried over, not re-made.
 
 ## Stage 4: UI and UX decisions (`mockups/`)
 
