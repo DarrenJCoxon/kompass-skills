@@ -34,7 +34,7 @@ ssh <runner> '~/kompass-skills/runner/start.sh <owner/repo> --hours 8 [--paralle
 
 This also starts phone notifications when the server has them set up. Follow the run with `ssh <runner> docker logs -f kompass-<repo>`. The runner fetches main and works only from what is merged, so nothing on your Mac needs to stay open.
 
-The runner builds only the current sequence: the lowest-numbered sequence with units not yet delivered or parked. For each ready unit it starts a fresh `claude -p "/kompass-build WU-NNNN"` session and waits for the unit to merge or be parked. With `--parallel 2`, two units with no dependency between them and no shared files are built at once.
+The runner builds only the current sequence: the lowest-numbered sequence with units not yet delivered or parked. For each ready unit it starts a fresh `claude -p "/kompass-build WU-NNNN"` session and waits for the unit to merge or be parked. With `--parallel 2`, two units with no dependency between them and no shared files are built at once. A unit with `alone: true` or an empty `owns:` list is built on its own. Each session running at once gets its own `KOMPASS_SLOT` and browser-test ports (`E2E_PORT` and `E2E_OFF_PORT`, 3100 and 3101 for the first, then 3102 and 3103), so a project's test config should read its ports from those.
 
 When every unit in the sequence is delivered or parked, the runner starts one more fresh session to write the sequence hand-over, then stops. It also stops if the time runs out or `docs/kompass/STOP` exists. Progress is written to `.kompass/run.log`, which is not committed.
 

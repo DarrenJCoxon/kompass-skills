@@ -9,7 +9,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runLog } from './lib/runlog.mjs';
-import { startSession } from './lib/session.mjs';
+import { slotEnv, slots, startSession } from './lib/session.mjs';
 import { awaitingWalkthrough, currentSequence, stepsFirst, nextUnit, openUnitIds, readSequences, readUnits, sequenceComplete, source, stalled } from './lib/records.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -27,6 +27,7 @@ const log = runLog(root);
 
 const deadline = Date.now() + hours * 3600_000;
 const active = new Map(); // id -> child process
+const sessionSlots = slots(); // each running unit session gets its own slot, and so its own browser-test ports
 const attempts = new Map();
 const skipped = new Set();
 
@@ -54,16 +55,18 @@ function finish(why) {
 function startNext() {
   const units = mainUnits();
   const inProgress = [...active.keys(), ...openUnitIds(root).filter((id) => !active.has(id)), ...skipped];
-  const unit = nextUnit(units, inProgress);
+  const unit = nextUnit(units, inProgress, [...active.keys()]); // skipped and open-PR units are not picked, but only running sessions hold others back
   if (!unit || unit.sequence !== sequence) return false;
   attempts.set(unit.id, (attempts.get(unit.id) ?? 0) + 1);
   log(`start ${unit.id} (attempt ${attempts.get(unit.id)}): ${unit.title}`);
   // The session starts in this checkout, so bring it to main first: a stale copy once made a session ask for a decision already made (WU-0159).
   try { const said = execFileSync('bash', [join(here, 'sync-main.sh')], { cwd: root, encoding: 'utf8' }).trim(); if (said && !said.includes('on the latest main')) log(said); } catch (e) { log(`main sync failed: ${e.message}`); }
-  const child = startSession(claude, ['-p', `/kompass-build ${unit.id}`, '--model', model, '--permission-mode', 'bypassPermissions'], { cwd: root });
+  const slot = sessionSlots.take();
+  const child = startSession(claude, ['-p', `/kompass-build ${unit.id}`, '--model', model, '--permission-mode', 'bypassPermissions'], { cwd: root, env: slotEnv(slot) });
   active.set(unit.id, child);
   child.on('ended', (code) => {
     active.delete(unit.id);
+    sessionSlots.free(slot);
     try { log(execFileSync('bash', [join(here, 'reclaim-worktrees.sh')], { cwd: root, encoding: 'utf8' }).trim() || 'no merged worktrees to remove'); } catch (e) { log(`worktree clean-up failed: ${e.message}`); }
     const after = mainUnits().find((u) => u.id === unit.id);
     log(`end ${unit.id}: session exit ${code}, status on main ${after?.status ?? 'missing'}`);
