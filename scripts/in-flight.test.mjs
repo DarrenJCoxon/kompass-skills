@@ -79,7 +79,10 @@ test('in-flight lists every unit not yet landed, with its status, owns, changed 
   const { units, pullsChecked } = JSON.parse(r.out);
   assert.equal(pullsChecked, true);
   const by = Object.fromEntries(units.map((u) => [u.id ?? u.branch, u]));
-  assert.deepEqual(Object.keys(by).sort(), ['WU-0002', 'WU-0003', 'WU-0009', 'plan-sequence-2']);
+  assert.deepEqual(Object.keys(by).sort(), ['WU-0002', 'WU-0003', 'WU-0004', 'WU-0006', 'WU-0009', 'plan-sequence-2']);
+  assert.equal(by['WU-0004'].resting, true, 'parked on main, no pull request: listed, resting');
+  assert.equal(by['WU-0006'].resting, true, 'parked on its own branch, no pull request: listed, resting');
+  assert.equal(by['WU-0002'].resting, false);
   assert.equal(by['WU-0002'].status, 'building');
   assert.equal(by['WU-0002'].branch, 'kompass/WU-0002-shared-format');
   assert.deepEqual(by['WU-0002'].owns, ['src/format.ts', 'src/format.test.ts']);
@@ -156,4 +159,98 @@ test('once the earlier unit lands, the later one is clear', () => {
   assert.equal(r.code, 0, r.out);
   assert.match(r.out, /^clear/m);
   assert.doesNotMatch(run(laptop, 'in-flight.mjs').out, /WU-0002/);
+});
+
+// Tertia, 27 Oct 2026: WU-0177 (approved, CI green) waited from 16:20 for WU-0159's kept branch, which shared
+// src/core/gate/index.ts. WU-0159 was `waiting` on main for WU-0250, its draft closed and its park delivered.
+// kompass-build keeps a parked unit's branch on purpose, so counting it would let every park hold every later
+// unit on the same files for a day. A unit's branch is in flight only while the unit is being worked on: an
+// open pull request, or `building` on main or on its own branch. Otherwise, when main says the unit is
+// parked, waiting, dropped or delivered, its branch is resting: listed, but it holds nothing back.
+const rest = (() => {
+  let made = null;
+  return () => {
+    if (made) return made;
+    const dir = join(work, 'resting'), rbin = join(dir, 'bin');
+    put(join(rbin, 'gh'), `#!/usr/bin/env node
+const fs = require('fs'); const a = process.argv.slice(2);
+if (a[0] === 'pr' && a[1] === 'list') process.stdout.write(fs.readFileSync(${JSON.stringify(join(dir, 'pulls.json'))}, 'utf8'));
+else process.stdout.write('{}');
+`);
+    chmodSync(join(rbin, 'gh'), 0o755);
+    // Only open pull requests come back: WU-0011's and WU-0012's drafts were closed when they parked.
+    writeFileSync(join(dir, 'pulls.json'), JSON.stringify([{ number: 13, headRefName: 'kompass/WU-0013-draft', isDraft: true }]));
+    const o = join(dir, 'origin.git'), s = join(dir, 'seed'), later = join(dir, 'later');
+    sh(work, `git init -q --bare -b main ${o} && git clone -q ${o} ${s}`);
+    put(k(s, 'units/WU-0011-kept.md'), unit(11, 'waiting', ['src/w.ts']));
+    put(k(s, 'units/WU-0012-parked.md'), unit(12, 'parked', ['src/p.ts']));
+    put(k(s, 'units/WU-0013-draft.md'), unit(13, 'waiting', ['src/d.ts']));
+    put(k(s, 'units/WU-0014-resumed.md'), unit(14, 'parked', ['src/b.ts']));
+    put(k(s, 'units/WU-0015-done.md'), unit(15, 'delivered', ['src/x.ts']));
+    put(k(s, 'units/WU-0020-later.md'), unit(20, 'waiting', ['src/later.ts']));
+    for (const f of ['w', 'p', 'd', 'b', 'x', 'later']) put(join(s, `src/${f}.ts`), 'v1\n');
+    sh(s, 'git add -A && git commit -qm main && git push -q origin main', now - 5 * hour);
+    // Kept branches, pushed three hours ago (well inside the stale window), each changing one shared file.
+    const branch = (name, file, edit, extra = '') => sh(s, `git checkout -qb ${name} origin/main && ${edit}echo x >> src/${file}.ts && git commit -qam work && git push -q origin HEAD${extra} && git checkout -q main`, now - 3 * hour);
+    branch('kompass/WU-0011-kept', 'w', ''); // waiting on main and on its branch; its draft closed
+    branch('kompass/WU-0012-parked', 'p', ''); // parked on main; its draft closed
+    branch('kompass/WU-0013-draft', 'd', '', ' HEAD:refs/pull/13/head'); // waiting on main, open draft pull request
+    branch('kompass/WU-0014-resumed', 'b', 'sed -i.bak s/parked/building/ docs/kompass/units/WU-0014-resumed.md && rm docs/kompass/units/*.bak && '); // resumed: building on its branch, no pull request yet
+    // Tertia, 27 Oct 2026: WU-0162 was delivered from another branch; this earlier attempt still says building.
+    branch('kompass/WU-0015-done', 'x', 'sed -i.bak s/delivered/building/ docs/kompass/units/WU-0015-done.md && rm docs/kompass/units/*.bak && ');
+    sh(dir, `git clone -q ${o} ${later}`);
+    sh(later, 'git checkout -qb kompass/WU-0020-later && sed -i.bak s/waiting/building/ docs/kompass/units/WU-0020-later.md && rm docs/kompass/units/*.bak && git commit -qam started');
+    made = { later, check: (file) => {
+      sh(later, 'git checkout -q -- src');
+      put(join(later, `src/${file}.ts`), 'the later unit changes this too\n');
+      const r = spawnSync('node', [join(here, 'in-flight.mjs'), '--check'], { cwd: later, encoding: 'utf8', env: { ...process.env, ...id, PATH: `${rbin}:${process.env.PATH}` } });
+      return { code: r.status, out: r.stdout + r.stderr };
+    }, list: () => {
+      const r = spawnSync('node', [join(here, 'in-flight.mjs'), '--json'], { cwd: later, encoding: 'utf8', env: { ...process.env, ...id, PATH: `${rbin}:${process.env.PATH}` } });
+      return Object.fromEntries(JSON.parse(r.stdout).units.map((u) => [u.id, u]));
+    } };
+    return made;
+  };
+})();
+
+test('a kept branch of a waiting unit, its pull request closed, is resting: listed, but holds nothing back', () => {
+  const r = rest().check('w');
+  assert.equal(r.code, 0, r.out);
+  assert.doesNotMatch(r.out, /WU-0011/);
+  const u = rest().list()['WU-0011'];
+  assert.equal(u?.resting, true, 'still listed, marked resting');
+  assert.match(spawnSync('node', [join(here, 'in-flight.mjs')], { cwd: rest().later, encoding: 'utf8', env: { ...process.env, PATH: `${join(work, 'resting', 'bin')}:${process.env.PATH}` } }).stdout, /WU-0011 {2}waiting, resting/);
+});
+
+test('a kept branch of a parked unit, its pull request closed, is resting: listed, but holds nothing back', () => {
+  const r = rest().check('p');
+  assert.equal(r.code, 0, r.out);
+  assert.doesNotMatch(r.out, /WU-0012/);
+  assert.equal(rest().list()['WU-0012']?.resting, true, 'still listed, marked resting');
+});
+
+test('a branch with an open draft pull request still holds its files, whatever main says', () => {
+  const r = rest().check('d');
+  assert.equal(r.code, 3, r.out);
+  assert.match(r.out, /wait: WU-0013 \(PR #13\) started earlier and holds src\/d\.ts/);
+  assert.equal(rest().list()['WU-0013'].resting, false);
+});
+
+test('a unit building on its own branch, with no pull request yet, still holds its files though main says parked', () => {
+  const r = rest().check('b');
+  assert.equal(r.code, 3, r.out);
+  assert.match(r.out, /wait: WU-0014 started earlier and holds src\/b\.ts/);
+  assert.equal(rest().list()['WU-0014'].resting, false);
+});
+
+test('a leftover branch of a delivered unit rests, even if it still says building', () => {
+  const r = rest().check('x');
+  assert.equal(r.code, 0, r.out);
+  assert.equal(rest().list()['WU-0015']?.resting, true);
+});
+
+test('the session-start notice leaves resting branches out', () => {
+  const r = spawnSync('node', [join(here, 'in-flight.mjs'), '--notice'], { cwd: rest().later, encoding: 'utf8', env: { ...process.env, PATH: `${join(work, 'resting', 'bin')}:${process.env.PATH}` } });
+  assert.match(r.stdout, /- WU-0013/);
+  assert.doesNotMatch(r.stdout, /- WU-0011|- WU-0012/);
 });

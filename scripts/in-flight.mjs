@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Lists every Kompass unit in flight (remote kompass/* branches and open pull requests), or checks this
 // checkout's work against them: a unit that shares files with one that started earlier lands after it.
+// A kept branch of a unit not being worked on (no open pull request, not `building`) is listed as resting and
+// holds nothing back; so is one with no push for --stale-hours.
 // usage: in-flight.mjs [docs/kompass] [--json | --check | --wait | --notice] [--stale-hours 24] [--no-gh] [--no-fetch]
 //   (list)     each unit: id, branch, status, owns, files changed against main so far, record numbers taken
 //   --check    exit 0 when nothing earlier shares this checkout's files, 3 when it must wait (and for what),
@@ -21,7 +23,7 @@ const time = (ms) => new Date(ms).toISOString().slice(0, 16).replace('T', ' ');
 const some = (files, n = 8) => (files.length > n ? `${files.slice(0, n).join(', ')} (+${files.length - n} more)` : files.join(', '));
 const name = (u) => `${u.id ?? u.branch}${u.pr ? ` (PR #${u.pr})` : ''}`;
 const describe = (u) => [
-  `${u.id ?? '(no unit)'}  ${u.status}${u.stale ? ', stale' : ''}  ${u.branch}${u.pr ? `  PR #${u.pr}` : ''}  started ${time(u.started)} UTC`,
+  `${u.id ?? '(no unit)'}  ${u.status}${u.resting ? `, resting (${u.onMain ?? u.status} on main)` : ''}${u.stale ? ', stale' : ''}  ${u.branch}${u.pr ? `  PR #${u.pr}` : ''}  started ${time(u.started)} UTC`,
   u.owns.length && `  owns: ${some(u.owns)}`,
   `  changed so far (${u.changed.length}): ${some(u.changed)}`,
   u.records.length && `  records taken: ${u.records.join(', ')}`,
@@ -33,7 +35,7 @@ if (args.includes('--notice')) {
     if (!p || !existsSync(p.docs)) process.exit(0);
     const me = local(p);
     const { units } = inFlight(p, opts);
-    const others = units.filter((u) => u.branch !== me.branch && !u.stale);
+    const others = units.filter((u) => u.branch !== me.branch && !u.stale && !u.resting);
     if (!others.length) { console.log('Kompass: no other unit is in flight.'); process.exit(0); }
     console.log(`Kompass: in flight now (a unit that touches these files lands after them; run in-flight.mjs --check):`);
     for (const u of others) console.log(`- ${name(u)} ${u.status}, started ${time(u.started)} UTC, holds: ${some([...new Set([...u.owns, ...u.changed])], 10) || 'no files yet'}${u.records.length ? `; records ${u.records.join(', ')}` : ''}`);
