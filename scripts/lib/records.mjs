@@ -72,6 +72,7 @@ export function readUnits(src) {
         status: STATUSES.includes(data.status) ? data.status : 'waiting',
         depends: Array.isArray(data.depends) ? data.depends : [],
         owns: Array.isArray(data.owns) ? data.owns : [],
+        alone: data.alone === 'true',
         mockup: data.mockup || '',
         decisions: Array.isArray(data.decisions) ? data.decisions : [],
         pr: data.pr || '',
@@ -125,6 +126,12 @@ export function openUnitIds(cwd) {
 
 const overlaps = (a, b) => a.some((p) => b.some((q) => p === q || p.startsWith(q.replace(/\*+$/, '')) || q.startsWith(p.replace(/\*+$/, ''))));
 
+/** A unit runs alone when it asks to (`alone: true`, e.g. it measures the real model) or names no files, since then it may touch any of them. */
+const runsAlone = (u) => u.alone === true || !u.owns.length;
+
+/** True when units `a` and `b` must not be built at the same time. */
+const conflicts = (a, b) => runsAlone(a) || runsAlone(b) || overlaps(a.owns, b.owns);
+
 /** Sequences from sequences/S-NN-….md: a run of units that ends in a walkthrough and a written hand-over. */
 export function readSequences(src) {
   return src.list('sequences')
@@ -155,7 +162,7 @@ export function sequenceComplete(units, n) {
   return inSeq.length > 0 && inSeq.every(settled);
 }
 
-/** The next unit in the current sequence that is waiting, has every dependency delivered, is not in progress, and shares no files with work in progress. Never crosses into the next sequence: that waits for the walkthrough. */
+/** The next unit in the current sequence that is waiting, has every dependency delivered, is not in progress, and shares no files with work in progress (a unit that runs alone shares with everything). Never crosses into the next sequence: that waits for the walkthrough. */
 export function nextUnit(units, inProgress = []) {
   const byId = new Map(units.map((u) => [u.id, u]));
   const busy = units.filter((u) => inProgress.includes(u.id) || u.status === 'building');
@@ -165,7 +172,7 @@ export function nextUnit(units, inProgress = []) {
     u.sequence === seq &&
     !inProgress.includes(u.id) &&
     u.depends.every((d) => byId.get(d)?.status === 'delivered') &&
-    !busy.some((b) => overlaps(u.owns, b.owns)),
+    !busy.some((b) => conflicts(u, b)),
   ) ?? null;
 }
 
