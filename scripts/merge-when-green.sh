@@ -5,6 +5,9 @@
 # but it doesn't merge, auto-merge is re-armed once, which is what freed Tertia #138, #139 and #140 on
 # 26 Oct 2026 (cause not visible through GitHub's API). It never merges directly: with an admin token
 # that could bypass branch protection. A pull request with conflicts is reported at once, naming the files.
+# A draft (the unit's `building` pull request) is marked ready first, since GitHub won't auto-merge a draft. A
+# project whose CI skips drafts (Tertia's does) starts CI on "ready"; until that run shows, the draft's skipped
+# check can count as passed, so auto-merge waits for it (a few looks at most) rather than merge untested code.
 # Exits 0 merged, 1 closed, 2 a check failed, 3 stuck, 4 timed out, 5 conflicts with main.
 set -uo pipefail
 
@@ -14,20 +17,29 @@ stuck_polls="${MWG_STUCK_POLLS:-6}" # looks while green and ready before acting 
 max_polls="${MWG_MAX_POLLS:-240}"   # give up after this many looks (2 hours)
 say() { echo "merge-when-green #$pr: $*"; }
 
-gh pr merge "$pr" --auto --merge --delete-branch >/dev/null 2>&1 || true
-green=0 rearmed=0 dirty=0
+green=0 rearmed=0 dirty=0 armed=0 readied=0 waited=0
 for ((i = 0; i < max_polls; i++)); do
-  read -r state merge checks head < <(gh pr view "$pr" --json state,mergeStateStatus,statusCheckRollup,headRefName | node -e '
+  read -r state merge checks head draft < <(gh pr view "$pr" --json state,mergeStateStatus,statusCheckRollup,headRefName,isDraft | node -e '
     const p = JSON.parse(require("fs").readFileSync(0, "utf8"));
     const c = p.statusCheckRollup || [];
     const done = (x) => (x.status ? x.status === "COMPLETED" : x.state !== "PENDING");
     const bad = (x) => ["FAILURE", "ERROR", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED"].includes(x.conclusion || x.state);
-    const checks = c.some((x) => !done(x)) ? "pending" : c.some(bad) ? "failed" : "green";
-    console.log(p.state, p.mergeStateStatus, checks, p.headRefName || "-");')
+    const skipped = c.some((x) => (x.conclusion || x.state) === "SKIPPED");
+    const checks = c.some((x) => !done(x)) ? "pending" : c.some(bad) ? "failed" : skipped ? "skipped" : "green";
+    console.log(p.state, p.mergeStateStatus, checks, p.headRefName || "-", p.isDraft ? "draft" : "ready");')
   case "$state" in
     MERGED) say "merged"; exit 0 ;;
     CLOSED) say "closed without merging"; exit 1 ;;
   esac
+  if [ "$draft" = draft ]; then
+    gh pr ready "$pr" >/dev/null 2>&1 || { say "a draft that could not be marked ready; needs a person"; exit 3; }
+    say "draft marked ready for review"; readied=1; sleep "$poll"; continue
+  fi
+  if [ "$armed" = 0 ] && [ "$readied" = 1 ] && [ "$checks" = skipped ] && [ "$waited" -lt "$stuck_polls" ]; then
+    [ "$waited" = 0 ] && say "waiting for CI to start on the ready pull request"
+    waited=$((waited + 1)); sleep "$poll"; continue
+  fi
+  if [ "$armed" = 0 ]; then gh pr merge "$pr" --auto --merge --delete-branch >/dev/null 2>&1 || true; armed=1; fi
   if [ "$checks" = failed ] && [ "$merge" != CLEAN ]; then say "checks failed; fix the cause"; exit 2; fi
   # DIRTY twice in a row (GitHub briefly reports UNKNOWN while it works a merge out): stop and name the files.
   if [ "$merge" = DIRTY ]; then dirty=$((dirty + 1)); else dirty=0; fi

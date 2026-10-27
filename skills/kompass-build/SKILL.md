@@ -29,6 +29,7 @@ If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kom
 
 - Work in your own copy of the project (a git worktree) on a branch named `kompass/WU-NNNN-<slug>`, cut from a fresh fetch of `origin/main`, never from whatever a local copy happens to hold.
 - Set the unit's `status: building` on the branch and add a log line: `<date time> started`.
+- **Show the unit on GitHub at once.** Push the branch and open a draft pull request titled `WU-NNNN: building` (`gh pr create --draft`), so anyone checking GitHub sees the unit and the files it is changing. Its body is one line, `Being built on the runner. Files it changes:` (`by a local session` instead when `/opt/kompass` doesn't exist), then each `owns` entry on its own line, then `Unit: docs/kompass/units/<file>`. If the branch already has an open pull request (a retry), use that one. Whenever `owns` changes, update the draft's body to match. WU-0148 built for 1.5 hours with nothing on GitHub, and a local session changed code it depended on.
 
 ## 2. Build
 
@@ -72,7 +73,7 @@ Then set `status: delivered`, add `pr:` once the pull request exists, and add a 
 ## 6. Deliver
 
 - Commit with messages starting `WU-NNNN:`. Push the branch.
-- Open the pull request titled `WU-NNNN: <title>`, with the hand-over as its body. Post the review verdict as a comment headed `Kompass review: APPROVE`.
+- Turn the unit's draft into the real pull request: set its title to `WU-NNNN: <title>` and its body to the hand-over (`gh pr edit`), then mark it ready (`gh pr ready`). Post the review verdict as a comment headed `Kompass review: APPROVE`.
 - Land it with `bash <kompass-skills>/scripts/merge-when-green.sh <number>` (on the runner `/opt/kompass/scripts/merge-when-green.sh`). It turns on auto-merge, deleting the branch when it merges, brings the branch up to date with main when it falls behind, and re-arms auto-merge once if GitHub shows the pull request green and ready but doesn't merge it. It never merges directly: with an admin token that would bypass branch protection, so don't merge by hand either. Exit 2 means a check failed (next bullet); exit 3 means stuck, so say so in the hand-over and the log, and stop rather than force it.
 - Watch CI. If it fails, read the failure and fix the cause honestly; a fix to your own code needs a re-review. If CI fails three times for one cause, raise your effort and rethink. If it is still red, park the unit.
 - Records a unit changes: its own unit file, new `decisions/` records and new follow-up units. Never commit `plan.html` (it is made locally) and never edit a sequence file; a unit's events go in its own log.
@@ -89,6 +90,7 @@ Park when the unit cannot be finished honestly: an unprovable cause, a needed ch
 - Write a **Parked** note in the hand-over: what blocks it, the evidence, and the decision needed from the operator.
 - Deliver just the unit file in a small pull request titled `WU-NNNN: parked`, so the run does not pick it again.
 - Keep the code branch for later.
+- Close the unit's `building` draft with a comment saying the unit parked and linking the `WU-NNNN: parked` pull request (`gh pr close <number> --comment …`, never `--delete-branch`), so it doesn't look like live work. A unit dropped during its build closes its draft the same way, the comment saying why.
 
 Choices about how the work is done are yours, never a reason to park: the scope of a unit (taking a follow-up's change into this unit when that is the honest fix), the order of units, which owned files a fix needs, test tooling, and whether to drop an approach that costs more than it saves. Decide, record the decision with your reasons as a `decisions/` record, update the unit (its `owns`, criteria and log) and carry on. Fold a follow-up unit in by giving this unit its criteria and setting the follow-up's `status: dropped` with a log line naming this unit. When the change reaches a sensitive module (access, privacy, figures), give the reviewer high effort. Park only for the stops listed below.
 
