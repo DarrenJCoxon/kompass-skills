@@ -85,3 +85,26 @@ test('a conflict GitHub is still working out does not stop it', () => {
   const r = run([{ state: 'OPEN', mergeStateStatus: 'UNKNOWN', mergeable: 'UNKNOWN', statusCheckRollup: [] }, pending, merged]);
   assert.equal(r.code, 0);
 });
+
+// Tertia, 27 Oct 2026: a unit now opens a draft `building` pull request when it starts, and GitHub won't
+// auto-merge a draft. Tertia's CI skips drafts, so the draft's skipped check must not count as CI passing.
+const skippedCheck = [{ name: 'checks', conclusion: 'SKIPPED', status: 'COMPLETED' }];
+const draft = { state: 'OPEN', mergeStateStatus: 'DRAFT', isDraft: true, statusCheckRollup: skippedCheck };
+
+test('a draft is marked ready, then auto-merge is turned on once CI has started', () => {
+  const r = run([draft, pending, merged]);
+  assert.equal(r.code, 0);
+  assert.match(r.calls, /pr ready 42\n[^]*pr merge 42 --auto --merge --delete-branch/);
+});
+
+test('auto-merge waits while the only check is the one skipped on the draft', () => {
+  const r = run([draft, { ...green, statusCheckRollup: skippedCheck }, merged]);
+  assert.equal(r.code, 0);
+  assert.match(r.out, /waiting for CI to start/);
+  assert.doesNotMatch(r.calls, /--auto/);
+});
+
+test('a pull request already ready is not marked ready again', () => {
+  const r = run([pending, merged]);
+  assert.doesNotMatch(r.calls, /pr ready/);
+});

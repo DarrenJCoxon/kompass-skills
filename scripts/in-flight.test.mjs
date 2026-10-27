@@ -33,7 +33,7 @@ if (a[0] === 'pr' && a[1] === 'list') process.stdout.write(fs.readFileSync(${JSO
 else { fs.appendFileSync(${JSON.stringify(join(work, 'calls'))}, a.join(' ') + '\\n'); process.stdout.write('{}'); }
 `);
 chmodSync(join(bin, 'gh'), 0o755);
-writeFileSync(join(work, 'pulls.json'), JSON.stringify([{ number: 7, headRefName: 'plan-sequence-2' }]));
+writeFileSync(join(work, 'pulls.json'), JSON.stringify([{ number: 7, headRefName: 'plan-sequence-2', isDraft: false }, { number: 8, headRefName: 'kompass/WU-0009-abandoned', isDraft: true }]));
 
 const origin = join(work, 'origin.git'), seed = join(work, 'seed'), runner = join(work, 'runner'), laptop = join(work, 'laptop');
 sh(work, `git init -q --bare -b main ${origin} && git clone -q ${origin} ${seed}`);
@@ -48,8 +48,8 @@ sh(seed, 'git add -A && git commit -qm main && git push -q origin main', now - 5
 // Merged branches GitHub kept (one with no unit), and a parked unit's code branch: none is in flight.
 sh(seed, 'git push -q origin main:kompass/WU-0001-done main:kompass/tidy-up');
 sh(seed, 'git checkout -qb kompass/WU-0004-parked && echo p >> src/format.ts && git commit -qam park && git push -q origin HEAD && git checkout -q main', now - 4 * hour);
-// An abandoned branch untouched for three days: listed as stale, holds nothing back.
-sh(seed, 'git checkout -qb kompass/WU-0009-abandoned && echo old >> src/format.ts && git commit -qam old && git push -q origin HEAD && git checkout -q main', now - 72 * hour);
+// An abandoned branch untouched for three days, with its draft `building` pull request: stale, holds nothing back.
+sh(seed, 'git checkout -qb kompass/WU-0009-abandoned && echo old >> src/format.ts && git commit -qam old && git push -q origin HEAD HEAD:refs/pull/8/head && git checkout -q main', now - 72 * hour);
 // A planning session's open pull request, visible only as a pull request head.
 sh(seed, 'git checkout -qb plan-sequence-2', now);
 put(k(seed, 'decisions/D-003-plan.md'), '---\nid: D-003\n---\n');
@@ -83,6 +83,7 @@ test('in-flight lists every unit not yet landed, with its status, owns, changed 
   assert.equal(by['plan-sequence-2'].pr, 7);
   assert.deepEqual(by['plan-sequence-2'].records.sort(), ['D-003', 'WU-0005']);
   assert.equal(by['WU-0009'].stale, true);
+  assert.equal(by['WU-0009'].pr, 8);
   assert.equal(by['WU-0002'].stale, false);
 });
 

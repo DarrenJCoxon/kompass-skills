@@ -30,6 +30,7 @@ Front matter:
 - `status: waiting`
 - `depends:` the units that must merge first (empty if none)
 - `owns:` the files and folders it may change
+- `alone: true` only when the unit must not run beside another, for example because it measures the real model. A unit with an empty `owns:` also runs alone, since it may touch any file.
 - `mockup:` and `decisions:` it follows, if any
 
 Body:

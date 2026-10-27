@@ -72,6 +72,7 @@ export function readUnits(src) {
         status: STATUSES.includes(data.status) ? data.status : 'waiting',
         depends: Array.isArray(data.depends) ? data.depends : [],
         owns: Array.isArray(data.owns) ? data.owns : [],
+        alone: data.alone === 'true',
         mockup: data.mockup || '',
         decisions: Array.isArray(data.decisions) ? data.decisions : [],
         pr: data.pr || '',
@@ -115,11 +116,13 @@ export function readMockups(src) {
     });
 }
 
-/** Ids of units with an open pull request on a kompass/WU-… branch (empty when gh is unavailable). */
-export function openUnitIds(cwd) {
+/** Ids of units with an open pull request on a kompass/WU-… branch (empty when gh is unavailable). A draft (a unit's
+ * `building` pull request) counts only with `drafts: true` (a local "build next", which mustn't take a unit the runner
+ * is building): for the runner, one left by a session that died must not stop the unit being retried. */
+export function openUnitIds(cwd, { drafts = false } = {}) {
   try {
-    const out = execFileSync('gh', ['pr', 'list', '--state', 'open', '--json', 'headRefName', '--limit', '200'], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-    return JSON.parse(out).map((p) => p.headRefName.match(/^kompass\/(WU-\d+)/)?.[1]).filter(Boolean);
+    const out = execFileSync('gh', ['pr', 'list', '--state', 'open', '--json', 'headRefName,isDraft', '--limit', '200'], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    return JSON.parse(out).filter((p) => drafts || !p.isDraft).map((p) => p.headRefName.match(/^kompass\/(WU-\d+)/)?.[1]).filter(Boolean);
   } catch { return []; }
 }
 
@@ -127,6 +130,12 @@ const within = (p, q) => p === q || p.startsWith(q.replace(/\*+$/, ''));
 /** The paths in `a` that share files with `b`: the same path, or one a folder (or `dir/*`) holding the other. */
 export const sharedPaths = (a, b) => a.filter((p) => b.some((q) => within(p, q) || within(q, p)));
 const overlaps = (a, b) => sharedPaths(a, b).length > 0;
+
+/** A unit runs alone when it asks to (`alone: true`, e.g. it measures the real model) or names no files, since then it may touch any of them. */
+const runsAlone = (u) => u.alone === true || !u.owns.length;
+
+/** True when units `a` and `b` must not be built at the same time. */
+const conflicts = (a, b) => runsAlone(a) || runsAlone(b) || overlaps(a.owns, b.owns);
 
 /** Sequences from sequences/S-NN-….md: a run of units that ends in a walkthrough and a written hand-over. */
 export function readSequences(src) {
@@ -165,17 +174,21 @@ export function sequenceComplete(units, n) {
   return inSeq.length > 0 && inSeq.every(settled);
 }
 
-/** The next unit in the current sequence that is waiting, has every dependency delivered, is not in progress, and shares no files with work in progress. Never crosses into the next sequence: that waits for the walkthrough. */
-export function nextUnit(units, inProgress = []) {
+/** The next unit in the current sequence that is waiting, has every dependency delivered, is not in `inProgress`, and
+ * shares no files with a busy unit (a unit that runs alone shares with everything). Busy means a session is building
+ * it now (`running`, by default all of `inProgress`) or it is marked building; a unit only excluded, such as one
+ * skipped this run or waiting on its open pull request, holds nothing back. Never crosses into the next sequence:
+ * that waits for the walkthrough. */
+export function nextUnit(units, inProgress = [], running = inProgress) {
   const byId = new Map(units.map((u) => [u.id, u]));
-  const busy = units.filter((u) => inProgress.includes(u.id) || u.status === 'building');
+  const busy = units.filter((u) => running.includes(u.id) || u.status === 'building');
   const seq = currentSequence(units);
   return units.find((u) =>
     u.status === 'waiting' &&
     u.sequence === seq &&
     !inProgress.includes(u.id) &&
     u.depends.every((d) => byId.get(d)?.status === 'delivered') &&
-    !busy.some((b) => overlaps(u.owns, b.owns)),
+    !busy.some((b) => conflicts(u, b)),
   ) ?? null;
 }
 

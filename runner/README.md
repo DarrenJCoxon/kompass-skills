@@ -36,7 +36,7 @@ You can build units in your own Claude sessions while the runner works; the tool
 - **One number allocator.** `scripts/next-id.mjs` gives the next free `D-` and `WU-` number across main, every unit branch, every open pull request and every local copy, so the runner and your sessions never take the same number.
 - **Session start says what is in flight.** The plugin's session-start check lists the units in flight on other branches and the files they hold.
 
-A unit branch with no pull request and no push for 24 hours is listed as stale and holds nothing back.
+A unit with no push for 24 hours and no pull request, or only its draft `building` one, is listed as stale and holds nothing back, so a session that died can't hold files for ever.
 
 ## Phone notifications
 

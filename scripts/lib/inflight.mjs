@@ -28,8 +28,8 @@ const lines = (s) => (s ?? '').split('\n').filter(Boolean);
 /** Open pull requests as [{ number, branch }], or null when gh can't answer. */
 function openPulls(root) {
   try {
-    const out = execFileSync('gh', ['pr', 'list', '--state', 'open', '--json', 'number,headRefName', '--limit', '200'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-    return JSON.parse(out).map((p) => ({ number: p.number, branch: p.headRefName }));
+    const out = execFileSync('gh', ['pr', 'list', '--state', 'open', '--json', 'number,headRefName,isDraft', '--limit', '200'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    return JSON.parse(out).map((p) => ({ number: p.number, branch: p.headRefName, draft: !!p.isDraft }));
   } catch { return null; }
 }
 
@@ -38,14 +38,16 @@ export function heads(p, { fetch = true, gh = true } = {}) {
   const pulls = gh ? openPulls(p.root) : [];
   if (fetch) {
     p.git(['fetch', '--quiet', '--prune', 'origin', '+refs/heads/main:refs/remotes/origin/main', '+refs/heads/kompass/*:refs/remotes/origin/kompass/*']);
-    if (pulls?.length) p.git(['fetch', '--quiet', 'origin', ...pulls.map((x) => `+refs/pull/${x.number}/head:refs/kompass/pull/${x.number}`)]);
+    const spec = (x) => `+refs/pull/${x.number}/head:refs/kompass/pull/${x.number}`;
+    // One fetch for all; if any head is missing that fetch fails as a whole, so then fetch each on its own.
+    if (pulls?.length && p.git(['fetch', '--quiet', 'origin', ...pulls.map(spec)]) === null) for (const x of pulls) p.git(['fetch', '--quiet', 'origin', spec(x)]);
   }
   const list = lines(p.git(['for-each-ref', '--format=%(refname)', 'refs/remotes/origin/kompass/']))
-    .map((ref) => ({ ref, branch: ref.replace('refs/remotes/origin/', ''), pr: null }));
+    .map((ref) => ({ ref, branch: ref.replace('refs/remotes/origin/', ''), pr: null, draft: false }));
   for (const x of pulls ?? []) {
     const same = list.find((h) => h.branch === x.branch);
-    if (same) same.pr = x.number;
-    else if (p.git(['rev-parse', '--verify', '--quiet', `refs/kompass/pull/${x.number}`])) list.push({ ref: `refs/kompass/pull/${x.number}`, branch: x.branch, pr: x.number });
+    if (same) Object.assign(same, { pr: x.number, draft: x.draft });
+    else if (p.git(['rev-parse', '--verify', '--quiet', `refs/kompass/pull/${x.number}`])) list.push({ ref: `refs/kompass/pull/${x.number}`, branch: x.branch, pr: x.number, draft: x.draft });
   }
   return { list, pullsChecked: pulls !== null };
 }
@@ -72,8 +74,9 @@ function unitOf(p, ref, branch, changed) {
   return touched.find((id) => unitAt(p, ref, id)?.data.status === 'building') ?? null;
 }
 
-/** Units in flight: not yet in main, and not delivered, parked or dropped on main. A head with no pull request
- * and no push for `staleHours` is marked stale: listed, but it holds nothing back. */
+/** Units in flight: not yet in main, and not delivered, parked or dropped on main. A head with no push for
+ * `staleHours` and no pull request, or only its draft `building` one, is marked stale: listed, but it holds
+ * nothing back, so a dead session's draft can't hold files for ever. */
 export function inFlight(p, { fetch = true, gh = true, staleHours = 24, now = Date.now() } = {}) {
   const { list: all, pullsChecked } = heads(p, { fetch, gh });
   const units = [];
@@ -93,7 +96,7 @@ export function inFlight(p, { fetch = true, gh = true, staleHours = 24, now = Da
       status: record?.data.status || (h.pr ? 'open pull request' : 'branch'),
       owns: arr(record?.data.owns), changed, records: recordsIn(p, added),
       started: Math.min(...times) * 1000, updated,
-      stale: !h.pr && now - updated > staleHours * 3600_000,
+      stale: (!h.pr || h.draft) && now - updated > staleHours * 3600_000,
     });
   }
   units.sort((a, b) => a.started - b.started);
