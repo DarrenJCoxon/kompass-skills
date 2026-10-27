@@ -52,3 +52,13 @@ test('a unit that depends on a dropped one says so', () => {
   const units = [unit('WU-0002', 1, 'dropped'), unit('WU-0003', 1, 'waiting', ['WU-0002'])];
   assert.deepEqual(blockers(units).find((b) => b.id === 'WU-0003').waitingOn, ['WU-0002 (dropped)']);
 });
+
+// Darren, 27 Oct 2026, on the steps before sequence 2: "how can we ensure this wihtout relying on me
+// remembering?" A sequence's "Before this sequence starts" tick boxes stop the runner until each is done.
+test('unticked steps before a sequence are listed, ticked ones are not', async () => {
+  const { stepsFirst, sections } = await import('./records.mjs');
+  const body = '## Goal\n\nx\n\n## Before this sequence starts (coordinator)\n\nSome context.\n\n- [x] Done already\n- [ ] Add the size check to CI\n- [ ] Pilot the folded build\n\n## Hand-over\n\n- [ ] not a step\n';
+  const seqs = [{ number: 2, sections: sections(body) }, { number: 3, sections: sections('## Goal\n\ny\n') }];
+  assert.deepEqual(stepsFirst(seqs, 2), ['Add the size check to CI', 'Pilot the folded build']);
+  assert.deepEqual(stepsFirst(seqs, 3), []);
+});

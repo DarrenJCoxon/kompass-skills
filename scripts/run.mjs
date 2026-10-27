@@ -10,7 +10,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runLog } from './lib/runlog.mjs';
 import { startSession } from './lib/session.mjs';
-import { awaitingWalkthrough, currentSequence, nextUnit, openUnitIds, readSequences, readUnits, sequenceComplete, source, stalled } from './lib/records.mjs';
+import { awaitingWalkthrough, currentSequence, stepsFirst, nextUnit, openUnitIds, readSequences, readUnits, sequenceComplete, source, stalled } from './lib/records.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -87,11 +87,15 @@ function tick() {
   }
 }
 
-const waiting = awaitingWalkthrough(readSequences(source(dir, 'origin/main')));
+const sequences = readSequences(source(dir, 'origin/main'));
+const waiting = awaitingWalkthrough(sequences);
+const first = sequence === null ? [] : stepsFirst(sequences, sequence);
 if (waiting !== null) {
   log(`run not started: sequence ${waiting} is handed over and waiting for its walkthrough; record the walkthrough first`);
 } else if (sequence === null) {
   log('run not started: every unit is delivered or parked');
+} else if (first.length) {
+  log(`run not started: sequence ${sequence} has steps to do first (tick each in its sequence file when done): ${first.join('; ')}`);
 } else {
   log(`run started: sequence ${sequence}, ${dir}, ${hours} h, ${parallel} at a time`);
   tick();

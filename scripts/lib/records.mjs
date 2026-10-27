@@ -136,6 +136,13 @@ export function readSequences(src) {
     .sort((a, b) => a.number - b.number);
 }
 
+/** The unticked steps (`- [ ] …`) in sequence `n`'s "Before this sequence starts" section: the runner won't start it until they are done. */
+export function stepsFirst(sequences, n) {
+  const seq = sequences.find((s) => s.number === n);
+  const text = Object.entries(seq?.sections ?? {}).find(([k]) => k.startsWith('Before this sequence starts'))?.[1] ?? '';
+  return [...text.matchAll(/^- \[ \] (.+)$/gm)].map((m) => m[1].trim());
+}
+
 /** The sequence whose hand-over is written but whose walkthrough is not yet recorded, or null. Work on the next sequence waits for it. */
 export function awaitingWalkthrough(sequences) {
   return sequences.find((s) => s.status === 'handed-over')?.number ?? null;
