@@ -11,6 +11,14 @@ cd "$root" || exit 0
 if [ ! -d docs/kompass ]; then
   git fetch --quiet origin main 2>/dev/null || exit 0
   git cat-file -e origin/main:docs/kompass 2>/dev/null || exit 0
+fi
+# The planning page is made locally from the records at every session start, however this script ends.
+# It is not committed: as a generated file it made most merge conflicts (Tertia, 27 Oct 2026).
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# A project still tracking plan.html is left alone, or the new page would show as an uncommitted change.
+page() { [ -d docs/kompass ] && ! git ls-files --error-unmatch docs/kompass/plan.html >/dev/null 2>&1 && node "$here/render-plan.mjs" docs/kompass >/dev/null 2>&1 && echo "Kompass: planning page made locally at docs/kompass/plan.html (not committed)."; }
+trap page EXIT
+if [ ! -d docs/kompass ]; then :
 elif ! git fetch --quiet origin main 2>/dev/null; then
   echo "Kompass: could not reach GitHub to check for newer work on main. Say so before relying on this copy."
   exit 0

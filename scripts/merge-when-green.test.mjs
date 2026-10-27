@@ -70,3 +70,18 @@ test('a failed check is reported, not waited on', () => {
   assert.equal(r.code, 2);
   assert.match(r.out, /checks failed/);
 });
+
+// Tertia #163 and #166, 27 Oct 2026: a pull request with conflicts was treated as "not ready yet", and the
+// script would have waited 2 hours before giving up.
+test('a pull request with conflicts is reported within a few looks, not waited on', () => {
+  const dirty = { state: 'OPEN', mergeStateStatus: 'DIRTY', mergeable: 'CONFLICTING', statusCheckRollup: [] };
+  const r = run([dirty]);
+  assert.equal(r.code, 5);
+  assert.match(r.out, /conflicts with main/);
+  assert.match(r.out, /merge origin\/main/i);
+});
+
+test('a conflict GitHub is still working out does not stop it', () => {
+  const r = run([{ state: 'OPEN', mergeStateStatus: 'UNKNOWN', mergeable: 'UNKNOWN', statusCheckRollup: [] }, pending, merged]);
+  assert.equal(r.code, 0);
+});

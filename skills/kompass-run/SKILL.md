@@ -45,7 +45,7 @@ A parked unit does not stop the sequence. The runner moves on to the next unit t
 Write the **Hand-over** in `docs/kompass/sequences/S-NN-….md` from the unit hand-overs, the merged code and CI. Be specific; this is what the next sequence starts from:
 - **What was achieved:** each delivered unit in one plain sentence, with what it proves.
 - **Parked, and the decision each needs:** with the evidence, quoted from the unit.
-- **State of main:** green or not, the last CI run, and that the planning page is current.
+- **State of main:** green or not, and the last CI run.
 - **Walkthrough:** points to the walkthrough guide below.
 - **Known issues:** anything the operator might notice that is already known.
 - **Where the next sequence starts:** its first units, anything they must read first, and any assumption that changed.
@@ -57,13 +57,13 @@ Then write the **Walkthrough guide** section, from the template. A sequence hold
 - **Not ready to test:** each parked unit and why. **Known issues:** what the operator might notice that is already known.
 - **Telling us how it went:** each step marked worked, or what they saw instead.
 
-Set `status: handed-over`, re-render the planning page, and deliver the sequence file in a small pull request titled `S-NN: hand-over`, landed with `scripts/merge-when-green.sh` as units are. Your final message is what reaches the operator's phone: start it with the link to the sequence file on GitHub (`https://github.com/<owner/repo>/blob/main/docs/kompass/sequences/<file>`), then give the whole walkthrough guide, not a summary.
+Set `status: handed-over` and deliver the sequence file in a small pull request titled `S-NN: hand-over`, landed with `scripts/merge-when-green.sh` as units are. Your final message is what reaches the operator's phone: start it with the link to the sequence file on GitHub (`https://github.com/<owner/repo>/blob/main/docs/kompass/sequences/<file>`), then give the whole walkthrough guide, not a summary.
 
 ## Prepare the walkthrough ("I'm ready to try it")
 
 The operator never has to think about where the code lives. When they want to try a sequence, do all of this for them on their Mac:
 1. In their usual checkout of the project, check for uncommitted work, which other sessions sometimes leave. If there is any, save it on a dated backup branch and say so; never discard it.
-2. Update the checkout to the latest main from GitHub, where the runner's merged work is.
+2. Update the checkout to the latest main from GitHub, where the runner's merged work is. Make the planning page from the records (`node <kompass-skills>/scripts/render-plan.mjs docs/kompass`), so it shows what was just built.
 3. Start the app the way the project runs it locally, with its sample accounts and data.
 4. Give the walkthrough steps from the sequence hand-over, with the local address to open.
 
@@ -77,7 +77,7 @@ After the operator has tried it, write their feedback into the sequence's **Walk
 - Each problem becomes a new unit at the start of the next sequence (`kompass-units`), titled `Defect: …` or with the change they asked for, and listed here by id.
 - Anything that changes the approved outcome is recorded in `plan.md` with their yes.
 
-Set `status: walked-through`, re-render the page, and deliver in a pull request titled `S-NN: walkthrough`. The next sequence can now start.
+Set `status: walked-through` and deliver in a pull request titled `S-NN: walkthrough`. The next sequence can now start.
 
 ## While it runs
 

@@ -48,10 +48,10 @@ docs/kompass/
   mockups/           interactive HTML mockups, one per UI decision
   units/             one file per work unit (WU-0001-….md), brief + hand-over + log
   sequences/         one file per sequence (S-01-….md): goal, units, hand-over, walkthrough feedback
-  plan.html          the planning page, generated from the files above (never edited by hand)
+  plan.html          the planning page, made locally from the files above at every session start (never committed)
 ```
 
-The markdown files are the single source of truth. `plan.html` is rebuilt from them with `node <skills>/scripts/render-plan.mjs`, so the page can never disagree with the records, and every record stays searchable with plain text search and git.
+The markdown files are the single source of truth. `plan.html` is made from them with `node <skills>/scripts/render-plan.mjs`, locally and never committed, so the page can never disagree with the records or cause a merge conflict, and every record stays searchable with plain text search and git.
 
 ## How a unit records its work
 

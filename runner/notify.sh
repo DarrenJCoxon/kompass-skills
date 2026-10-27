@@ -44,7 +44,6 @@ while IFS= read -r line; do
         delivered) send "Merged: $id" "${titles[$id]:-$id}$(said)" ;;
         parked) send "Parked: $id" "${titles[$id]:-$id}$(said)" ;;
       esac ;;
-    "plan page out of date"*) send "Planning page out of date" "${event}" ;;
     "retry "*)
       id="${event#retry }"; id="${id%%:*}"
       send "Retrying: $id" "${titles[$id]:-$id} - ${event#*: }$(said)" ;;

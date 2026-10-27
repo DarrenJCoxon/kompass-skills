@@ -27,7 +27,6 @@ If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kom
 
 - Work in your own copy of the project (a git worktree) on a branch named `kompass/WU-NNNN-<slug>`, cut from a fresh fetch of `origin/main`, never from whatever a local copy happens to hold.
 - Set the unit's `status: building` on the branch and add a log line: `<date time> started`.
-- Check the planning page: `node <skills>/scripts/render-plan.mjs docs/kompass --check`. If it is out of date on main, your pull request brings it up to date (step 6).
 
 ## 2. Build
 
@@ -73,7 +72,8 @@ Then set `status: delivered`, add `pr:` once the pull request exists, and add a 
 - Open the pull request titled `WU-NNNN: <title>`, with the hand-over as its body. Post the review verdict as a comment headed `Kompass review: APPROVE`.
 - Land it with `bash <kompass-skills>/scripts/merge-when-green.sh <number>` (on the runner `/opt/kompass/scripts/merge-when-green.sh`). It turns on auto-merge, deleting the branch when it merges, brings the branch up to date with main when it falls behind, and re-arms auto-merge once if GitHub shows the pull request green and ready but doesn't merge it. It never merges directly: with an admin token that would bypass branch protection, so don't merge by hand either. Exit 2 means a check failed (next bullet); exit 3 means stuck, so say so in the hand-over and the log, and stop rather than force it.
 - Watch CI. If it fails, read the failure and fix the cause honestly; a fix to your own code needs a re-review. If CI fails three times for one cause, raise your effort and rethink. If it is still red, park the unit.
-- Re-render the planning page on the branch before the final push, so main always carries a current page. If `render-plan.mjs docs/kompass --check` already failed on main when you started, this pull request also brings it up to date.
+- Records a unit changes: its own unit file, new `decisions/` records and new follow-up units. Never commit `plan.html` (it is made locally) and never edit a sequence file; a unit's events go in its own log.
+- If `merge-when-green.sh` exits 5 (conflicts with main): merge `origin/main` into the branch, resolve each file on its merits, run the checks again, push, and run the script again. In a project's approvals lock (for example `docs/litebench/protected-checks.json`), keep every approval and fingerprint from both sides, never drop one, then check every fingerprint matches its file and run the project's guard tests. A file deleted on main (for example an old `plan.html`) stays deleted.
 
 The unit is done when the pull request has merged. Its `delivered` status then reaches main with the code.
 
@@ -84,7 +84,7 @@ The unit is done when the pull request has merged. Its `delivered` status then r
 Park when the unit cannot be finished honestly: an unprovable cause, a needed change to a locked file, a change to the approved outcome, or CI still red after a rethink.
 - Set `status: parked`.
 - Write a **Parked** note in the hand-over: what blocks it, the evidence, and the decision needed from the operator.
-- Re-render the planning page, then deliver just the unit file and the page in a small pull request titled `WU-NNNN: parked`, so the run does not pick it again.
+- Deliver just the unit file in a small pull request titled `WU-NNNN: parked`, so the run does not pick it again.
 - Keep the code branch for later.
 
 Choices about how the work is done are yours, never a reason to park: the scope of a unit (taking a follow-up's change into this unit when that is the honest fix), the order of units, which owned files a fix needs, test tooling, and whether to drop an approach that costs more than it saves. Decide, record the decision with your reasons as a `decisions/` record, update the unit (its `owns`, criteria and log) and carry on. Fold a follow-up unit in by giving this unit its criteria and setting the follow-up's `status: dropped` with a log line naming this unit. When the change reaches a sensitive module (access, privacy, figures), give the reviewer high effort. Park only for the stops listed below.

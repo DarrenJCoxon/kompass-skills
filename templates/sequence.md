@@ -10,10 +10,6 @@ date:
 
 What is true at the end of this sequence, and what the operator will be able to walk through. Written when the units are planned.
 
-## Units
-
-- WU-0000 Title
-
 ## Hand-over
 
 _Written when every unit in the sequence is delivered or parked._

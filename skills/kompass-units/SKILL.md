@@ -50,7 +50,7 @@ Body:
 
 ## Sequences
 
-Every unit belongs to one sequence from the plan. For each sequence, create `docs/kompass/sequences/S-NN-<slug>.md` from `templates/sequence.md` with its **Goal** (what the operator will be able to try at the end) and its **Units**, leaving Hand-over and Walkthrough empty. A run builds one sequence and stops at its end for the walkthrough, so put each unit in the first sequence that needs it, and keep dependencies inside the same or an earlier sequence.
+Every unit belongs to one sequence from the plan. For each sequence, create `docs/kompass/sequences/S-NN-<slug>.md` from `templates/sequence.md` with its **Goal** (what the operator will be able to try at the end), leaving Hand-over and Walkthrough empty. Don't list the units in it: each unit's `sequence:` says where it belongs and the planning page lists them from that, so there is one copy. A run builds one sequence and stops at its end for the walkthrough, so put each unit in the first sequence that needs it, and keep dependencies inside the same or an earlier sequence.
 
 ## Defects and follow-ups
 
@@ -67,7 +67,7 @@ Check the set once:
 - There are no dependency cycles, and every id in `depends:` has a unit file in `units/`.
 - Every criterion names its test.
 
-Then render the planning page, so the operator sees the ordered list:
+Then make the planning page locally, so the operator sees the ordered list (it isn't committed):
 
 ```
 node <kompass-skills>/scripts/render-plan.mjs docs/kompass

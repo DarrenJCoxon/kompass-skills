@@ -17,6 +17,20 @@ out="$(cd "$work/copy" && bash "$here/sync-main.sh")"
 check "a copy from before Kompass is brought up to date" "brought this copy up to date with main (1 new commits" "$out"
 check "the copy now has the Kompass records" "plan" "$(cat "$work/copy/docs/kompass/plan.md" 2>/dev/null)"
 
+# Tertia, 27 Oct 2026: the committed planning page caused most merge conflicts, so it is no longer committed;
+# every session start makes it locally from the records, whether or not the copy needed updating.
+rm -f "$work/copy/docs/kompass/plan.html"
+out="$(cd "$work/copy" && bash "$here/sync-main.sh")"
+check "the planning page is made locally at session start" "planning page" "$out"
+[ -f "$work/copy/docs/kompass/plan.html" ] && echo "ok - plan.html exists after session start" || { echo "not ok - plan.html missing after session start"; fail=1; }
+
+# A project that still tracks plan.html is not given a changed page (its copy must stay clean to update).
+(cd "$work/origin" && echo "<html>old</html>" > docs/kompass/plan.html && git add docs/kompass/plan.html && git commit -qm "tracked page")
+(cd "$work/copy" && rm -f docs/kompass/plan.html && git pull -q --ff-only origin main)
+out="$(cd "$work/copy" && bash "$here/sync-main.sh")"
+check "a still-tracked planning page is left as committed" "<html>old</html>" "$(cat "$work/copy/docs/kompass/plan.html")"
+[ -z "$(cd "$work/copy" && git status --porcelain --untracked-files=no)" ] && echo "ok - the copy stays clean" || { echo "not ok - the copy has changes"; fail=1; }
+
 git init -q -b main "$work/other" && cd "$work/other" && git config user.email t@t && git config user.name t && echo x > x && git add . && git commit -qm x
 out="$(cd "$work/other" && bash "$here/sync-main.sh")"
 check "a project that has never used Kompass is left alone" "" "$out"

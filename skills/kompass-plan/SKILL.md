@@ -15,7 +15,7 @@ Planning is where most of the time goes. A unit built from a clear module map an
 
 You plan on **Opus**: the brief, the module map, the architecture, the decisions and the self-check are judgement work. Hand broad reading of an existing codebase to `kompass-searcher` (**Haiku**), one bounded question at a time. Once you have specified a mockup exactly (its variants, states, data and tokens), you may hand the HTML to `kompass-builder` (**Sonnet**), then check it against your specification yourself.
 
-Everything goes in `docs/kompass/` (create it from `templates/` if missing). The markdown files are the source of truth; `plan.html` is generated from them. After any change, run:
+Everything goes in `docs/kompass/` (create it from `templates/` if missing). The markdown files are the source of truth; `plan.html` is generated from them. The page is never committed (it is in `.gitignore`): every session start makes it again from the records, so it can't go stale or cause merge conflicts. Make sure the project's `.gitignore` has `docs/kompass/plan.html`. After any change, make it again to show the operator:
 
 ```
 node <kompass-skills>/scripts/render-plan.mjs docs/kompass
