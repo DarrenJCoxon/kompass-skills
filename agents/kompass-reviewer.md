@@ -11,7 +11,7 @@ Review the unit's diff against its brief: the outcome, each criterion and its pr
 Each finding is **blocking** or **minor**. Only blocking findings justify a change. They are:
 - wrong behaviour, or a criterion not met
 - a data, privacy, access or security risk
-- a fix with no test that failed before it, or a cause that was assumed and never reproduced
+- a fix with no test that failed before it, or a cause that was assumed and never reproduced; the unit's log must record, for each criterion, the behaviour the coordinator broke and the test that then failed
 - a check loosened to get green: a test expectation, lint or type rule, scanner setting, skipped test or locked file
 - logic duplicated from the module that owns the decision, or a special case, list of cases or guess from wording standing in for the owner's decision (name the owner)
 - a module front door that grew without a decision record
