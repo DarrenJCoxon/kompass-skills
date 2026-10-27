@@ -1,0 +1,61 @@
+# LiteBench CI box: one private Docker engine (dind) shared by one runner per repository.
+# Jobs never reach the host's Docker. Runners share dind's network namespace, so service
+# containers a job publishes are reachable on localhost, as on GitHub's runners.
+#
+#   docker compose -p lb-base --profile base up -d        # the shared engine (once)
+#   ./register.sh OWNER/REPO < token                       # a runner per repo
+name: ${COMPOSE_PROJECT_NAME:-lb-base}
+
+services:
+  dind:
+    profiles: [base]
+    container_name: lb-dind
+    image: docker:29-dind
+    privileged: true
+    restart: unless-stopped
+    environment:
+      DOCKER_TLS_CERTDIR: ""
+    command: ["--tls=false"]
+    volumes:
+      - lb-work:/work
+      - lb-docker-data:/var/lib/docker
+
+  runner:
+    profiles: [runner]
+    build: .
+    image: litebench-runner:local
+    restart: unless-stopped
+    network_mode: container:lb-dind
+    environment:
+      DOCKER_HOST: tcp://127.0.0.1:2375
+      RUNNER_REPO: ${RUNNER_REPO:-}
+      RUNNER_SLUG: ${RUNNER_SLUG:-}
+      RUNNER_NAME: ${RUNNER_NAME:-}
+      RUNNER_LABELS: ${RUNNER_LABELS:-}
+      RUNNER_TOKEN: ${RUNNER_TOKEN:-}
+      # CI slots (hooks/slots.sh): how many jobs run at once, and the repos whose jobs share
+      # the box. Any other repo's job takes every slot, since runners share one network
+      # namespace and its checks may publish ports. Raise CI_SLOTS with the box's size.
+      CI_SLOTS: ${CI_SLOTS:-2}
+      CI_SHARED_REPOS: ${CI_SHARED_REPOS:-DarrenJCoxon/tertia}
+      # One package cache shared by every runner, on the work volume so pnpm can hard-link
+      # from it and it survives runs and rebuilds. pnpm's store is safe to use from two jobs at once.
+      npm_config_cache: /work/.cache/npm
+      npm_config_store_dir: /work/.cache/pnpm-store
+      COREPACK_HOME: /work/.cache/corepack
+      YARN_CACHE_FOLDER: /work/.cache/yarn
+      TURBO_CACHE_DIR: /work/.cache/turbo
+      LITEBENCH_TOOL_CACHE: /work/.cache/tools
+    volumes:
+      - lb-work:/work
+      - lb-locks:/locks
+      - state:/home/runner/state
+
+volumes:
+  lb-work:
+    name: lb-work
+  lb-docker-data:
+    name: lb-docker-data
+  lb-locks:
+    name: lb-locks
+  state:

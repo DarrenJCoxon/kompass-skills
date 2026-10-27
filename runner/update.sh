@@ -14,7 +14,11 @@ if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   exit 1
 fi
 git fetch --quiet origin main
+before="$(git rev-parse HEAD)"
 git merge --ff-only --quiet origin/main
 echo "kompass-skills at $(git log --oneline -1)"
+# The CI box's runners are rebuilt separately: rebuild.sh waits for each to be idle, which can take a while.
+git diff --quiet "$before" HEAD -- runner/ci-box \
+  || echo "the CI box's files changed; rebuild its runners with: ~/kompass-skills/runner/ci-box/rebuild.sh"
 cd runner && docker compose build -q
 echo "runner image rebuilt"
