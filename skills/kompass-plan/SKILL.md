@@ -114,6 +114,10 @@ Record the approval in `plan.md` under `## Approval`, with the date and the oper
 
 A change to the approved outcome needs the operator's yes, recorded the same way. So does a new decision, module or unit: show it and ask before recording it. Only wording fixes and corrections that change no decision go in without asking.
 
+## Landing the records
+
+Land a planning session's records (plan, decisions, mockups, units) in **one** pull request when the session's records are finished, not one per change. Push the branch as you go, since a pushed `kompass/*` branch keeps numbers taken. CI runs on a few self-hosted runners, and every records-only pull request, or push to a ready one, costs a full run.
+
 ## Speaking to the operator
 
 Plain English, with no file names, commands or jargon unless they ask. Explain any unavoidable technical term once. Every question must be answerable without knowing the code.
