@@ -4,3 +4,4 @@ node_modules/
 .DS_Store
 runner/notify*.log
 skills/synced/
+runner/ci-box/rebuild.log
