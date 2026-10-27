@@ -33,8 +33,13 @@ services:
       RUNNER_NAME: ${RUNNER_NAME:-}
       RUNNER_LABELS: ${RUNNER_LABELS:-}
       RUNNER_TOKEN: ${RUNNER_TOKEN:-}
-      # One package cache shared by every runner (jobs run one at a time), on the work
-      # volume so pnpm can hard-link from it and it survives runs and rebuilds.
+      # CI slots (hooks/slots.sh): how many jobs run at once, and the repos whose jobs share
+      # the box. Any other repo's job takes every slot, since runners share one network
+      # namespace and its checks may publish ports. Raise CI_SLOTS with the box's size.
+      CI_SLOTS: ${CI_SLOTS:-2}
+      CI_SHARED_REPOS: ${CI_SHARED_REPOS:-DarrenJCoxon/tertia}
+      # One package cache shared by every runner, on the work volume so pnpm can hard-link
+      # from it and it survives runs and rebuilds. pnpm's store is safe to use from two jobs at once.
       npm_config_cache: /work/.cache/npm
       npm_config_store_dir: /work/.cache/pnpm-store
       COREPACK_HOME: /work/.cache/corepack

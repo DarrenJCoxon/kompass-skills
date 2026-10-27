@@ -2,9 +2,9 @@
 # Usage (on the box): ./rebuild.sh
 # Builds the runner image once, then recreates every existing runner (compose projects
 # lb-runner-*) on it, one at a time and only when that runner is idle, so no running job is
-# ever killed. Idle: no Runner.Worker process in the container and the shared job lock
-# (/locks/job/owner) not held by it. A runner still busy after REBUILD_WAIT_SECONDS (default
-# 1800) is skipped and reported, never killed. This script never takes /locks/job: holding it
+# ever killed. Idle: no Runner.Worker process in the container and no CI slot (hooks/slots.sh,
+# or the old /locks/job) held by it. A runner still busy after REBUILD_WAIT_SECONDS (default
+# 1800) is skipped and reported, never killed. This script never takes a slot: holding one
 # while waiting would deadlock a job waiting on it.
 # Each runner keeps its RUNNER_* settings, read from its container; registration lives in its
 # state volume, so no token is needed or used. Exits non-zero listing failed or skipped runners.
@@ -21,12 +21,13 @@ if ! docker compose -p lb-base --profile runner build --quiet runner >>"$LOG" 2>
   exit 1
 fi
 
-# busy CONTAINER NAME: succeeds while the runner runs or holds the job lock.
+# busy CONTAINER NAME: succeeds while the runner runs or holds a CI slot.
 busy() {
   docker exec "$1" pgrep -f Runner.Worker >/dev/null 2>&1 && return 0
-  local owner
-  owner="$(docker exec "$1" cat /locks/job/owner 2>/dev/null || true)"
-  [ -n "$2" ] && [ "${owner%% *}" = "$2" ]
+  [ -n "$2" ] || return 1
+  local owners
+  owners="$(docker exec "$1" sh -c 'cat /locks/job/owner /locks/slot-*/owner 2>/dev/null' || true)"
+  grep -q "^$2 " <<<"$owners"
 }
 
 failed=()
