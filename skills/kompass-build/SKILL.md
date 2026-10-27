@@ -12,6 +12,8 @@ You start with no memory of earlier units. Read, in this order:
 4. the **Hand-over** of each unit it depends on, plus the last two delivered units
 5. the decisions and mockup the unit names
 
+Read them as they are on GitHub's main: `git fetch origin main` first, then read from `origin/main` (`git show origin/main:<path>`) or from your fresh worktree (step 1), never from a local checkout, which can be hours behind. WU-0159 parked to ask the operator for a decision already recorded, because it read a stale copy of its own unit file.
+
 If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kompass` and take the id it prints. If it prints nothing, report that no unit is ready, and why.
 
 ## Who does what
@@ -40,6 +42,7 @@ If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kom
 ## 3. Check locally
 
 - Run the unit's proving tests, type-check and lint on what changed.
+- **Break each behaviour and watch its test fail.** Before you commit a builder's work, for each criterion, break the behaviour it proves in a scratch change (disable or revert the line that makes it pass), run its proving test and see it fail for the right reason, then put the code back and see it pass. Log which behaviour you broke and which test failed. A test that still passes with its behaviour broken proves nothing: send it back. This is the proof that counts, because the order the builder wrote code and tests in can't be checked afterwards (WU-0148's gate builder wrote its tests after the code).
 - For a UI change, run the browser tests that cover the changed screens, and compare against the approved mockup variant. Run each covering file in full once, after the builders are done; while fixing, run single tests (`-g`) against a running test server. On the runner a full browser file can take ten minutes, so a habit of re-running whole files costs hours.
 - Do not run the full suite locally unless asked; CI runs it.
 - Keep long logs in files and report only pass and fail counts.

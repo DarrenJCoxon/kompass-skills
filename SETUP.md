@@ -49,7 +49,7 @@ First check whether they already have one. Run `ssh -o BatchMode=yes -o ConnectT
    4. click **Update**.
 
    The token itself doesn't change, so nothing needs pasting. If the token has expired, they make a new one as in 3.3 step 2, covering every repository the runner builds, and paste it as in 3.3 step 3.
-2. **The toolchain.** Check that `~/kompass-skills/runner/Dockerfile` on the server covers this project's toolchain, as Part 1 found it. If it doesn't, add what is missing and rebuild with `docker compose build`. A rebuild doesn't disturb a run already going for another project.
+2. **The toolchain.** Check that `~/kompass-skills/runner/Dockerfile` on the server covers this project's toolchain, as Part 1 found it. If it doesn't, add what is missing through a pull request to kompass-skills (or a fork), then run `~/kompass-skills/runner/update.sh`. A rebuild doesn't disturb a run already going for another project.
 3. **Check it can reach the repository.** Run `ssh kompass-runner 'cd ~/kompass-skills/runner && docker compose run --rm --entrypoint gh runner repo view <owner/repo> --json name'`. It should print `{"name":"<repo>"}`. Anything else means the token doesn't cover it yet: go back to step 1.
 4. **Record the runner** as in 3.5, and confirm that phone notifications already work (3.4). The same ntfy topic serves every project, and each message starts with the project's name.
 
@@ -64,7 +64,7 @@ Then go to Part 4.
 3. Walk them through **Add Server**:
    - **Location:** the nearest.
    - **Image:** Ubuntu (the newest LTS).
-   - **Type:** shared CPU with at least 8 GB of memory, because builds run the project's tests.
+   - **Type:** shared CPU with at least 8 GB of memory, because builds run the project's tests. That's enough for one project at a time. Tests run about twice as slowly as on an Apple-silicon laptop, so suggest a dedicated server later (Hetzner's dedicated-CPU cloud servers, or a dedicated AX machine) if several projects build at once or browser tests take most of the time.
    - **SSH keys:** Add SSH key, then paste.
    - **Name:** `kompass-runner`.
 
@@ -83,10 +83,11 @@ Then go to Part 4.
 2. Over `ssh root@<IPv4>`:
    - install Docker (`apt-get update && apt-get install -y docker.io docker-compose-v2 git`);
    - create the user `ops` in the `docker` group, with the same `authorized_keys`;
-   - check that `ssh kompass-runner docker ps` works.
+   - check that `ssh kompass-runner docker ps` works;
+   - then lock it down, since it will hold two tokens: in `/etc/ssh/sshd_config` set `PasswordAuthentication no` and `PermitRootLogin no`, restart SSH, and allow only SSH in through the firewall (`ufw allow OpenSSH && ufw --force enable`). Check `ssh kompass-runner` still works before you close the root session.
 3. As `ops`, clone this repository (`git clone https://github.com/DarrenJCoxon/kompass-skills.git ~/kompass-skills`). Keep it a clone: it is updated only with `runner/update.sh`, never edited in place.
 4. In `~/kompass-skills/runner`, copy `.env.example` to `.env` and run `chmod 600 .env`. Fill in `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL` from the operator's local `git config`. Add `NOTIFY_URL=https://ntfy.sh/kompass-<random>`, using `openssl rand -hex 10` for the random part.
-5. Build the image with `docker compose build`. It takes a few minutes. The image suits Node projects. For another toolchain, add it to `runner/Dockerfile` first, and tell the operator.
+5. Build the image with `docker compose build`. It takes a few minutes. The image suits Node projects. Another toolchain goes into `runner/Dockerfile` through a pull request to kompass-skills (or the operator's fork of it), then `runner/update.sh`; never edit the server's copy in place. Browser tests need nothing extra: the first session installs Playwright's browser (`pnpm exec playwright install chromium`) and it's kept on the `kompass-browsers` volume across restarts.
 
 ### 3.3 The two tokens (the operator does this)
 
@@ -104,6 +105,10 @@ Then go to Part 4.
    - save by holding **Control** and pressing **O**, then pressing **Return**;
    - exit by holding **Control** and pressing **X**.
 4. Check the file without showing it. Print only each line's name, its length and its first eight characters. Expect `sk-ant-o…`, about 108 characters, and `github_p…`, about 93. A token split over two lines shows as an extra line with no name: join it back with a short script, without displaying it.
+5. Check both tokens work from inside the runner, before any real run:
+   - Claude: `ssh kompass-runner 'cd ~/kompass-skills/runner && docker compose run --rm -T --entrypoint claude runner -p "Reply with OK" --model haiku'` prints OK;
+   - GitHub: `ssh kompass-runner 'cd ~/kompass-skills/runner && docker compose run --rm -T --entrypoint gh runner repo view <owner/repo> --json name'` prints the repository's name.
+   If either fails, fix that token now rather than finding out on the first run.
 
 ### 3.4 Phone notifications
 

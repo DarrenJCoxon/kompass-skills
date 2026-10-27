@@ -6,7 +6,9 @@ Version 0.1.
 
 ## Getting started
 
-Paste this repository's link into Claude Code in your project and ask it to set up Kompass Skills. It installs the skills, checks your GitHub settings, offers to set up the runner (a small server that keeps building while your laptop is closed) and walks you through each step.
+Paste this repository's link into Claude Code in your project and ask it to set up Kompass Skills. It installs the skills, checks your GitHub settings and walks you through each step.
+
+The runner is optional. Without it, you build on your own computer, one unit at a time (`/kompass-build`). With it, a small rented server (about 30 minutes to set up, a few pounds or euros a month) builds whole sequences while your laptop is closed and sends alerts to your phone. The agent asks whether you want it and, if you do, sets it up with you step by step.
 
 **AI agents:** follow [`SETUP.md`](SETUP.md) with the operator, step by step.
 
