@@ -11,6 +11,10 @@ Every unit leaves the same trail: the unit file (brief, hand-over and log), the 
 
 Hand broad sweeps (many files, many units, long history) to `kompass-searcher` (**Haiku**), one bounded question at a time. Keep the judgement of what the evidence means for yourself.
 
+## Whose words
+
+Quote the operator only word for word, copied from a message they sent in this conversation. Everything an agent decided, concluded or inferred is written as the agent's ("the coordinator decided", "agent's reading"), never as the operator's words, and never under their name or a "(Name, date)" heading. A record of an approval holds the operator's exact words or it isn't an approval. When you summarise what they asked, say it's your reading.
+
 ## Common questions
 
 **Which unit changed this file or behaviour?**

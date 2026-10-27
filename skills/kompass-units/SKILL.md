@@ -13,6 +13,10 @@ Write units on **Opus**: cutting work and naming the proving tests is judgement 
 
 Create each unit from `templates/unit.md` as `docs/kompass/units/WU-NNNN-<short-slug>.md`. Number units in the order they should be built. Keep the brief to about one page; the detail lives in the module map, decisions and mockups it points to.
 
+## Whose words
+
+Quote the operator only word for word, copied from a message they sent in this conversation. Everything an agent decided, concluded or inferred is written as the agent's ("the coordinator decided", "agent's reading"), never as the operator's words, and never under their name or a "(Name, date)" heading. A record of an approval holds the operator's exact words or it isn't an approval. When you summarise what they asked, say it's your reading.
+
 ## Carrying over existing units
 
 When units already exist from an earlier plan (LiteBench or other), convert them; do not rewrite them.
