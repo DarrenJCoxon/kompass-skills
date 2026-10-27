@@ -70,6 +70,8 @@ function startNext() {
   if (!unit || unit.sequence !== sequence) return false;
   attempts.set(unit.id, (attempts.get(unit.id) ?? 0) + 1);
   log(`start ${unit.id} (attempt ${attempts.get(unit.id)}): ${unit.title}`);
+  // The session starts in this checkout, so bring it to main first: a stale copy once made a session ask for a decision already made (WU-0159).
+  try { const said = execFileSync('bash', [join(here, 'sync-main.sh')], { cwd: root, encoding: 'utf8' }).trim(); if (said && !said.includes('on the latest main')) log(said); } catch (e) { log(`main sync failed: ${e.message}`); }
   const child = startSession(claude, ['-p', `/kompass-build ${unit.id}`, '--model', model, '--permission-mode', 'bypassPermissions'], { cwd: root });
   active.set(unit.id, child);
   child.on('ended', (code) => {
