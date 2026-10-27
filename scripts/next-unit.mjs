@@ -10,8 +10,9 @@ const opt = (name) => { const i = args.indexOf(name); return i < 0 ? null : args
 const src = source(dir, opt('--ref'));
 const units = readUnits(src);
 const walkthrough = awaitingWalkthrough(readSequences(src));
-const inProgress = [...(opt('--in-progress')?.split(',').filter(Boolean) ?? []), ...(args.includes('--no-gh') ? [] : openUnitIds(dir))];
-const next = walkthrough === null ? nextUnit(units, inProgress) : null;
+const running = opt('--in-progress')?.split(',').filter(Boolean) ?? [];
+const inProgress = [...running, ...(args.includes('--no-gh') ? [] : openUnitIds(dir))];
+const next = walkthrough === null ? nextUnit(units, inProgress, running) : null;
 
 if (walkthrough !== null) {
   console.error(`No unit is ready: sequence ${walkthrough} is handed over and waiting for its walkthrough.`);

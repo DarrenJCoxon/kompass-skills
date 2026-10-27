@@ -97,3 +97,25 @@ test('alone: true is read from a unit\'s front matter, and is false when absent'
   assert.equal(read.find((u) => u.id === 'WU-0001').alone, true);
   assert.equal(read.find((u) => u.id === 'WU-0002').alone, false);
 });
+
+// A unit skipped this run, or waiting on its open pull request, is not picked again but is not running
+// either, so it holds nothing back. Only units with a running session, or marked building, are busy.
+test('a skipped unit with no owned files does not stop another unit starting', () => {
+  const units = [owning('WU-0001', []), owning('WU-0002', ['src/b.ts'])];
+  assert.equal(nextUnit(units, ['WU-0001'], [])?.id, 'WU-0002');
+});
+
+test('a skipped unit marked alone does not stop another unit starting', () => {
+  const units = [owning('WU-0001', ['evals/'], { alone: true }), owning('WU-0002', ['src/b.ts'])];
+  assert.equal(nextUnit(units, ['WU-0001'], [])?.id, 'WU-0002');
+});
+
+test('a unit with an open pull request and no running session does not hold back a lone unit', () => {
+  const units = [owning('WU-0001', ['src/a.ts']), owning('WU-0002', [], { alone: true })];
+  assert.equal(nextUnit(units, ['WU-0001'], [])?.id, 'WU-0002');
+});
+
+test('a unit marked building on main is busy even with no session here', () => {
+  const units = [owning('WU-0001', ['src/a.ts'], { status: 'building' }), owning('WU-0002', [])];
+  assert.equal(nextUnit(units, [], []), null);
+});

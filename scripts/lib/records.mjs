@@ -162,10 +162,14 @@ export function sequenceComplete(units, n) {
   return inSeq.length > 0 && inSeq.every(settled);
 }
 
-/** The next unit in the current sequence that is waiting, has every dependency delivered, is not in progress, and shares no files with work in progress (a unit that runs alone shares with everything). Never crosses into the next sequence: that waits for the walkthrough. */
-export function nextUnit(units, inProgress = []) {
+/** The next unit in the current sequence that is waiting, has every dependency delivered, is not in `inProgress`, and
+ * shares no files with a busy unit (a unit that runs alone shares with everything). Busy means a session is building
+ * it now (`running`, by default all of `inProgress`) or it is marked building; a unit only excluded, such as one
+ * skipped this run or waiting on its open pull request, holds nothing back. Never crosses into the next sequence:
+ * that waits for the walkthrough. */
+export function nextUnit(units, inProgress = [], running = inProgress) {
   const byId = new Map(units.map((u) => [u.id, u]));
-  const busy = units.filter((u) => inProgress.includes(u.id) || u.status === 'building');
+  const busy = units.filter((u) => running.includes(u.id) || u.status === 'building');
   const seq = currentSequence(units);
   return units.find((u) =>
     u.status === 'waiting' &&

@@ -55,7 +55,7 @@ function finish(why) {
 function startNext() {
   const units = mainUnits();
   const inProgress = [...active.keys(), ...openUnitIds(root).filter((id) => !active.has(id)), ...skipped];
-  const unit = nextUnit(units, inProgress);
+  const unit = nextUnit(units, inProgress, [...active.keys()]); // skipped and open-PR units are not picked, but only running sessions hold others back
   if (!unit || unit.sequence !== sequence) return false;
   attempts.set(unit.id, (attempts.get(unit.id) ?? 0) + 1);
   log(`start ${unit.id} (attempt ${attempts.get(unit.id)}): ${unit.title}`);
