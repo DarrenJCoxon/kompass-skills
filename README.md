@@ -16,7 +16,7 @@ The runner is optional. Without it, you build on your own computer, one unit at 
 
 Most of the time goes into planning. You and the agent map the modules, the architecture and the key screens, and every UI decision with real alternatives gets an interactive mockup that you click through and choose from. All of it lands on one planning page (`docs/kompass/plan.html`) that both of you refer to for the life of the project. The work is grouped into **sequences**, each ending at a point you can walk through. After one approval, the agent builds a sequence's units in order. At the end of each sequence it writes a sequence hand-over with walkthrough steps. You try it, your feedback is recorded, and the next sequence picks up from that record. Each unit is a short written brief, built in a fresh session, reviewed by a second agent, checked by CI, merged, and closed with a written hand-over. The next unit starts from the plan, its own brief and that hand-over. Enforcement lives in GitHub and CI, not in local blockers, so it holds whichever tool writes the code.
 
-## The five skills
+## The six skills
 
 | Skill | When | What it produces |
 |---|---|---|
@@ -25,6 +25,7 @@ Most of the time goes into planning. You and the agent map the modules, the arch
 | `kompass-build` | For one unit | Failing test first, build, local checks, independent review, pull request, CI, merge and the written hand-over. |
 | `kompass-run` | To run a sequence | Builds the sequence's units back to back in fresh sessions, parks blocked units and moves on, writes the sequence hand-over with walkthrough steps, and afterwards records your walkthrough feedback. |
 | `kompass-find` | When something breaks later | Finds which unit changed what, and why, from the hand-overs, decisions and git history. |
+| `kompass-improve` | After each sequence, or weekly | The harness review: reads how the runs went (run log, unit logs, parks, retries, review rounds, stalls, CI failures), records each lesson with its evidence in `docs/lessons.md`, and proposes changes to these skills as pull requests. |
 
 ## Who does what
 
@@ -109,7 +110,8 @@ A unit blocked for any other reason is parked with a written reason, and the run
 
 ## Files
 
-- `skills/*/SKILL.md`: the five skills
+- `skills/*/SKILL.md`: the six skills
+- `docs/lessons.md`: what the runs taught us about the skills, with evidence and what was done (written by `kompass-improve`)
 - `agents/`: builder (Sonnet), searcher (Haiku) and reviewer (Opus)
 - `templates/`: unit, sequence, decision, module map, architecture, plan brief, mockup starter
 - `scripts/render-catalogue.mjs`: builds `catalogue.html`, the skills catalogue, from the skill files and `design/skills.json`

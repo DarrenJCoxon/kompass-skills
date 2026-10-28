@@ -5,7 +5,8 @@
     "kompass-units",
     "kompass-run",
     "kompass-build",
-    "kompass-find"
+    "kompass-find",
+    "kompass-improve"
   ],
   "lifecycle": [
     {
@@ -37,6 +38,11 @@
       "step": "Next sequence",
       "skill": "kompass-run",
       "what": "Starts from the hand-over and your recorded walkthrough."
+    },
+    {
+      "step": "Harness review",
+      "skill": "kompass-improve",
+      "what": "After each sequence or weekly: what kept going wrong, lessons with evidence, and proposed changes to the skills."
     }
   ],
   "skills": {
@@ -160,6 +166,30 @@
       ],
       "questions": [
         "Is plain text search enough, or do we want an index like LiteBench's search?"
+      ]
+    },
+    "kompass-improve": {
+      "plain": "Reviews how the runs went and proposes changes to the Kompass skills themselves, each backed by evidence, so the same problem doesn't keep costing time.",
+      "when": "After a sequence is handed over, weekly while runs are going, or \"run the harness review\".",
+      "reads": [
+        "The run log: starts, ends, retries, skips",
+        "Unit logs, hand-overs, park notes and review records",
+        "Pull request timelines (ready to merged) and CI failures",
+        "Earlier lessons, to check whether their fixes held"
+      ],
+      "produces": [
+        "Lessons with their evidence, appended to docs/lessons.md in kompass-skills",
+        "A kompass-skills pull request for each change the evidence supports, test first where code is involved",
+        "Patterns to watch where the evidence is thin",
+        "A plain-English summary for you"
+      ],
+      "stops": [
+        "Never merges its own pull requests: you or your desktop session accept them",
+        "Never changes a project's code or records, and never spends real-model money"
+      ],
+      "questions": [
+        "Is two occurrences the right bar for a lesson, or should a costly one-off count?",
+        "Should the replay check be required for every change to kompass-build, or stay optional?"
       ]
     }
   },

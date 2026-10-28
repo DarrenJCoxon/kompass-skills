@@ -22,7 +22,7 @@ How to guide them:
    - **Its toolchain:** for example Node with pnpm, or Python. Note how CI runs its checks, and the name of its required check.
 3. If `kompass-plan` is already available in this session, the plugin is installed: skip to step 5.
 4. Install the plugin. Run `claude plugin marketplace add DarrenJCoxon/kompass-skills`, then `claude plugin install kompass@kompass`. If those commands aren't available, ask the operator to type `/plugin marketplace add DarrenJCoxon/kompass-skills` and then `/plugin install kompass@kompass` in Claude Code.
-   Then ask them to restart Claude Code in the project, so the five skills load. They should then see `kompass-plan`, `kompass-units`, `kompass-build`, `kompass-run` and `kompass-find`.
+   Then ask them to restart Claude Code in the project, so the six skills load. They should then see `kompass-plan`, `kompass-units`, `kompass-build`, `kompass-run`, `kompass-find` and `kompass-improve`.
 5. Check the repository's safety settings with `gh api` and explain each one in a sentence. All three are needed before any unit merges by itself:
    - main accepts changes only through pull requests, with one required CI check;
    - a pull request must be up to date with main before it merges;
