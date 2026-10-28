@@ -35,10 +35,12 @@ else if (a[0] === 'api' && /statuses/.test(a[1])) out([]);
 else if (a[0] === 'pr' && a[1] === 'view') { const p = pr(a[2]); out({ state: merged.includes(p.number) ? 'MERGED' : 'OPEN', mergeStateStatus: 'CLEAN', headRefName: p.headRefName, headRefOid: p.headRefOid, isDraft: p.isDraft }); }
 else if (a[0] === 'pr' && a[1] === 'diff') out(pr(a[2]).files.join('\\n') + '\\n');
 else if (a[0] === 'pr' && a[1] === 'merge' && a.includes('--auto')) fs.appendFileSync(d + '/merged', a[2] + '\\n');
+else if (a[0] === 'pr' && a[1] === 'ready' && a.includes('--undo')) { pr(a[2]).isDraft = true; fs.writeFileSync(d + '/gh.json', JSON.stringify(g)); }
 `;
 
 /** A project with these open pull requests. Each: n, branch, files {path: text}, hours (opened that long ago,
- * last commit then too), ci ('success' | 'failure' | 'in_progress' | 'queued' | 'none'), draft, title, body. */
+ * last commit then too), ci ('success' | 'failure' | 'in_progress' | 'queued' | 'none'), draft, title, body,
+ * auto (its author turned auto-merge on). */
 function project(pulls, { merged = [] } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'lander-'));
   const origin = join(dir, 'origin.git'), seed = join(dir, 'seed'), clone = join(dir, 'clone'), bin = join(dir, 'bin');
@@ -53,7 +55,7 @@ function project(pulls, { merged = [] } = {}) {
     for (const [f, text] of Object.entries(x.files)) put(join(seed, f), text);
     sh(seed, `git add -A && git commit -qm work && git push -q origin HEAD:refs/heads/${x.branch} HEAD:refs/pull/${x.n}/head && git checkout -q main`, at);
     const sha = sh(seed, `git rev-parse ${x.branch}`).trim();
-    gh.pulls.push({ number: x.n, title: x.title ?? `${x.branch.split('/').pop()}: work`, headRefName: x.branch, headRefOid: sha, isDraft: !!x.draft, createdAt: iso(at), body: x.body ?? '', files: Object.keys(x.files) });
+    gh.pulls.push({ number: x.n, title: x.title ?? `${x.branch.split('/').pop()}: work`, headRefName: x.branch, headRefOid: sha, isDraft: !!x.draft, createdAt: iso(at), body: x.body ?? '', files: Object.keys(x.files), autoMergeRequest: x.auto ? { enabledAt: iso(at) } : null });
     const ci = x.ci ?? 'success';
     if (ci !== 'none') gh.runs.push({ id: x.n, name: 'CI', head_sha: sha, head_branch: x.branch, created_at: iso(x.ciQueued ?? at), status: ['in_progress', 'queued'].includes(ci) ? ci : 'completed', conclusion: ['in_progress', 'queued'].includes(ci) ? null : ci });
   }
@@ -96,13 +98,13 @@ test('it skips drafts and pull requests titled building, and a person\'s own pul
   t.poll();
   assert.deepEqual(t.merges().map((a) => a[2]), ['23']);
   assert.match(t.page('txt'), /Building \(2\)\n- #20 WU-0003: building \[on-device, last commit 5\.0 h ago\] files: src\/c\.ts/);
-  assert.match(t.page('txt'), /#22 by-hand: work \(not a unit or records; a person lands it\)/);
+  assert.match(t.page('txt'), /Waiting for a person \(1\)\n- #22 by-hand: work/);
 });
 
 test('a records-only pull request goes straight through, before CI finishes and past the units in flight', () => {
   const t = project([
     code(30, 'kompass/WU-0001-a', 'docs/kompass/units/WU-0001-a.md', 4, { draft: true, title: 'WU-0001: building' }),
-    { n: 31, branch: 'monitor/park-WU-0001', files: { 'docs/kompass/units/WU-0001-a.md': 'parked\n' }, hours: 2, ci: 'in_progress' },
+    { n: 31, branch: 'monitor/park-WU-0001', files: { 'docs/kompass/units/WU-0001-a.md': 'parked\n' }, hours: 2, ci: 'in_progress', auto: true },
     code(32, 'kompass/WU-0002-b', 'src/b.ts', 1, { ci: 'in_progress' }),
   ]);
   const out = t.poll();
@@ -125,14 +127,33 @@ test('a unit an earlier one blocks is not landed, and gets one comment saying wh
   assert.doesNotMatch(t.page('txt'), /Idle/, 'a runner draft is not an idle claim');
 });
 
-test('a pull request with failing checks gets one comment and an alert, and is left for its unit', () => {
+// A unit's session hands over and ends before CI finishes; if CI then fails, the pull request must not sit open
+// and ready, which the runner counts as landing. Back to draft, the runner resumes the unit from its branch.
+test('a unit pull request with failing checks gets one comment and alert, and goes back to draft for its unit', () => {
   const t = project([code(50, 'kompass/WU-0001-a', 'src/a.ts', 2, { ci: 'failure' }), code(51, 'kompass/WU-0002-b', 'src/b.ts', 1)]);
   const first = t.poll();
   const second = t.poll();
   assert.deepEqual(t.merges().map((a) => a[2]), ['51']);
   assert.equal(t.comments(50).length, 1);
-  assert.match(t.comments(50)[0].join(' '), /checks failed/);
+  assert.match(t.comments(50)[0].join(' '), /checks failed .* back to draft, so the runner resumes the unit/);
   assert.equal((first + second).match(/\[demo: Checks failed: #50\]/g)?.length, 1);
+  assert.equal(t.calls().filter((a) => a.join(' ') === 'pr ready 50 --undo').length, 1);
+  assert.match(t.page('txt'), /Left for its unit \(1\)\n- #50 .*: checks failed/);
+});
+
+// Tertia #262 (kompass/phase-2-school-admin-plan) is a phase plan awaiting Darren: records only and not a draft.
+// Only a unit's own pull request, or one whose author turned auto-merge on, is landed without asking.
+test('a pull request that is neither a unit\'s nor opted in is left for a person, even records only', () => {
+  const plan = { 'docs/kompass/plan.md': 'phase 2\n' };
+  const t = project([
+    { n: 262, branch: 'kompass/phase-2-school-admin-plan', files: plan, hours: 4 },
+    { n: 263, branch: 'kompass/WU-0007-parked', files: { 'docs/kompass/units/WU-0001-a.md': 'parked\n' }, hours: 3, title: 'WU-0007: parked', ci: 'in_progress' },
+    { n: 264, branch: 'monitor/records', files: { 'docs/kompass/notes.md': 'x\n' }, hours: 2, auto: true },
+  ]);
+  for (let i = 0; i < 3; i++) t.poll();
+  assert.deepEqual(t.merges().map((a) => a[2]), ['263', '264'], 'the unit\'s parked records, then the opted-in one');
+  assert.deepEqual(t.comments(262), []);
+  assert.match(t.page('txt'), /Waiting for a person \(1\)\n- #262 phase-2-school-admin-plan: work/);
 });
 
 test('each alert goes once per item: an idle on-device claim and CI queued too long', () => {
@@ -161,7 +182,7 @@ test('a unit waiting on another for over 30 minutes is alerted once', () => {
 });
 
 test('it never merges directly: every merge call is auto-merge on or off', () => {
-  const t = project([code(80, 'kompass/WU-0001-a', 'src/a.ts', 3), { n: 81, branch: 'monitor/notes', files: { 'docs/kompass/notes.md': 'x\n' }, hours: 2 }, code(82, 'kompass/WU-0002-b', 'src/b.ts', 1)]);
+  const t = project([code(80, 'kompass/WU-0001-a', 'src/a.ts', 3), { n: 81, branch: 'monitor/notes', files: { 'docs/kompass/notes.md': 'x\n' }, hours: 2, auto: true }, code(82, 'kompass/WU-0002-b', 'src/b.ts', 1)]);
   for (let i = 0; i < 4; i++) t.poll();
   assert.equal(t.merges().length, 3);
   for (const a of t.merges()) assert.ok(a.includes('--auto') || a.includes('--disable-auto'), a.join(' '));

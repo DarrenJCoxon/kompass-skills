@@ -2,8 +2,10 @@
 // The lander: one process per Kompass project, beside the runner, that owns landing. Every poll it looks at the
 // open pull requests, oldest first, and lands one at a time with merge-when-green.sh (auto-merge only, never a
 // direct merge): a unit's ready pull request once CI is green and no earlier unit holds its files, and a
-// records-only one (only docs/kompass/) straight away. It skips drafts and `…: building` pull requests and
-// never lands a person's other pull requests. It comments once on a pull request it won't land (waiting for an
+// records-only one (only docs/kompass/) straight away. It lands only a unit's own pull request (kompass/WU-NNNN-…)
+// or one whose author turned auto-merge on; anything else may await a person's review and is left alone. It
+// skips drafts and `…: building` pull requests. A unit's pull request it can't land (checks failed, conflicts,
+// stuck) goes back to draft, so the runner resumes the unit. It comments once on a pull request it won't land (waiting for an
 // earlier unit, checks failed, conflicts), sends each alert once through scripts/notify-send.sh, and writes the
 // queue page (KOMPASS_QUEUE_PAGE, default /work/<repo>/.kompass/queue.html, and a .txt twin) every poll.
 // Sessions hand their pull request over and end, rather than hold a runner slot waiting to land it (Tertia,
@@ -61,18 +63,14 @@ function land(it, now) {
 
 function landed(it, code, out) {
   landing = null;
-  const now = Date.now();
   if (code === 0) { log(`landed #${it.n}`); alert({ title: `Merged: #${it.n}`, body: it.title }); save(); return; }
   log(`#${it.n} not landed (merge-when-green exit ${code}): ${out.trim().split('\n').pop() ?? ''}`);
-  const note = afterLanding(code, it, out, memory, now);
-  if (note) comment(it.n, note);
-  const key = code === 3 ? `green:${it.n}:${it.sha}` : `left:${it.n}:${it.sha}`;
-  if (note && !memory.said[key]) {
-    memory.said[key] = now;
-    alert(code === 3 ? { title: `Green, not merging: #${it.n}`, body: `${it.title}\nauto-merge re-armed and still not merging; needs a person` } : { title: `Needs its unit: #${it.n}`, body: `${it.title}\n${memory.left[it.n].why}` });
-  }
+  const l = afterLanding(code, it, out, memory, Date.now());
+  if (l) { comment(l.comment.n, l.comment.body); if (l.alert) alert(l.alert); if (l.draft) toDraft(l.draft); }
   save();
 }
+// A unit's pull request left for its unit goes back to draft: the runner then resumes the unit (openUnitIds skips drafts).
+const toDraft = (n) => log(gh(p.root, ['pr', 'ready', String(n), '--undo']) === null ? `#${n} could not be put back to draft` : `#${n} back to draft for its unit`);
 
 let pageWarned = false;
 async function poll() {
@@ -83,6 +81,7 @@ async function poll() {
   const todo = plan(items, seen, memory, now, landing);
   for (const c of todo.comments) comment(c.n, c.body);
   for (const a of todo.alerts) alert(a);
+  for (const n of todo.draft) toDraft(n);
   for (const n of todo.update) {
     const it = items.find((i) => i.n === n);
     if (gh(p.root, ['pr', 'update-branch', String(n)]) !== null) { log(`#${n}: the unit it waited for has landed; brought up to date with main so CI runs on both`); continue; }
