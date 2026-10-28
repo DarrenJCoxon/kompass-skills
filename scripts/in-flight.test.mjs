@@ -254,3 +254,51 @@ test('the session-start notice leaves resting branches out', () => {
   assert.match(r.stdout, /- WU-0013/);
   assert.doesNotMatch(r.stdout, /- WU-0011|- WU-0012/);
 });
+
+// Tertia, 27 Oct 2026: WU-0179 waited behind WU-0227's on-device draft, which had had no new commit for hours,
+// and nobody could see that it had gone quiet. A draft `building` pull request with no new commit for 2 hours
+// is shown as idle: still in flight, so it still holds its files, but whoever waits on it can see it and ask.
+const inRest = (...args) => {
+  const r = spawnSync('node', [join(here, 'in-flight.mjs'), ...args], { cwd: rest().later, encoding: 'utf8', env: { ...process.env, ...id, PATH: `${join(work, 'resting', 'bin')}:${process.env.PATH}` } });
+  return { code: r.status, out: r.stdout + r.stderr };
+};
+
+test('a draft pull request with no new commit for 2 hours is shown as idle, and still holds its files', () => {
+  const by = rest().list();
+  assert.equal(by['WU-0013'].idle, true, 'draft, last commit 3 hours ago');
+  assert.equal(by['WU-0014'].idle, false, 'no pull request: not an idle draft');
+  assert.match(inRest().out, /WU-0013 {2}waiting, idle since \d{4}-\d\d-\d\d \d\d:\d\d UTC {2}kompass\/WU-0013-draft/);
+  assert.match(inRest('--notice').out, /- WU-0013 \(PR #13\) waiting, idle since \d{4}-\d\d-\d\d \d\d:\d\d UTC, started/);
+  const r = rest().check('d');
+  assert.equal(r.code, 3, 'idle is still in flight');
+  assert.match(r.out, /WU-0013 \(PR #13\) has had no new commit since .* UTC/);
+});
+
+test('a draft is not idle within --idle-hours of its last commit', () => {
+  const units = Object.fromEntries(JSON.parse(inRest('--json', '--idle-hours', '4').out).units.map((u) => [u.id, u]));
+  assert.equal(units['WU-0013'].idle, false);
+  assert.doesNotMatch(inRest('--idle-hours', '4').out, /idle since/);
+});
+
+// Tertia, 27 Oct 2026: WU-0177's second session didn't find its approved branch
+// kompass/WU-0177-claimed-send-refusal-audit (draft #219) and rebuilt the fix from scratch on a new branch,
+// kompass/WU-0177-refused-reads-keep-audit. --unit lists a unit's existing branches by number, whatever the slug.
+test('--unit lists a unit\'s branches by number, any slug, the one with an open pull request first', () => {
+  const later = rest().later;
+  sh(later, 'git fetch -q origin && git checkout -q -b kompass/WU-0013-rebuilt origin/main && echo r > src/r.ts && git add -A && git commit -qm rebuilt && git push -q origin HEAD && git checkout -q kompass/WU-0020-later', now - hour);
+  const r = inRest('--unit', 'WU-0013');
+  assert.equal(r.code, 0, r.out);
+  const rows = r.out.trim().split('\n');
+  assert.equal(rows.length, 2, r.out);
+  assert.match(rows[0], /^kompass\/WU-0013-draft {2}PR #13 \(draft\) {2}last commit .* UTC/);
+  assert.match(rows[1], /^kompass\/WU-0013-rebuilt {2}no pull request {2}last commit .* UTC/);
+  assert.equal(inRest('--unit', 'WU-0011').out.trim().split('\n').length, 1, 'a parked unit\'s kept branch is found, to resume');
+  assert.doesNotMatch(inRest('--unit', 'WU-0001').out, /kompass/, 'nothing for a unit with no branch');
+  assert.doesNotMatch(inRest('--unit', 'WU-001').out, /WU-0013|WU-0011/, 'the number is matched whole');
+});
+
+test('--unit leaves out a branch already merged into main', () => {
+  const r = run(laptop, 'in-flight.mjs', '--unit', 'WU-0001');
+  assert.equal(r.code, 0, r.out);
+  assert.equal(r.out.trim(), '');
+});

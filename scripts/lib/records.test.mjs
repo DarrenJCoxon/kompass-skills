@@ -158,3 +158,38 @@ test('unticked steps before a sequence are listed, ticked ones are not', async (
   assert.deepEqual(stepsFirst(seqs, 2), ['Add the size check to CI', 'Pilot the folded build']);
   assert.deepEqual(stepsFirst(seqs, 3), []);
 });
+
+// Tertia, 27 Oct 2026: units with separate owned files still collided in a shared foundation (the gate, the
+// agent), because each changed that foundation's front door and its callers. A unit that changes a foundation's
+// front door carries `foundation: <name>`, and the runner never builds two with the same tag side by side.
+test('a unit never starts beside a busy unit with the same foundation tag', () => {
+  const units = [owning('WU-0001', ['src/gate/a.ts'], { foundation: 'gate' }), owning('WU-0002', ['src/b.ts'], { foundation: 'gate' })];
+  assert.equal(nextUnit(units, ['WU-0001']), null);
+  assert.equal(nextUnit([{ ...units[0], status: 'building' }, units[1]], [], []), null, 'marked building on main counts too');
+});
+
+test('units with different foundation tags, or one untagged, still start side by side', () => {
+  const gate = owning('WU-0001', ['src/gate/a.ts'], { foundation: 'gate' });
+  assert.equal(nextUnit([gate, owning('WU-0002', ['src/b.ts'], { foundation: 'agent' })], ['WU-0001'])?.id, 'WU-0002');
+  assert.equal(nextUnit([gate, owning('WU-0002', ['src/b.ts'])], ['WU-0001'])?.id, 'WU-0002');
+  assert.equal(nextUnit([owning('WU-0001', ['src/a.ts']), owning('WU-0002', ['src/b.ts'])], ['WU-0001'])?.id, 'WU-0002', 'two untagged units do not share an empty tag');
+});
+
+test('a skipped unit with a foundation tag does not hold back another with the same tag', () => {
+  const units = [owning('WU-0001', ['src/a.ts'], { foundation: 'gate' }), owning('WU-0002', ['src/b.ts'], { foundation: 'gate' })];
+  assert.equal(nextUnit(units, ['WU-0001'], [])?.id, 'WU-0002');
+});
+
+test('foundation is read from a unit\'s front matter, exactly, and is empty when absent', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const dir = mkdtempSync(join(tmpdir(), 'records-'));
+  mkdirSync(join(dir, 'units'));
+  writeFileSync(join(dir, 'units', 'WU-0001-a.md'), '---\nid: WU-0001\nsequence: 1\nowns: [src/gate/]\nfoundation: gate\n---\n');
+  writeFileSync(join(dir, 'units', 'WU-0002-b.md'), '---\nid: WU-0002\nsequence: 1\nowns: [src/]\n---\n');
+  const read = readUnits(source(dir));
+  rmSync(dir, { recursive: true, force: true });
+  assert.equal(read.find((u) => u.id === 'WU-0001').foundation, 'gate');
+  assert.equal(read.find((u) => u.id === 'WU-0002').foundation, '');
+});

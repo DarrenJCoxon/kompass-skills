@@ -83,8 +83,10 @@ function unitOf(p, ref, branch, changed) {
  * neither, a unit main says is parked, waiting, dropped or delivered (or that is parked on its own branch) is
  * marked resting: listed, but it holds nothing back. Tertia, 27 Oct 2026: WU-0159's kept branch (`waiting` on main, draft closed) held WU-0177 back.
  * A head with no push for `staleHours` and no pull request, or only its draft `building` one, is marked stale:
- * listed, but it holds nothing back, so a dead session's draft can't hold files for ever. */
-export function inFlight(p, { fetch = true, gh = true, staleHours = 24, now = Date.now() } = {}) {
+ * listed, but it holds nothing back, so a dead session's draft can't hold files for ever.
+ * A draft pull request with no new commit for `idleHours` (and not yet stale) is marked idle: still in flight
+ * and still holding its files, but shown, so whoever waits on it can ask. WU-0179 waited on WU-0227's quiet draft. */
+export function inFlight(p, { fetch = true, gh = true, staleHours = 24, idleHours = 2, now = Date.now() } = {}) {
   const { list: all, pullsChecked } = heads(p, { fetch, gh });
   const units = [];
   for (const h of all) {
@@ -103,14 +105,28 @@ export function inFlight(p, { fetch = true, gh = true, staleHours = 24, now = Da
     units.push({
       id, branch: h.branch, pr: h.pr,
       status: record?.data.status || (h.pr ? 'open pull request' : 'branch'),
-      owns: arr(record?.data.owns), changed, records: recordsIn(p, added),
+      owns: arr(record?.data.owns), foundation: record?.data.foundation || '', changed, records: recordsIn(p, added),
       started: Math.min(...times) * 1000, updated,
       stale: (!h.pr || h.draft) && now - updated > staleHours * 3600_000,
+      idle: !!h.pr && h.draft && now - updated > idleHours * 3600_000 && now - updated <= staleHours * 3600_000,
       resting, onMain: onMain ?? null,
     });
   }
   units.sort((a, b) => a.started - b.started);
   return { units, pullsChecked };
+}
+
+/** Every unpushed-to-main branch of unit `id` (`kompass/WU-NNNN-<any slug>`), so a session resumes the unit's
+ * existing branch instead of cutting a new one: the one with an open pull request first, then the latest commit.
+ * Tertia, 27 Oct 2026: WU-0177's second session missed its approved branch (draft #219) and rebuilt the fix. */
+export function unitBranches(p, id, opts = {}) {
+  const { list, pullsChecked } = heads(p, opts);
+  const named = new RegExp(`^kompass/${id}(-|$)`);
+  const branches = list
+    .filter((h) => named.test(h.branch) && p.git(['merge-base', '--is-ancestor', h.ref, 'refs/remotes/origin/main']) === null)
+    .map((h) => ({ branch: h.branch, pr: h.pr, draft: h.draft, updated: Number(p.git(['log', '-1', '--format=%ct', h.ref])) * 1000 }))
+    .sort((a, b) => (!!b.pr - !!a.pr) || b.updated - a.updated);
+  return { branches, pullsChecked };
 }
 
 /** This checkout's own work: its branch, unit, owns and every file changed against main, committed or not. */

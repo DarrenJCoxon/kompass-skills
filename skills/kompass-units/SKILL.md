@@ -31,6 +31,7 @@ Front matter:
 - `depends:` the units that must merge first (empty if none)
 - `owns:` the files and folders it may change
 - `alone: true` only when the unit must not run beside another, for example because it measures the real model. A unit with an empty `owns:` also runs alone, since it may touch any file.
+- `foundation: <name>` when the unit changes the front door of one of the project's shared foundations (modules many others call, such as `gate`, `agent`, `host` or `calculators`; modules.md says which modules are foundations if it lists them). Use the same name for every unit touching that foundation, since tags are compared exactly; the runner never builds two units with the same tag side by side.
 - `mockup:` and `decisions:` it follows, if any
 
 Body:

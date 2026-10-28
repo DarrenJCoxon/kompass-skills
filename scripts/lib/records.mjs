@@ -73,6 +73,7 @@ export function readUnits(src) {
         depends: Array.isArray(data.depends) ? data.depends : [],
         owns: Array.isArray(data.owns) ? data.owns : [],
         alone: data.alone === 'true',
+        foundation: typeof data.foundation === 'string' ? data.foundation : '',
         mockup: data.mockup || '',
         decisions: Array.isArray(data.decisions) ? data.decisions : [],
         pr: data.pr || '',
@@ -134,8 +135,11 @@ const overlaps = (a, b) => sharedPaths(a, b).length > 0;
 /** A unit runs alone when it asks to (`alone: true`, e.g. it measures the real model) or names no files, since then it may touch any of them. */
 const runsAlone = (u) => u.alone === true || !u.owns.length;
 
+/** Units that change the same shared foundation's front door (`foundation: gate`, compared exactly) are built one at a time. */
+const sameFoundation = (a, b) => !!a.foundation && a.foundation === b.foundation;
+
 /** True when units `a` and `b` must not be built at the same time. */
-const conflicts = (a, b) => runsAlone(a) || runsAlone(b) || overlaps(a.owns, b.owns);
+const conflicts = (a, b) => runsAlone(a) || runsAlone(b) || overlaps(a.owns, b.owns) || sameFoundation(a, b);
 
 /** Sequences from sequences/S-NN-….md: a run of units that ends in a walkthrough and a written hand-over. */
 export function readSequences(src) {
@@ -175,7 +179,7 @@ export function sequenceComplete(units, n) {
 }
 
 /** The next unit in the current sequence that is waiting, has every dependency delivered, is not in `inProgress`, and
- * shares no files with a busy unit (a unit that runs alone shares with everything). Busy means a session is building
+ * shares no files and no foundation tag with a busy unit (a unit that runs alone shares with everything). Busy means a session is building
  * it now (`running`, by default all of `inProgress`) or it is marked building; a unit only excluded, such as one
  * skipped this run or waiting on its open pull request, holds nothing back. Never crosses into the next sequence:
  * that waits for the walkthrough. */

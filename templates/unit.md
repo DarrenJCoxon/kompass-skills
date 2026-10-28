@@ -7,6 +7,7 @@ module: module-id
 status: waiting
 depends: []
 owns: [src/module/file.ts, src/module/file.test.ts]
+foundation:
 mockup:
 decisions: []
 pr:
