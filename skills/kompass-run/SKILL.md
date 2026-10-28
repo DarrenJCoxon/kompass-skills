@@ -59,6 +59,8 @@ Then write the **Walkthrough guide** section, from the template. A sequence hold
 
 Set `status: handed-over` and deliver the sequence file in a small pull request titled `S-NN: hand-over`, landed with `scripts/merge-when-green.sh` as units are. Your final message is what reaches the operator's phone: start it with the link to the sequence file on GitHub (`https://github.com/<owner/repo>/blob/main/docs/kompass/sequences/<file>`), then give the whole walkthrough guide, not a summary.
 
+A handed-over sequence is also the time for the **harness review** (`kompass-improve`): what kept going wrong in this sequence's units, and what to change in the Kompass skills because of it. Don't do it in the hand-over session, whose final message is the walkthrough guide. The Kompass monitor, or the operator's own session, runs `/kompass-improve` once the hand-over has landed (see `runner/README.md`).
+
 ## Prepare the walkthrough ("I'm ready to try it")
 
 The operator never has to think about where the code lives. When they want to try a sequence, do all of this for them on their Mac:

@@ -52,6 +52,16 @@ ssh kompass-runner '~/kompass-skills/runner/update.sh'
 
 A run already going keeps its image (and the scripts and skills baked into it) until it ends; the next run uses the new one. Update the plugin on your own computer at the same time (`claude plugin marketplace update kompass`, then restart Claude Code), so your sessions and the runner follow the same rules.
 
+## Harness review
+
+After each sequence is handed over, and at least weekly while runs are going, run the harness review on the server from the Kompass monitor, where the run logs, the projects' clones and a clone of this repository are all to hand:
+
+```
+cd ~/kompass-monitor && claude -p "/kompass-improve"
+```
+
+Or ask the monitor from your phone: "run the harness review". It reads the period since the last review (else 7 days): the run log, unit logs and hand-overs, parks, retries, review rounds, pull request stalls and CI failures. It records each lesson with its evidence in `docs/lessons.md` and proposes changes to the skills as pull requests here, which it never merges. There is no timer: the hand-over alert is the reminder.
+
 ## Session histories
 
 Each unit session's history is kept on the `kompass-claude-state` volume, so what a session did before it stopped can be read afterwards. A volume created by an image before 26 Oct 2026 belongs to root and the runner refuses to start with it; fix it once with:
