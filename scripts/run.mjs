@@ -3,7 +3,7 @@
 // Reads unit status from origin/main after each unit, so it only ever sees merged state.
 // A run builds one sequence. When every unit in it is delivered or parked, a fresh session writes the
 // sequence hand-over for the walkthrough, and the run stops; the next sequence starts after the walkthrough.
-// usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 2] [--model opus] [--claude claude]
+// usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 2] [--model opus] [--claude claude] [--lander-wait 2] [--lander-poll 60]
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -30,6 +30,15 @@ const active = new Map(); // id -> child process
 const sessionSlots = slots(); // each running unit session gets its own slot, and so its own browser-test ports
 const attempts = new Map();
 const skipped = new Set();
+// With the lander running (start.sh sets KOMPASS_LANDER=1), a session ends once its pull request is handed over,
+// before it merges. Units that depend on it become ready only when it lands, so the run looks again every minute
+// while unit pull requests are open (every --lander-poll seconds), for at most --lander-wait hours (2) with nothing
+// running, rather than stopping early with the sequence "not complete". One the lander can't land goes back to
+// draft, which openUnitIds doesn't count, so it is picked again and resumed from its branch.
+const lander = process.env.KOMPASS_LANDER === '1';
+const landerWait = Number(opt('--lander-wait', 2)) * 3600_000;
+const landerPoll = Number(opt('--lander-poll', 60)) * 1000;
+let later = null, idleSince = null; // the next look, and since when nothing has run
 
 function mainUnits() {
   execFileSync('git', ['fetch', '--quiet', 'origin', 'main'], { cwd: root });
@@ -52,11 +61,18 @@ function finish(why) {
   log(`run finished: ${why}${skipped.size ? `; needs a look: ${[...skipped].join(', ')}` : ''}`);
 }
 
-function startNext() {
+function startNext(open = openUnitIds(root)) {
   const units = mainUnits();
-  const inProgress = [...active.keys(), ...openUnitIds(root).filter((id) => !active.has(id)), ...skipped];
+  const inProgress = [...active.keys(), ...open.filter((id) => !active.has(id)), ...skipped];
   const unit = nextUnit(units, inProgress, [...active.keys()]); // skipped and open-PR units are not picked, but only running sessions hold others back
   if (!unit || unit.sequence !== sequence) return false;
+  // A unit can come back after its session ended with a pull request open: the lander puts it back to draft when
+  // its checks fail, it conflicts or it sticks. It is resumed as a retry, never more than --attempts sessions.
+  if ((attempts.get(unit.id) ?? 0) >= maxAttempts) {
+    skipped.add(unit.id);
+    log(`skip ${unit.id}: not delivered after ${maxAttempts} sessions; needs a look`);
+    return startNext(open);
+  }
   attempts.set(unit.id, (attempts.get(unit.id) ?? 0) + 1);
   log(`start ${unit.id} (attempt ${attempts.get(unit.id)}): ${unit.title}`);
   // The session starts in this checkout, so bring it to main first: a stale copy once made a session ask for a decision already made (WU-0159).
@@ -85,7 +101,17 @@ function startNext() {
 function tick() {
   const stop = existsSync(join(dir, 'STOP'));
   const timeUp = Date.now() > deadline;
-  while (!stop && !timeUp && active.size < parallel && startNext()) { /* fill free slots */ }
+  const open = openUnitIds(root); // one look per tick, so picking and waiting for the lander agree
+  while (!stop && !timeUp && active.size < parallel && startNext(open)) { /* fill free slots */ }
+  if (later) { clearTimeout(later); later = null; }
+  const wasIdle = idleSince !== null;
+  idleSince = active.size ? null : (idleSince ?? Date.now());
+  const landing = lander && !stop && !timeUp && active.size < parallel && (idleSince === null || Date.now() - idleSince < landerWait) ? open : [];
+  if (landing.length) {
+    if (!active.size && !wasIdle) log(`waiting for the lander to land ${landing.join(', ')}`);
+    later = setTimeout(tick, landerPoll);
+    return;
+  }
   if (active.size === 0) {
     if (stop || timeUp) finish(stop ? 'STOP file found' : 'time limit reached');
     else handOver();

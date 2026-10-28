@@ -10,14 +10,13 @@ container="${1:?usage: notify.sh CONTAINER}"
 here="$(cd "$(dirname "$0")" && pwd)"
 NOTIFY_URL="${NOTIFY_URL:-$(grep -m1 '^NOTIFY_URL=' "$here/.env" 2>/dev/null | cut -d= -f2-)}"
 : "${NOTIFY_URL:?NOTIFY_URL is not set in runner/.env}"
+export NOTIFY_URL
 
 since="$(date -u +%Y-%m-%dT%H:%M:%S)" # earlier lines only teach unit titles, so a restart sends nothing twice
 project="${container#kompass-}" # one topic serves every project on the runner, so each title names its project
-send() { # title, message
+send() { # title, message; sent by scripts/notify-send.sh, which the lander uses too
   [[ "$stamp" < "$since" ]] && return
-  set -- "$project: $1" "$2"
-  if [ "$NOTIFY_URL" = "-" ]; then echo "[$1] $2"; return; fi
-  curl -fsS -m 20 -H "Title: $1" -H "Markdown: yes" --data-binary "$2" "$NOTIFY_URL" >/dev/null || echo "notify failed: $1" >&2
+  bash "$here/../scripts/notify-send.sh" "$project: $1" "$2"
 }
 # A unit session's own words: what it printed since its unit started. Its last message holds any question
 # for the operator, so it goes with the alert and can be read on the phone with the laptop shut.

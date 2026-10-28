@@ -31,7 +31,8 @@ changed=$(gh pr diff "$pr" --name-only 2>/dev/null)
 if [ -n "$changed" ] && ! grep -qv '^docs/kompass/' <<<"$changed"; then
   say "records only; not waiting for the units in flight"
 elif [ -n "$top" ] && [ -d "$top/docs/kompass" ]; then
-  held=$(node "$here/in-flight.mjs" --check); code=$?
+  # The lander has no copy of the branch, so it has the pushed branch checked instead (MWG_INFLIGHT_BRANCH).
+  held=$(node "$here/in-flight.mjs" --check ${MWG_INFLIGHT_BRANCH:+--branch "$MWG_INFLIGHT_BRANCH"}); code=$?
   if [ "$code" = 3 ]; then say "not landing yet: $(grep '^wait:' <<<"$held" | tr '\n' ' ')"; exit 6; fi
   if [ "$code" = 4 ]; then say "not landing yet: the units in flight could not be checked (gh did not answer); run this again"; exit 6; fi
   [ "$code" = 0 ] || say "could not check the units in flight (exit $code); going on"
@@ -46,17 +47,7 @@ for ((i = 0; i < max_polls; i++)); do
     runs=$(gh api "repos/{owner}/{repo}/actions/runs?head_sha=$sha&per_page=100")
     statuses=$(gh api "repos/{owner}/{repo}/commits/$sha/statuses?per_page=100")
   fi
-  read -r state merge checks head draft < <(PR="$pr_json" RUNS="$runs" STATUSES="$statuses" node -e '
-    const j = (v, d) => { try { return JSON.parse(process.env[v]); } catch { return d; } };
-    const p = j("PR", {}), r = j("RUNS", null), s = j("STATUSES", null);
-    // The latest run of each workflow and the latest status of each context count; an older run it replaced does not.
-    const latest = (xs, key) => Object.values(xs.reduce((m, x) => ((m[key(x)]?.id ?? -1) < x.id ? { ...m, [key(x)]: x } : m), {}));
-    const runs = latest(r?.workflow_runs || [], (x) => x.name), sts = latest(Array.isArray(s) ? s : [], (x) => x.context);
-    const bad = ["failure", "cancelled", "timed_out", "action_required", "startup_failure", "stale"];
-    const checks = !r || !Array.isArray(s) || !runs.length || runs.some((x) => x.status !== "completed") || sts.some((x) => x.state === "pending") ? "pending"
-      : runs.some((x) => bad.includes(x.conclusion)) || sts.some((x) => ["failure", "error"].includes(x.state)) ? "failed"
-      : runs.some((x) => x.conclusion === "skipped") ? "skipped" : "green";
-    console.log(p.state || "-", p.mergeStateStatus || "-", checks, p.headRefName || "-", p.isDraft ? "draft" : "ready");')
+  read -r state merge checks head draft < <(PR="$pr_json" RUNS="$runs" STATUSES="$statuses" node "$here/lib/checks.mjs")
   case "$state" in
     MERGED) say "merged"; exit 0 ;;
     CLOSED) say "closed without merging"; exit 1 ;;

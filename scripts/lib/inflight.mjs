@@ -103,7 +103,7 @@ export function inFlight(p, { fetch = true, gh = true, staleHours = 24, idleHour
     const times = lines(p.git(['log', '--format=%at', `${base}..${h.ref}`])).map(Number);
     const updated = Math.max(...times) * 1000;
     units.push({
-      id, branch: h.branch, pr: h.pr,
+      id, branch: h.branch, pr: h.pr, draft: h.draft,
       status: record?.data.status || (h.pr ? 'open pull request' : 'branch'),
       owns: arr(record?.data.owns), foundation: record?.data.foundation || '', changed, records: recordsIn(p, added),
       started: Math.min(...times) * 1000, updated,
@@ -138,20 +138,39 @@ export function local(p) {
   return { id, branch, owns: arr(id ? unitAt(p, null, id)?.data.owns : []), changed };
 }
 
-/** What this checkout shares with other in-flight units. `wait` lists those that started earlier: this one
- * lands only after them. A unit not yet pushed counts as starting now. */
-export function check(p, opts = {}) {
-  const { units, pullsChecked } = inFlight(p, opts);
-  const me = local(p);
-  const mine = units.find((u) => u.branch === me.branch) ?? (me.id ? units.find((u) => u.id === me.id) : null);
-  const started = mine?.started ?? (opts.now ?? Date.now());
+/** What `me` (a unit's id, branch, owns and changed files) shares with the other units in flight. `wait` lists
+ * those that started earlier than `started`: `me` lands only after them. */
+function against(units, me, mine, started) {
   const holds = [...me.owns, ...me.changed];
   const shared = units
     .filter((u) => u !== mine && !(me.id && u.id === me.id) && !u.stale && !u.resting)
     .map((u) => ({ unit: u, files: sharedPaths(holds, [...u.owns, ...u.changed]) }))
     .filter((s) => s.files.length);
   const earlier = (u) => u.started < started || (u.started === started && u.branch < (me.branch ?? ''));
-  return { me, wait: shared.filter((s) => earlier(s.unit)), after: shared.filter((s) => !earlier(s.unit)), pullsChecked };
+  return { me, wait: shared.filter((s) => earlier(s.unit)), after: shared.filter((s) => !earlier(s.unit)) };
+}
+
+/** What this checkout shares with other in-flight units. `wait` lists those that started earlier: this one
+ * lands only after them. A unit not yet pushed counts as starting now. */
+export function check(p, opts = {}) {
+  const { units, pullsChecked } = inFlight(p, opts);
+  const me = local(p);
+  const mine = units.find((u) => u.branch === me.branch) ?? (me.id ? units.find((u) => u.id === me.id) : null);
+  return { ...against(units, me, mine, mine?.started ?? (opts.now ?? Date.now())), pullsChecked };
+}
+
+/** The same for a pushed branch, judged from `units` (inFlight's list) as it stands on GitHub: the lander lands
+ * pull requests it has no copy of. A branch not in flight (already in main) shares nothing. */
+export function checkPushed(units, branch) {
+  const mine = units.find((u) => u.branch === branch);
+  if (!mine) return { me: { id: null, branch, owns: [], changed: [] }, wait: [], after: [] };
+  return against(units, { id: mine.id, branch, owns: mine.owns, changed: mine.changed }, mine, mine.started);
+}
+
+/** checkPushed, after looking at what is in flight now. */
+export function checkBranch(p, branch, opts = {}) {
+  const { units, pullsChecked } = inFlight(p, opts);
+  return { ...checkPushed(units, branch), pullsChecked };
 }
 
 /** The next free number of each record kind, past every number on main, on every in-flight head (stale ones
