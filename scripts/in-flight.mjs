@@ -4,20 +4,21 @@
 // A kept branch of a unit not being worked on (no open pull request, not `building`) is listed as resting and
 // holds nothing back; so is one with no push for --stale-hours.
 // A draft pull request with no new commit for --idle-hours is shown as idle: still in flight, so it still holds its files.
-// usage: in-flight.mjs [docs/kompass] [--json | --check | --wait | --notice | --unit WU-NNNN] [--stale-hours 24] [--idle-hours 2] [--no-gh] [--no-fetch]
+// usage: in-flight.mjs [docs/kompass] [--json | --check | --wait | --notice | --unit WU-NNNN] [--branch NAME] [--stale-hours 24] [--idle-hours 2] [--no-gh] [--no-fetch]
 //   (list)     each unit: id, branch, status, owns, files changed against main so far, record numbers taken
 //   --check    exit 0 when nothing earlier shares this checkout's files, 3 when it must wait (and for what),
 //              4 when gh could not answer: open pull requests unchecked is not clear
 //   --wait     --check again every --poll seconds (60) until clear, for at most --max-wait minutes (9); exit 0 or 3
+//   --branch   with --check or --wait: judge that pushed branch as it stands on GitHub, not this checkout (the lander)
 //   --notice   the session-start lines; prints nothing outside a Kompass project or when anything fails
 //   --unit     the unit's own branches not yet in main (kompass/WU-NNNN-<any slug>), one per line, the one with an
 //              open pull request first: the branch to resume. Prints nothing when it has none.
 import { existsSync } from 'node:fs';
-import { check, inFlight, local, project, unitBranches } from './lib/inflight.mjs';
+import { check, checkBranch, inFlight, local, project, unitBranches } from './lib/inflight.mjs';
 
 const args = process.argv.slice(2);
 const opt = (name, fallback) => { const i = args.indexOf(name); return i < 0 ? fallback : args[i + 1]; };
-const values = new Set(['--stale-hours', '--idle-hours', '--poll', '--max-wait', '--unit'].map((n) => opt(n, null)).filter(Boolean));
+const values = new Set(['--stale-hours', '--idle-hours', '--poll', '--max-wait', '--unit', '--branch'].map((n) => opt(n, null)).filter(Boolean));
 const dir = args.find((a) => !a.startsWith('--') && !values.has(a));
 const opts = { fetch: !args.includes('--no-fetch'), gh: !args.includes('--no-gh'), staleHours: Number(opt('--stale-hours', 24)), idleHours: Number(opt('--idle-hours', 2)) };
 const p = project(dir);
@@ -73,12 +74,14 @@ if (args.includes('--check') || args.includes('--wait')) {
   };
   // Tertia, 27 Oct 2026: "clear" while gh could not answer let a unit through unchecked. Not looking is not clear.
   const unchecked = (r) => opts.gh && !r.pullsChecked;
-  let r = check(p, opts);
+  const branch = opt('--branch', null);
+  const look = () => (branch ? checkBranch(p, branch, opts) : check(p, opts));
+  let r = look();
   if (args.includes('--wait')) {
     while ((r.wait.length || unchecked(r)) && Date.now() + poll < until) {
       console.log(r.wait.length ? `waiting for ${r.wait.map((s) => name(s.unit)).join(', ')} (${time(Date.now())} UTC)` : `waiting for gh to answer (${time(Date.now())} UTC)`);
       await new Promise((ok) => setTimeout(ok, poll));
-      r = check(p, opts);
+      r = look();
     }
   }
   say(r);

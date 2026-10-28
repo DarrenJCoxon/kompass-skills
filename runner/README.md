@@ -38,6 +38,18 @@ You can build units in your own Claude sessions while the runner works; the tool
 
 A unit with no push for 24 hours and no pull request, or only its draft `building` one, is listed as stale and holds nothing back, so a session that died can't hold files for ever. A unit's kept branch is in flight only while the unit is being worked on (an open pull request, or `building` again on that branch): with neither, a unit that main shows as parked, waiting, dropped or delivered is listed as resting and holds nothing back, so a parked unit's kept branch can't block later units.
 
+## The lander
+
+One process per project owns landing: `scripts/lander.mjs`, run by `start.sh` as its own container, `kompass-lander-<repo>`, from the runner's image. It stays up between runs (stop it with `docker stop kompass-lander-<repo>`; the next `start.sh` starts it again), so pull requests from the monitor and from on-device sessions land too, not only the runner's. Every minute it:
+
+- looks at the open pull requests, oldest first, and lands one at a time with `merge-when-green.sh` (auto-merge only, never a direct merge): a `kompass/*` pull request that is ready and green, and a records-only one (only `docs/kompass/`) straight away, without waiting for the units in flight;
+- skips drafts, pull requests titled `…: building`, and any other pull request (a person's own work). To hold a unit or records pull request back from landing, keep it a draft;
+- leaves one comment on a pull request it won't land: it waits for an earlier unit holding the same files (once that unit lands, the lander brings the branch up to date with main so CI runs on both, then lands it), its checks failed, or it conflicts with main;
+- sends each alert once, through `scripts/notify-send.sh` (the same route as `notify.sh`): merged; checks failed; green and unmerged 5 minutes after it armed auto-merge; CI queued over 15 minutes; a unit waiting on another over 30 minutes; an on-device `building` draft with no new commit for 2 hours;
+- writes the queue page, `/work/<repo>/.kompass/queue.html` and a plain-text twin `queue.txt` (set `KOMPASS_QUEUE_PAGE` to move it; never committed): what is building (runner and on-device, with files), waiting and on what, green but unmerged, CI running and queued, and the last 24 hours of merges with the time from ready to merged. Read it with `docker exec kompass-lander-<repo> cat /work/<repo>/.kompass/queue.txt`.
+
+With the lander up, `start.sh` starts the run with `KOMPASS_LANDER=1`: a unit session hands its pull request over and ends instead of holding a runner slot while it waits to land, and the run waits (up to 2 hours with nothing running) for unit pull requests still landing before it calls the sequence done. Its log is `docker logs kompass-lander-<repo>`. It uses its own clone, `/work/.lander/<repo>`, so its fetches never race the run's.
+
 ## Phone notifications
 
 When `NOTIFY_URL` is set, `start.sh` also starts `notify.sh`, which follows the run's log and sends a notification through [ntfy](https://ntfy.sh) when a unit merges, parks or needs a look, and when the run ends or the sequence is handed over. Subscribe to the topic in the ntfy phone app. It stops by itself when the run's container stops. Anyone who knows the topic can read it, so keep the name random; messages carry only unit ids and titles.

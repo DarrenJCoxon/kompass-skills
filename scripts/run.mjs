@@ -3,7 +3,7 @@
 // Reads unit status from origin/main after each unit, so it only ever sees merged state.
 // A run builds one sequence. When every unit in it is delivered or parked, a fresh session writes the
 // sequence hand-over for the walkthrough, and the run stops; the next sequence starts after the walkthrough.
-// usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 2] [--model opus] [--claude claude]
+// usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 2] [--model opus] [--claude claude] [--lander-wait 2]
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -30,6 +30,13 @@ const active = new Map(); // id -> child process
 const sessionSlots = slots(); // each running unit session gets its own slot, and so its own browser-test ports
 const attempts = new Map();
 const skipped = new Set();
+// With the lander running (start.sh sets KOMPASS_LANDER=1), a session ends once its pull request is handed over,
+// before it merges. Units that depend on it become ready only when it lands, so the run looks again every minute
+// while unit pull requests are open, for at most --lander-wait hours (2) with nothing running, rather than
+// stopping early with the sequence "not complete".
+const lander = process.env.KOMPASS_LANDER === '1';
+const landerWait = Number(opt('--lander-wait', 2)) * 3600_000;
+let later = null, idleSince = null; // the next look, and since when nothing has run
 
 function mainUnits() {
   execFileSync('git', ['fetch', '--quiet', 'origin', 'main'], { cwd: root });
@@ -86,6 +93,15 @@ function tick() {
   const stop = existsSync(join(dir, 'STOP'));
   const timeUp = Date.now() > deadline;
   while (!stop && !timeUp && active.size < parallel && startNext()) { /* fill free slots */ }
+  if (later) { clearTimeout(later); later = null; }
+  const wasIdle = idleSince !== null;
+  idleSince = active.size ? null : (idleSince ?? Date.now());
+  const landing = lander && !stop && !timeUp && active.size < parallel && (idleSince === null || Date.now() - idleSince < landerWait) ? openUnitIds(root) : [];
+  if (landing.length) {
+    if (!active.size && !wasIdle) log(`waiting for the lander to land ${landing.join(', ')}`);
+    later = setTimeout(tick, 60_000);
+    return;
+  }
   if (active.size === 0) {
     if (stop || timeUp) finish(stop ? 'STOP file found' : 'time limit reached');
     else handOver();
