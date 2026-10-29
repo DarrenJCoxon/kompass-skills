@@ -78,7 +78,7 @@ Fill in the unit's **Hand-over** section. It is the record future agents rely on
 - **Review:** verdict, number of rounds, and what review found and how it was fixed.
 - **Decisions:** any made during the build, each as a new `decisions/` record.
 - **How to try it:** numbered steps in the running product: which sample account, where to go, what to do, what the operator should see, and what would be wrong. Name the seeded data each step relies on. The sequence's walkthrough guide is built from these. For a change with nothing to see (a fix deep in the data, a script), say how its effect shows, or say plainly that it can't be seen and what proves it instead.
-- **Known issues and follow-ups:** each real follow-up becomes a new waiting unit.
+- **Known issues and follow-ups:** each real follow-up becomes a new waiting unit. Put it in the **next** sequence, not the one being built, unless the current sequence's walkthrough can't be done without it; say which in its log. Otherwise every review adds to the sequence and it never reaches its hand-over (Tertia, 28–29 Oct 2026: WU-0324 and WU-0326's reviews added WU-0344 to WU-0354 to sequence 1, and the runner kept building them past the planned stop).
 - **For the next unit:** anything surprising, any trap, and any changed assumption.
 - **Evidence:** anything that failed along the way and what was done about it. Leave nothing out and soften nothing.
 
