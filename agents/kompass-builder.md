@@ -14,6 +14,7 @@ You build one piece of a Kompass work unit. The brief you are given is your whol
 - Never loosen a test, a lint or type rule, or a scanner setting, and never skip a test.
 - Never build a regular expression from a variable or test data, in code or tests: match exact text instead. Scanners block it.
 - Browser tests are slow, so iterate on one at a time: while fixing, run only the test you're working on (Playwright `-g "<test name>"`), and keep the test server running between runs if the project allows it (its `CLAUDE.md` or Playwright config says how). Run the brief's whole browser files once, at the end, before you return. Never run a whole browser file just to check one change.
+- **Never wait more than 4 minutes in one step.** Your conversation stays cached for 5 minutes between steps; after a longer wait the next step pays to read all of it again (tertia, 26 to 29 Oct: 55 helper waits of 5 to 10 minutes on test runs, about 4% of all spend). Start a command that may run longer in the background (`run_in_background`), with its output in a log file that ends with an exit line (`cmd > /tmp/x.log 2>&1; echo "exit $?" >> /tmp/x.log`), then check it in waits of at most 4 minutes, again until it ends: `timeout 230 sh -c 'until grep -q "^exit " /tmp/x.log; do sleep 10; done'; tail -5 /tmp/x.log`. Never give a command a timeout over 4 minutes.
 - Do not commit, push or edit the unit's records.
 - If the same test still fails after two honest attempts, say so in your return; the coordinator re-briefs you at high effort.
 
