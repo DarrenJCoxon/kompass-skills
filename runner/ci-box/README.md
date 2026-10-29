@@ -29,3 +29,15 @@ Merge the change to main, then on the server:
 ```
 
 `rebuild.sh` waits up to 30 minutes for each busy runner and skips (never kills) one still busy; run it again later for those.
+
+## CI runners on boat
+
+Extra CI runners can run on [boat](https://boat.dev) machines beside this box (on trial for Tertia since 29 Oct 2026; see the README). They take the same jobs, because they carry the same labels.
+
+1. **The operator** creates a boat account and an API key, and saves the key on the server without showing it: `read -s -p "Paste boat key: " K && echo "BOAT_API_KEY=$K" >> ~/kompass-skills/runner/.env && unset K`. Then, in GitHub (the repository's Settings, Actions, Runners, New self-hosted runner), they copy the code after `--token` and save it the same way as `GH_RUNNER_TOKEN`. The token lasts one hour.
+2. **Install the CLI only** (the installer also edits shell start-up files): `curl -fsSL "https://boat.dev/api/boat/cli/download?platform=linux-x64&channel=prod" -o ~/.ascii/bin/boat`, then sign in with `grep '^BOAT_API_KEY=' runner/.env | cut -d= -f2- | boat login --key-stdin`. Set `BOAT_NO_UPDATE=1`.
+3. **Start a machine:** `boat new --type default --name <repo>-ci-1` (`--no-auto-stop` on a paid plan; the free trial caps auto-stop at 2 hours, so `boat extend <id> --hours 2` it hourly).
+4. **Register the runner on it.** Copy the token to the machine as a file (`boat scp`), never on a command line, then install fnm (CI uses it) and the Actions runner, and run `./config.sh --unattended --url https://github.com/<owner>/<repo> --token "$(cat ~/gh-runner-token)" --name boat-ci-1 --labels self-hosted,litebench,boat`, delete the token file, and start `./run.sh` in the background. Remove `GH_RUNNER_TOKEN` from `.env` once used.
+5. **Stopping:** `boat stop <id>` snapshots the machine and stops billing; it keeps its runner registration, so `boat` starting it again brings the runner back without a new token. To retire one, remove the runner in GitHub and `boat delete <id> --yes`.
+
+Boat machines don't take this box's CI slots or hooks: each runs one job at a time on its own CPUs. Never put real school data on one.

@@ -81,6 +81,14 @@ A worktree that still holds uncommitted or untracked files is kept and reported,
 
 The runner lives on a small server (we use Hetzner), in its own container (`runner/`), so sequences build overnight with your laptop closed. It works only from what is merged on main, sends phone notifications as units merge or park, and it needs two tokens you paste into the server yourself: one for Claude Code and one for GitHub.
 
+## CI capacity on boat (on trial)
+
+CI is the throughput limit once more than one unit builds at a time: every code change runs the full checks, and on a single small server CI and the runner's builds compete for the same CPUs, so checks queue and slow tests time out. Hetzner's June 2026 price rises, and its limits on ordering and resizing servers, made a bigger server poor value.
+
+[boat](https://boat.dev) rents small cloud machines billed by the second (`default`: 4 vCPU, 8 GB, about $0.036 an hour; `large`: 8 vCPU, 16 GB, after the first payment). A boat machine can be a self-hosted GitHub Actions runner with the same labels as the CI box, so CI jobs spread across both, and machines can be added on busy days and stopped when quiet. The runner itself (unit sessions, the lander, the monitor) stays on the server.
+
+Tertia has run two `default` boat machines as CI runners since 29 Oct 2026. On the first day's comparable full runs, boat averaged 8.4 minutes against the server's 8.9, with fewer failures from load. The trial is not finished; the operator decides from its numbers. How to set one up: `runner/ci-box/README.md`, "CI runners on boat". Real school data never goes on a boat machine: like the runner, CI uses only test data.
+
 ## What enforces safety
 
 These are GitHub and CI settings, set once per repository:
