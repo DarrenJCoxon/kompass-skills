@@ -10,7 +10,7 @@ import { checkPushed, inFlight } from './inflight.mjs';
 const MIN = 60_000;
 /** How long before each alert: green and unmerged after the lander armed it, CI queued, a unit waiting on
  * another. (An on-device `building` draft is idle after 2 hours with no new commit: inFlight's `idle`.) */
-export const LIMITS = { green: 5 * MIN, queued: 15 * MIN, waiting: 30 * MIN };
+export const LIMITS = { green: 5 * MIN, queued: 15 * MIN, waiting: 30 * MIN, failedGrace: 3 * MIN };
 /** A unit's own pull request (its branch kompass/WU-NNNN-…), which the lander lands without being asked. */
 export const isUnit = (branch) => /^kompass\/WU-\d+/.test(branch);
 const QUEUED = ['queued', 'waiting', 'pending', 'requested'];
@@ -43,22 +43,30 @@ const oldest = (a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.
  *   waiting    a unit that started earlier holds some of its files (`on` says which)
  *   ci         checks running, queued or not started
  *   ready      green (a records-only one need not wait for CI or for the units in flight) */
-export function classify(p, seen, memory) {
+export function classify(p, seen, memory, now = Date.now()) {
   return [...seen.pulls].sort(oldest).map((pr) => {
     const unit = seen.units.find((u) => u.pr === pr.number);
     const records = !!unit?.changed.length && unit.changed.every((f) => f.startsWith(`${p.prefix}/`));
-    const checks = checksState({ workflow_runs: seen.runs.filter((r) => r.head_sha === pr.headRefOid) }, []);
+    const onHead = seen.runs.filter((r) => r.head_sha === pr.headRefOid);
+    const checks = checksState({ workflow_runs: onHead }, []);
+    const newest = onHead.reduce((m, r) => (r.id > m.id ? r : m), { id: -1 });
     const it = {
       n: pr.number, title: pr.title, branch: pr.headRefName, sha: pr.headRefOid, created: Date.parse(pr.createdAt),
       checks, records, files: unit ? [...new Set([...unit.owns, ...unit.changed])] : [], updated: unit?.updated ?? null,
       runner: /^Being built on the runner/.test(pr.body ?? ''), idle: !!unit?.idle, unit: isUnit(pr.headRefName),
+      run: newest.id,
     };
+    // A session pushes while its pull request is a draft (CI fails it at once, by design), then marks it ready,
+    // which starts a new run on the same commit (Tertia WU-0318, WU-0330, 30 Oct 2026). A failure a newer run has
+    // replaced no longer holds, and one that has only just finished waits a few minutes for its replacement.
+    if (memory.left[pr.number]?.why === 'checks failed' && newest.id > (memory.left[pr.number].run ?? -1)) delete memory.left[pr.number];
+    const justFailed = checks === 'failed' && now - Date.parse(newest.updated_at ?? newest.created_at) < LIMITS.failedGrace;
     const left = memory.left[pr.number];
     const wait = records ? [] : checkPushed(seen.units, pr.headRefName).wait;
     if (left?.sha === pr.headRefOid) Object.assign(it, { state: 'left', why: left.why });
     else if (pr.isDraft || /: building$/.test(pr.title)) it.state = 'building';
     else if (!it.unit && !pr.autoMergeRequest) it.state = 'person';
-    else if (checks === 'failed') Object.assign(it, { state: 'left', why: 'checks failed' });
+    else if (checks === 'failed' && !justFailed) Object.assign(it, { state: 'left', why: 'checks failed' });
     else if (wait.length) Object.assign(it, { state: 'waiting', on: wait.map((s) => `${unitName(s.unit)} on ${s.files.slice(0, 5).join(', ')}${s.files.length > 5 ? ` (+${s.files.length - 5} more)` : ''}`) });
     else if (records || checks === 'green') it.state = 'ready';
     else it.state = 'ci';
@@ -71,7 +79,7 @@ const BACK = 'It is back to draft, so the runner resumes the unit from its branc
 /** Marks `it` left for its unit on this head: one comment and one alert, and a unit's pull request goes back to
  * draft, so the runner no longer counts it as landing and resumes the unit. Returns what to do, or null when said. */
 export function leave(it, why, memory, now, detail = '') {
-  memory.left[it.n] = { sha: it.sha, why };
+  memory.left[it.n] = { sha: it.sha, why, run: it.run };
   const key = `left:${it.n}:${it.sha}`;
   if (memory.said[key]) return null;
   memory.said[key] = now;

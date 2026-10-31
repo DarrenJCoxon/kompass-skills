@@ -77,7 +77,7 @@ async function poll() {
   const now = Date.now();
   const seen = look(p, now);
   if (!seen) { log('gh could not list the open pull requests; trying again next poll'); return; }
-  const items = classify(p, seen, memory);
+  const items = classify(p, seen, memory, now);
   const todo = plan(items, seen, memory, now, landing);
   for (const c of todo.comments) comment(c.n, c.body);
   for (const a of todo.alerts) alert(a);
