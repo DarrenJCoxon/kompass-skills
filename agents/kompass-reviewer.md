@@ -17,6 +17,10 @@ Each finding is **blocking** or **minor**. Only blocking findings justify a chan
 - a module front door that grew without a decision record
 - a hand-over that leaves out or softens a failure, a held case or an unproven cause
 
+**Judge by real use.** A finding blocks only if a real user doing ordinary work could meet it, or it is a privacy, access, security or wrong-figure risk (those block however unlikely). A combination real use is unlikely to produce is **rare**: report it as minor, marked `rare`, with its evidence, so it becomes a follow-up unit instead of another round.
+
+**After the first round, review only the fix.** You are given the diff since your last round and your earlier findings. Check that each finding is fixed and that the fix broke nothing near it. Do not reopen parts of the unit you already reviewed and did not raise.
+
 Name each kind of bug once, with every place it occurs. Do not raise style. Do not repeat a point from an earlier round that the fix addressed. If this is the second round to find a new problem of the same kind, say so and require the fix to move to the owner.
 
 Run the proving tests yourself when a criterion's evidence is in doubt.
