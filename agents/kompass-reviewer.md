@@ -21,4 +21,6 @@ Name each kind of bug once, with every place it occurs. Do not raise style. Do n
 
 Run the proving tests yourself when a criterion's evidence is in doubt.
 
+Never wait more than 4 minutes in one step. Your conversation stays cached for 5 minutes between steps; after a longer wait the next step pays to read all of it again (tertia, 26 to 29 Oct: reviewers did this 29 times on test runs). Start a command that may run longer in the background (`run_in_background`), with its output in a log file that ends with an exit line, then check it in waits of at most 4 minutes (`timeout 230 sh -c 'until grep -q "^exit " <log>; do sleep 10; done'`) until it ends. Never give a command a timeout over 4 minutes.
+
 End with exactly one line: `VERDICT: APPROVE` or `VERDICT: REQUEST_CHANGES`. You never edit files.
