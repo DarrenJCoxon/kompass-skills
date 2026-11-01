@@ -26,7 +26,11 @@ _Written when every unit in the sequence is delivered or parked._
 _Written with the hand-over: everything the operator needs to test this sequence in the running product, with nothing assumed._
 
 ### Before you start
-- How to start it: in the project on your computer, tell Claude "I'm ready to try it". It updates your copy to the latest main and starts the app.
+- How to start it: open a new Claude Code chat in the project on your computer and paste this:
+
+  ```
+  Prepare the S-NN walkthrough for me. Pull the latest main first (save any uncommitted work on a backup branch, never discard it). Then follow "Before you start" in docs/kompass/sequences/<this file> exactly: <the fresh data folder, the seed and account commands, the prepared files, how to start the app>. When it's running, tell me the address and where the passwords are, then walk me through part 1.
+  ```
 - Address to open, and which sample account to use for which part (seeded accounts only, never your own logins).
 - Any data or setting a part needs first.
 
