@@ -141,6 +141,29 @@ test('a unit pull request with failing checks gets one comment and alert, and go
   assert.match(t.page('txt'), /Left for its unit \(1\)\n- #50 .*: checks failed/);
 });
 
+// Tertia WU-0318 and WU-0330, 30 Oct 2026: a session pushes while its pull request is a draft (CI fails it at once,
+// by design), then marks it ready, which starts a second run on the same commit. The lander saw the draft run's
+// failure first and left the unit for good on that commit, though the later run went green: a wasted session each.
+test('a failure from a run a newer run on the same commit replaced does not leave the unit', () => {
+  const t = project([code(52, 'kompass/WU-0001-a', 'src/a.ts', 2, { ci: 'failure' })]);
+  t.poll();
+  assert.equal(t.comments(52).length, 1, 'left once for the failed run');
+  const g = JSON.parse(readFileSync(join(t.dir, 'gh.json'), 'utf8'));
+  g.runs.push({ ...g.runs[0], id: 9052, created_at: iso(now), status: 'completed', conclusion: 'success' });
+  g.pulls[0].isDraft = false; // the unit's next session marks it ready again, with no new commit
+  writeFileSync(join(t.dir, 'gh.json'), JSON.stringify(g));
+  t.poll();
+  assert.deepEqual(t.merges().map((a) => a[2]), ['52'], 'the newer green run on the same commit lands it');
+});
+
+test('a failure that has only just finished waits a few minutes for the run that replaces it', () => {
+  const t = project([code(53, 'kompass/WU-0001-a', 'src/a.ts', 2, { ci: 'failure', ciQueued: now - 30 })]);
+  t.poll();
+  assert.equal(t.comments(53).length, 0, 'not left yet: a draft run fails within seconds, and the ready run follows');
+  assert.equal(t.calls().filter((a) => a.join(' ') === 'pr ready 53 --undo').length, 0);
+  assert.doesNotMatch(t.page('txt'), /Left for its unit \(1\)/);
+});
+
 // Tertia #262 (kompass/phase-2-school-admin-plan) is a phase plan awaiting Darren: records only and not a draft.
 // Only a unit's own pull request, or one whose author turned auto-merge on, is landed without asking.
 test('a pull request that is neither a unit\'s nor opted in is left for a person, even records only', () => {
