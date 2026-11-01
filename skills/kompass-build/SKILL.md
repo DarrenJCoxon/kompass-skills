@@ -67,7 +67,12 @@ If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kom
 Save the unit's diff against main and give it to `kompass-reviewer` with the unit file. It returns `APPROVE` or `REQUEST_CHANGES` with blocking findings.
 
 - Fix only the blocking findings, in one round, then send the fix back for review.
+- **Rounds after the first review only the fix:** give the reviewer the diff since its last round and its earlier findings, not the whole unit again. It checks that each finding is fixed and that the fix broke nothing near it.
 - If a second round finds a new problem of the same kind, stop patching. Rethink the approach at higher effort and record the new approach in the log.
+- **At most three rounds.** Each round costs the most expensive model 30 to 45 minutes, and long review loops were the main cause of slow units (tertia, 31 Oct 2026: one unit took 15 rounds and over nine hours for cases no school would produce). After the third round:
+  - A remaining finding about privacy, access, security or a wrong figure must still be fixed before landing. If it is not fixed by the third round, park the unit with the finding.
+  - Every other remaining finding becomes a follow-up unit (`kompass-units`), with the reviewer's evidence. The case stays refused or blocked meanwhile, never landing wrong data. Land what review approved, and list the follow-ups in the hand-over.
+  - Do not wait for a third round for a finding the reviewer marks **rare** (a combination real use is unlikely to produce): send it to a follow-up at once.
 - A review stays valid if you only bring the branch up to date with main or edit the unit's records. Re-review only when the unit's own code changes.
 
 ## 5. Write the hand-over
