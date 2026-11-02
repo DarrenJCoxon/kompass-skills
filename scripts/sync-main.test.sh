@@ -31,6 +31,26 @@ out="$(cd "$work/copy" && bash "$here/sync-main.sh")"
 check "a still-tracked planning page is left as committed" "<html>old</html>" "$(cat "$work/copy/docs/kompass/plan.html")"
 [ -z "$(cd "$work/copy" && git status --porcelain --untracked-files=no)" ] && echo "ok - the copy stays clean" || { echo "not ok - the copy has changes"; fail=1; }
 
+# Tertia, 2 Nov 2026: the operator's main sat 283 commits behind for two days, because six uncommitted files (another
+# session's, from 28 Oct) made every session start refuse to update, and no agent acted on the notice.
+# Uncommitted changes to files main did not change ride along with the update.
+(cd "$work/copy" && echo "local tweak" >> app.txt)
+(cd "$work/origin" && echo more > more.txt && git add more.txt && git commit -qm "more")
+out="$(cd "$work/copy" && bash "$here/sync-main.sh")"
+check "a copy with unrelated uncommitted changes is brought up to date" "brought this copy up to date with main (1 new commits" "$out"
+check "the unrelated uncommitted change is kept in place" "local tweak" "$(cat "$work/copy/app.txt")"
+check "the new commit arrived" "more" "$(cat "$work/copy/more.txt" 2>/dev/null)"
+
+# Uncommitted changes to a file main also changed are saved on a dated backup branch, then the copy is updated.
+(cd "$work/origin" && echo "main's change" >> app.txt && git add app.txt && git commit -qm "main changes app")
+out="$(cd "$work/copy" && bash "$here/sync-main.sh")"
+check "a copy whose changes clash with main is still brought up to date" "brought this copy up to date with main (1 new commits" "$out"
+check "the copy now holds main's version" "main's change" "$(cat "$work/copy/app.txt")"
+backup="$(cd "$work/copy" && git for-each-ref --format='%(refname:short)' 'refs/heads/backup/main-uncommitted-*' | head -1)"
+check "the notice names the backup branch" "${backup:-no backup branch was made}" "$out"
+check "the backup branch holds the uncommitted change" "local tweak" "$(cd "$work/copy" && git show "$backup:app.txt" 2>/dev/null)"
+check "the notice names the saved file" "app.txt" "$out"
+
 git init -q -b main "$work/other" && cd "$work/other" && git config user.email t@t && git config user.name t && echo x > x && git add . && git commit -qm x
 out="$(cd "$work/other" && bash "$here/sync-main.sh")"
 check "a project that has never used Kompass is left alone" "" "$out"
