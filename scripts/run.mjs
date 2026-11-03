@@ -112,6 +112,9 @@ function tick() {
     later = setTimeout(tick, landerPoll);
     return;
   }
+  // A slot is free while a unit runs: look again, since a unit becomes ready when main moves (its dependency
+  // lands), not only when a session ends (Tertia, 1-3 Nov 2026: free slots sat empty for hours).
+  if (!stop && !timeUp && active.size > 0 && active.size < parallel) { later = setTimeout(tick, landerPoll); return; }
   if (active.size === 0) {
     if (stop || timeUp) finish(stop ? 'STOP file found' : 'time limit reached');
     else handOver();

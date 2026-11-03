@@ -42,3 +42,35 @@ else process.stdout.write('[]');
   assert.match(log, /run finished: .*needs a look: WU-0001/);
   assert.doesNotMatch(readFileSync(join(root, '.kompass/run.log'), 'utf8'), /start WU-0001 \(attempt 3\)/);
 });
+
+// Tertia, 1-3 Nov 2026: with one unit running and the other slot free, a unit that became ready when main moved
+// (its dependency landed) waited until the running session ended, sometimes for hours. The run looks again
+// every --lander-poll seconds while a slot is free and a unit is running.
+test('a free slot is filled when a unit becomes ready while another is still running', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'run-'));
+  const origin = join(dir, 'origin.git'), root = join(dir, 'project'), bin = join(dir, 'bin'), seed = join(dir, 'seed');
+  const sh = (cwd, cmd) => execSync(cmd, { cwd, stdio: 'ignore', env: { ...process.env, ...who } });
+  sh(dir, `git init -q --bare -b main ${origin} && git clone -q ${origin} ${root}`);
+  put(join(root, 'docs/kompass/units/WU-0001-a.md'), '---\nid: WU-0001\ntitle: A\nsequence: 1\nstatus: waiting\nowns: [src/a.ts]\n---\n');
+  put(join(root, 'docs/kompass/units/WU-0002-b.md'), '---\nid: WU-0002\ntitle: B\nsequence: 1\nstatus: waiting\ndepends: [WU-0003]\nowns: [src/b.ts]\n---\n');
+  put(join(root, 'docs/kompass/units/WU-0003-c.md'), '---\nid: WU-0003\ntitle: C\nsequence: 2\nstatus: waiting\nowns: [src/c.ts]\n---\n');
+  sh(root, 'git add -A && git commit -qm main && git push -q origin main');
+  sh(dir, `git clone -q ${origin} ${seed}`);
+  // WU-0001's session runs 4 s; after 1 s WU-0003 lands on main (as another merge would), readying WU-0002.
+  // Each session then marks its own unit delivered on main, so the run ends.
+  put(join(bin, 'deliver.sh'), `#!/bin/sh
+cd ${seed} && git pull -q origin main && sed -i 's/^status: waiting$/status: delivered/' docs/kompass/units/$1-*.md && git commit -qam "$1" && git push -q origin main
+`, 0o755);
+  put(join(bin, 'claude'), `#!/bin/sh
+unit=$(echo "$*" | grep -o 'WU-[0-9]*' | head -1)
+if [ "$unit" = WU-0001 ]; then sleep 1; ${join(bin, 'deliver.sh')} WU-0003; sleep 3; fi
+${join(bin, 'deliver.sh')} "$unit"
+`, 0o755);
+  put(join(bin, 'gh'), '#!/bin/sh\necho "[]"\n', 0o755);
+  const r = spawnSync('node', [join(here, 'run.mjs'), join(root, 'docs/kompass'), '--claude', join(bin, 'claude'), '--parallel', '2', '--lander-poll', '0.3'], { cwd: root, encoding: 'utf8', timeout: 60_000, env: { ...process.env, ...who, PATH: `${bin}:${process.env.PATH}`, KOMPASS_LANDER: '1' } });
+  const log = readFileSync(join(root, '.kompass/run.log'), 'utf8');
+  assert.equal(r.status, 0, r.stdout + r.stderr + log);
+  const startB = log.indexOf('start WU-0002'), endA = log.indexOf('end WU-0001');
+  assert.ok(startB > 0 && endA > 0, log);
+  assert.ok(startB < endA, `WU-0002 should start while WU-0001 is still running:\n${log}`);
+});
