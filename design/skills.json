@@ -58,6 +58,7 @@
         "Brief and approval record",
         "Module map: purpose, front door, owned files, rules with their tests",
         "Architecture with diagrams of each key journey",
+        "Design system from the start: chosen scale, one tokens file, a raw-value test, shared components and written UI rules, with protected checks",
         "Interactive mockups for each UI decision",
         "Decision records",
         "Sequences: where each walkthrough falls",
@@ -71,7 +72,8 @@
         "Should every UI decision get a mockup, or only those with real alternatives?"
       ],
       "decided": [
-        "Where plans already exist, planning starts by going through them with the operator and carrying the approved work across unchanged. Darren, 25 Oct: \"the whole point here is that we should be working through the existing plans together first\"."
+        "Where plans already exist, planning starts by going through them with the operator and carrying the approved work across unchanged. Darren, 25 Oct: \"the whole point here is that we should be working through the existing plans together first\".",
+        "A project with a UI sets up its design system when it starts, before any screen is built or mocked up: tokens, a raw-value test, shared components, written UI rules and protected checks. Darren, 5 Nov 2026, after tertia's S-04 walkthrough: \"yes add all six now\"."
       ]
     },
     "kompass-units": {

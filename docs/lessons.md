@@ -119,3 +119,13 @@ Fixed by hand by the operator and the Kompass monitor during tertia's first runs
 - **Evidence:** tertia run started 27 Oct 21:00: WU-0206 retry 23:59, skip 00:08; WU-0211 retry 00:01, skip 00:11; WU-0212 retry 02:37, skip 02:37. WU-0211 waited on WU-0206 (#239), which waited on WU-0252 (#232), which needed the operator's paid test run.
 - **Done:** watch. A retry is only useful when the first session failed; for a unit waiting on another unit or on the operator it costs a slot and an alert.
 - **Check:** retries whose session said it was waiting on another unit or the operator. If it recurs, the runner could leave such a unit as waiting without a retry.
+
+## Walkthrough finding (5 Nov 2026; tertia)
+
+Found by the operator in a walkthrough, not by a harness review; recorded here so the next review checks it held.
+
+### L-020 UI drifted with nothing to stop it (5 Nov)
+- **Pattern:** every screen chose its own text sizes and drew its own tiles and cards, because the plan set up no text-size or spacing tokens, no check against raw values, no shared component per pattern and no written UI rules. The UI was noisy: oversized cards, stat tiles, data in chip lists instead of tables, text sizes all over the place, headings like "Tertia noticed".
+- **Evidence:** tertia (DarrenJCoxon/tertia) S-04 walkthrough, 5 Nov 2026: 558 raw `font-size` values (37 distinct, none a token), five separate tile implementations, and the table and no-stat-card rules never written down. Darren stopped the walkthrough for a UI pass. Records on tertia's main: decisions D-271 to D-279, units WU-0596 to WU-0609, merged in DarrenJCoxon/tertia#535.
+- **Done:** kompass-plan's design-system stage sets up the scale decision, one tokens file, a raw-value test with a count file that may only fall, shared components, a written UI rules page and protected checks when a project starts; kompass-units puts the guard units first in the first UI sequence; the mockup template links the tokens and shared component CSS; the reviewer refuses raw values, copies of shared patterns, stat cards and anthropomorphic headings.
+- **Check:** a new project's first UI sequence opens with the guard units; walkthroughs raise no drift findings; brownfield count files only fall.

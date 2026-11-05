@@ -49,6 +49,7 @@ Body:
 - **Large files get split first.** If a unit must change a file already over the size limit (5,000 tokens, see `scripts/size-check.mjs`), and the change can't go in a new module beside it, put a unit before it that splits that file along its real seams, behind its existing front door, with no change in behaviour. The split unit's proof is that the existing tests pass unchanged.
 - **Dependencies are real.** A unit depends on another only if it needs that unit's merged code. Units with no dependency between them and no shared files can run at the same time.
 - **UI units point at an approved mockup** and name the variant.
+- **The design-system guards come first.** When the plan has a UI, the first UI sequence opens with the guard units from the plan's design system: the tokens file at the approved scale, the raw-value test (with its count file in an existing project), the shared components, the UI rules page and the protected-check list in `CLAUDE.md`. Every screen unit depends on them, so no screen is built before the guards exist.
 
 ## Sequences
 
