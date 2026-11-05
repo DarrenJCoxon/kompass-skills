@@ -8,10 +8,15 @@
 <meta name="kompass:status" content="proposed">
 <meta name="kompass:chosen" content="">
 <meta name="kompass:summary" content="One sentence on what this mockup decides.">
-<!-- Link the project's canonical design tokens; never copy colours or fonts into a mockup. -->
+<!-- Build from the project's design system. Link its one tokens file and the shared components' CSS
+     (table, headline line, status cell, section heading, drawer, dialog); fix the paths for this project.
+     Never copy a colour, font, size or spacing value into a mockup, and never draw a new copy of a shared pattern. -->
 <link rel="stylesheet" href="../../../src/styles/tokens.css">
+<link rel="stylesheet" href="../../../src/styles/components.css">
 <style>
-  /* Mockup frame: the bar at the top switches variant and state; the page below is the design. */
+  /* Layout only: grid, placement and widths, using the tokens. No colours, fonts or sizes of its own;
+     the project's mockup test reads this block for raw values. The frame bar below is the one exception:
+     it is the mockup's controls, not the design. */
   body { margin: 0; font-family: var(--font-sans, system-ui, sans-serif); background: var(--white); color: var(--ink); }
   .kbar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 10px 16px; background: var(--mist); border-bottom: 1px solid var(--line); font-size: 12px; }
   .kbar b { font-weight: 600; }
