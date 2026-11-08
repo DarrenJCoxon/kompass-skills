@@ -35,6 +35,20 @@ RUN case "${TARGETARCH:-$(dpkg --print-architecture)}" in \
  && curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/${asset}" \
  && echo "${sum}  /usr/local/lib/docker/cli-plugins/docker-compose" | sha256sum -c - \
  && chmod 755 /usr/local/lib/docker/cli-plugins/docker-compose
+# Gitleaks, so CI's secret scan uses the box's own copy instead of downloading it on every run
+# (8 Nov 2026: GitHub's release downloads for gitleaks returned 504 for hours and every PR failed).
+# Fetched by asset id through the API, which kept serving when the release download links did not.
+# Checksums are this version's; update version, ids and sums together.
+ARG GITLEAKS_VERSION=8.30.1
+RUN case "${TARGETARCH:-$(dpkg --print-architecture)}" in \
+      amd64) id=378332058; sum=551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb ;; \
+      arm64) id=378332057; sum=e4a487ee7ccd7d3a7f7ec08657610aa3606637dab924210b3aee62570fb4b080 ;; \
+      *) echo "unsupported architecture" >&2; exit 1 ;; \
+    esac \
+ && curl -fsSL -H 'Accept: application/octet-stream' -o /tmp/gitleaks.tgz "https://api.github.com/repos/gitleaks/gitleaks/releases/assets/${id}" \
+ && echo "${sum}  /tmp/gitleaks.tgz" | sha256sum -c - \
+ && tar -xzf /tmp/gitleaks.tgz -C /usr/local/bin gitleaks && chmod 755 /usr/local/bin/gitleaks && rm /tmp/gitleaks.tgz \
+ && gitleaks version | grep -qx "${GITLEAKS_VERSION}"
 ENV PATH=/opt/fnm/aliases/default/bin:$PATH
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 COPY hooks/ /hooks/
