@@ -178,6 +178,20 @@ export function sequenceComplete(units, n) {
   return inSeq.length > 0 && inSeq.every(settled);
 }
 
+/** Why a unit's mockup is out of the design checks' reach, or '' when it is in reach or the unit has none. The project's
+ * checks hold the mockups directly in `mockups/`; one in a subfolder or elsewhere is a redesign they never test (tertia,
+ * 8 Nov 2026: a failing board was moved into mockups/direction/ and twelve screen units pointed at it). The unit that
+ * owns the mockup is let through: it is the one that brings it back under the checks. */
+export function mockupOutOfReach(u) {
+  const path = (u.mockup || '').match(/\S+\.html\b/)?.[0];
+  if (!path) return '';
+  const parts = path.split('/');
+  if (parts.at(-2) === 'mockups' && (parts.length === 2 || parts.slice(-4, -2).join('/') === 'docs/kompass')) return '';
+  const tail = (x) => x.replace(/^docs\/kompass\//, '');
+  if ((u.owns ?? []).some((o) => o === path || tail(o) === tail(path) || (o.endsWith('/') && tail(path).startsWith(tail(o))))) return '';
+  return `its mockup ${path} (outside the mockups folder the design checks read)`;
+}
+
 /** The next unit in the current sequence that is waiting, has every dependency delivered, is not in `inProgress`, and
  * shares no files and no foundation tag with a busy unit (a unit that runs alone shares with everything). Busy means a session is building
  * it now (`running`, by default all of `inProgress`) or it is marked building; a unit only excluded, such as one
@@ -192,6 +206,7 @@ export function nextUnit(units, inProgress = [], running = inProgress) {
     u.sequence === seq &&
     !inProgress.includes(u.id) &&
     u.depends.every((d) => byId.get(d)?.status === 'delivered') &&
+    !mockupOutOfReach(u) &&
     !busy.some((b) => conflicts(u, b)),
   ) ?? null;
 }
@@ -203,7 +218,7 @@ export function blockers(units) {
   return units.filter((u) => u.status === 'waiting').map((u) => ({
     id: u.id,
     sequence: u.sequence,
-    waitingOn: u.depends.filter((d) => byId.get(d)?.status !== 'delivered').map(why),
+    waitingOn: [...u.depends.filter((d) => byId.get(d)?.status !== 'delivered').map(why), mockupOutOfReach(u)].filter(Boolean),
   })).filter((b) => b.waitingOn.length);
 }
 
