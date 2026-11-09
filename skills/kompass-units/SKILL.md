@@ -48,7 +48,8 @@ Body:
 - **`owns` lists are honest.** Include the tests and callers the unit must touch. A builder that needs a file outside `owns` records why in the log and carries on; it does not need a new unit.
 - **Large files get split first.** If a unit must change a file already over the size limit (5,000 tokens, see `scripts/size-check.mjs`), and the change can't go in a new module beside it, put a unit before it that splits that file along its real seams, behind its existing front door, with no change in behaviour. The split unit's proof is that the existing tests pass unchanged.
 - **Dependencies are real.** A unit depends on another only if it needs that unit's merged code. Units with no dependency between them and no shared files can run at the same time.
-- **UI units point at an approved mockup** and name the variant.
+- **UI units point at an approved mockup** and name the variant. The mockup sits directly in `mockups/`, where the project's checks read it: `next-unit` will not start a unit whose mockup is anywhere else, except the unit that owns that mockup.
+- **Every UI unit proves it follows the design system.** One criterion says every value it draws comes from the tokens file (no raw value, no token defined anywhere else, the count file does not grow, an existing shared piece restyled rather than copied), proved by the project's raw-value and integrity tests. A redesign's first unit is its token unit: it adds and changes the tokens, owns the mockup and brings it under the mockup check, proved by that check; every screen unit of the redesign depends on it (Darren, 9 Nov 2026: "no redesign should ever pass testing unless it follows the design system"; `docs/lessons.md` L-021).
 - **The design-system guards come first.** When the plan has a UI, the first UI sequence opens with the guard units from the plan's design system: the tokens file at the approved scale, the raw-value test (with its count file in an existing project), the shared components, the UI rules page and the protected-check list in `CLAUDE.md`. Every screen unit depends on them, so no screen is built before the guards exist.
 
 ## Sequences
@@ -69,6 +70,7 @@ Check the set once:
 - Every unit's `owns` sits inside its module, or says why not.
 - There are no dependency cycles, and every id in `depends:` has a unit file in `units/`.
 - Every criterion names its test.
+- Every UI unit has the design-system criterion, and every unit's mockup is directly in `mockups/` or owned by that unit (`next-unit` holds the rest back).
 
 Then make the planning page locally, so the operator sees the ordered list (it isn't committed):
 

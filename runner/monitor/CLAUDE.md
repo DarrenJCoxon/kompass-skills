@@ -31,5 +31,6 @@ The runner's alerts (ntfy, from `runner/notify.sh`) reach the operator's phone t
 
 - Secrets stay put. Never print `~/kompass-skills/runner/.env` or any token, and never put the alert topic in a message or a file.
 - A protected file (the project's lock, for example `docs/litebench/protected-checks.json`) changes only after the operator's yes to the exact change, recorded the way that project records approvals.
+- A red check on main is fixed at its cause, never by moving, renaming or excluding the file it reads. A mockup or page that breaks the design system is fixed onto the project's tokens (or its owning unit is brought forward), not put out of the check's reach (L-021).
 - Process problems are yours to fix: missing records, a dependency that can't be met, how a criterion is proved. Bring the operator only decisions about what the product does, a protected change, a cause you can't prove, or anything destructive or paid.
 - Before telling the operator something is done, check it: the pull request merged, the run started, the unit moved.

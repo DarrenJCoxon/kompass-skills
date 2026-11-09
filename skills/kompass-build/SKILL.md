@@ -51,7 +51,7 @@ If the unit is `next`, run `node <kompass-skills>/scripts/next-unit.mjs docs/kom
 - **Fix where the decision is owned.** Change the module that owns the behaviour, through its front door. Never add a second copy of another module's logic, a list of special cases, or a guess from wording. If the right fix sits in another module, say so in the log and either extend `owns` with a reason or park with the evidence.
 - **Reuse before adding.** Search for an existing helper, component or value first. Never hardcode a value that has a canonical home.
 - **Hand bounded coding to `kompass-builder`.** Give it the outcome, owned files, criteria, the proving command and the excerpts you already read. Disjoint pieces can run in parallel. Edit directly only for trivial changes.
-- **Never loosen a check to get green.** That means a test's expectation, a lint or type rule, a scanner setting, a skipped test, or a locked file. If the project has a lock of protected files, a change to one of them stops the unit: park it and ask the operator, quoting the failing test that proves the change is needed.
+- **Never loosen a check to get green.** That means a test's expectation, a lint or type rule, a scanner setting, a skipped test, or a locked file. Moving, renaming or excluding a file so a check no longer reads it is loosening the check too (L-021). If the project has a lock of protected files, a change to one of them stops the unit: park it and ask the operator, quoting the failing test that proves the change is needed.
 
 ## 3. Check locally
 

@@ -12,11 +12,11 @@ Each finding is **blocking** or **minor**. Only blocking findings justify a chan
 - wrong behaviour, or a criterion not met
 - a data, privacy, access or security risk
 - a fix with no test that failed before it, or a cause that was assumed and never reproduced; the unit's log must record, for each criterion, the behaviour the coordinator broke and the test that then failed
-- a check loosened to get green: a test expectation, lint or type rule, scanner setting, skipped test or locked file
+- a check loosened to get green: a test expectation, lint or type rule, scanner setting, skipped test or locked file, or a file moved, renamed or excluded so a check no longer reads it
 - logic duplicated from the module that owns the decision, or a special case, list of cases or guess from wording standing in for the owner's decision (name the owner)
 - a module front door that grew without a decision record
 - a hand-over that leaves out or softens a failure, a held case or an unproven cause
-- in a UI diff, a breach of the project's UI rules page (linked from `CLAUDE.md`; read it): a raw value where a token belongs, a screen's own copy of a shared pattern (table, headline line, status cell, section heading, drawer, dialog), a stat card or oversized card, data in chips or cards instead of a table, or a heading that gives the product a human act ("X noticed", "X knows")
+- in a UI diff, a breach of the project's UI rules page (linked from `CLAUDE.md`; read it): a raw value where a token belongs, a screen's own copy of a shared pattern (table, headline line, status cell, section heading, drawer, dialog), a stat card or oversized card, data in chips or cards instead of a table, or a heading that gives the product a human act ("X noticed", "X knows"); and in any UI or mockup diff, a value that is not from the project's tokens file, a token defined outside it, or a mockup the project's mockup check does not hold. A redesign follows the design system or it does not pass (L-021)
 
 **Judge by real use.** A finding blocks only if a real user doing ordinary work could meet it, or it is a privacy, access, security or wrong-figure risk (those block however unlikely). A combination real use is unlikely to produce is **rare**: report it as minor, marked `rare`, with its evidence, so it becomes a follow-up unit instead of another round.
 

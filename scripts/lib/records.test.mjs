@@ -1,7 +1,7 @@
 // node --test scripts/lib/records.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { blockers, nextUnit, readUnits, source, stalled } from './records.mjs';
+import { blockers, mockupOutOfReach, nextUnit, readUnits, source, stalled } from './records.mjs';
 
 const unit = (id, sequence, status, depends = []) => ({ id, sequence, status, depends, owns: [] });
 
@@ -192,4 +192,39 @@ test('foundation is read from a unit\'s front matter, exactly, and is empty when
   rmSync(dir, { recursive: true, force: true });
   assert.equal(read.find((u) => u.id === 'WU-0001').foundation, 'gate');
   assert.equal(read.find((u) => u.id === 'WU-0002').foundation, '');
+});
+
+// Tertia, 8 Nov 2026: a redesign's mockup failed the project's mockup check (its own colours, no tokens file), so
+// the monitor moved it into mockups/direction/, where the check does not look, and twelve screen units pointed at
+// it. Darren, 9 Nov: "no redesign should ever pass testing unless it follows the design system". A unit whose
+// mockup sits outside the mockups folder the checks read does not start; the unit that owns the mockup does, as
+// it is the one that brings it back under the checks.
+const drawing = (id, mockup, owns = ['src/x.tsx']) => ({ ...unit(id, 1, 'waiting'), owns, mockup });
+
+test('a mockup directly in the mockups folder is in reach, written either way, with a variant note', () => {
+  for (const m of ['', 'none', 'mockups/a.html', 'docs/kompass/mockups/a.html', 'docs/kompass/mockups/a.html (variant B)']) {
+    assert.equal(mockupOutOfReach(drawing('WU-0001', m)), '', m);
+  }
+});
+
+test('a mockup in a subfolder or outside the mockups folder is out of reach', () => {
+  for (const m of ['docs/kompass/mockups/direction/a.html', 'mockups/direction/a.html', 'docs/design/prototypes/x/index.html']) {
+    assert.match(mockupOutOfReach(drawing('WU-0001', m)), /outside the mockups folder/, m);
+  }
+});
+
+test('a unit whose mockup is out of reach does not start, and says why', () => {
+  const units = [drawing('WU-0001', 'docs/kompass/mockups/direction/a.html'), drawing('WU-0002', 'mockups/b.html', ['src/y.tsx'])];
+  assert.equal(nextUnit(units)?.id, 'WU-0002');
+  assert.equal(nextUnit([units[0]]), null);
+  assert.deepEqual(blockers(units).find((b) => b.id === 'WU-0001').waitingOn, ['its mockup docs/kompass/mockups/direction/a.html (outside the mockups folder the design checks read)']);
+  assert.match(stalled(units, 1), /WU-0001 waits on its mockup/);
+});
+
+test('the unit that owns an out-of-reach mockup starts, since it brings the mockup back under the checks', () => {
+  const tokens = drawing('WU-0001', 'docs/kompass/mockups/direction/a.html', ['src/tokens.css', 'docs/kompass/mockups/direction/']);
+  assert.equal(mockupOutOfReach(tokens), '');
+  assert.equal(nextUnit([tokens])?.id, 'WU-0001');
+  const file = drawing('WU-0002', 'mockups/direction/a.html', ['docs/kompass/mockups/direction/a.html']);
+  assert.equal(nextUnit([file])?.id, 'WU-0002');
 });
