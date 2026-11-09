@@ -35,6 +35,14 @@ RUN case "${TARGETARCH:-$(dpkg --print-architecture)}" in \
  && curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/${asset}" \
  && echo "${sum}  /usr/local/lib/docker/cli-plugins/docker-compose" | sha256sum -c - \
  && chmod 755 /usr/local/lib/docker/cli-plugins/docker-compose
+# The system libraries Chromium needs, so a project's unit tests can print through Playwright's
+# browser (8 Nov 2026: tertia's PDF export tests failed on the box with "libnspr4.so: cannot open").
+# The list is Playwright's own for Chromium on Ubuntu; the browser itself comes with each project.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libnspr4 libnss3 libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libdrm2 \
+      libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libasound2t64 \
+      libatspi2.0-0t64 libxshmfence1 fonts-liberation \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
 # Gitleaks, so CI's secret scan uses the box's own copy instead of downloading it on every run
 # (8 Nov 2026: GitHub's release downloads for gitleaks returned 504 for hours and every PR failed).
 # Fetched by asset id through the API, which kept serving when the release download links did not.
