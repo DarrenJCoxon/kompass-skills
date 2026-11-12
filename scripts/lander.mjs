@@ -23,7 +23,8 @@ import { runLog } from './lib/runlog.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const opt = (name, fallback) => { const i = args.indexOf(name); return i < 0 ? fallback : args[i + 1]; };
-const pollMs = Number(opt('--poll', 60)) * 1000;
+// Every 2 minutes: the lander shares one account's 5,000 GitHub requests an hour with every session (Tertia, 12 Nov 2026).
+const pollMs = Number(opt('--poll', 120)) * 1000;
 const once = args.includes('--once');
 
 const p = project();

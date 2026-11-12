@@ -18,9 +18,12 @@
 set -uo pipefail
 
 pr="${1:?usage: merge-when-green.sh <pull request number>}"
-poll="${MWG_POLL:-30}"          # seconds between looks
-stuck_polls="${MWG_STUCK_POLLS:-6}" # looks while green and ready before acting (6 x 30 s = 3 minutes)
-max_polls="${MWG_MAX_POLLS:-240}"   # give up after this many looks (2 hours)
+# Every look costs three GitHub requests, and every session, the lander and the monitor share one account's
+# 5,000 an hour: at 30 s, five units waiting at once spent it twice running (Tertia, 12 Nov 2026), so look every 2 minutes.
+poll="${MWG_POLL:-120}"         # seconds between looks
+if [ "$poll" -gt 0 ]; then def_stuck=$(( (180 + poll - 1) / poll )) def_max=$(( 7200 / poll )); else def_stuck=6 def_max=240; fi
+stuck_polls="${MWG_STUCK_POLLS:-$def_stuck}" # looks while green and ready before acting (about 3 minutes)
+max_polls="${MWG_MAX_POLLS:-$def_max}"       # give up after this many looks (2 hours)
 say() { echo "merge-when-green #$pr: $*"; }
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
