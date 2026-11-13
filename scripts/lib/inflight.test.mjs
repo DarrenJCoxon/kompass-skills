@@ -35,3 +35,8 @@ test('a later unit whose own claim is broad waits only on what it changed', () =
   const other = { owns: ['src/core/gate/audit.ts'], changed: ['src/core/gate/audit.ts'] };
   assert.deepEqual(landingShares(['src/surfaces/x.tsx'], other), []);
 });
+
+test('the project records never hold a unit back: they merge on their merits', () => {
+  const other = { owns: ['docs/kompass/modules.md'], changed: ['docs/kompass/modules.md', 'src/surfaces/brand.tsx'] };
+  assert.deepEqual(landingShares(['docs/kompass/modules.md', '.github/workflows/ci.yml'], other), []);
+});

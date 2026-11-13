@@ -145,6 +145,10 @@ export function local(p) {
  * main, never hand-merged, so they never decide landing order (Tertia, 13 Nov 2026: every screen unit waited on
  * every other one for its key-screen images). */
 export const regenerated = (f) => /(^|\/)[^/]*-snapshots\//.test(f);
+/** A project's records (docs/kompass/: the module map, unit files, decisions) are text that merges on its merits; they
+ * never decide landing order (Tertia, 13 Nov 2026: WU-0870 and WU-0867 waited behind WU-0847 and WU-0854 for a line
+ * each in docs/kompass/modules.md). A record number taken twice is still caught by next-id. */
+const isRecord = (f) => /(^|\/)docs\/kompass\//.test(f);
 const claimsAFolder = (p) => /[*?]/.test(p) || p.endsWith('/');
 
 /** The files `mine` (what a unit has changed) shares with another unit in flight: what that unit has changed, and
@@ -152,8 +156,9 @@ const claimsAFolder = (p) => /[*?]/.test(p) || p.endsWith('/');
  * only the files the unit has actually changed in it (Tertia, 13 Nov 2026: WU-0850's few dashboard files waited
  * hours behind WU-0847's claim of all of src/surfaces/**). Screenshot images hold nothing back. */
 export function landingShares(mine, other) {
-  const theirs = [...other.changed, ...other.owns.filter((p) => !claimsAFolder(p))].filter((f) => !regenerated(f));
-  return sharedPaths(mine.filter((f) => !regenerated(f)), theirs);
+  const counts = (f) => !regenerated(f) && !isRecord(f);
+  const theirs = [...other.changed, ...other.owns.filter((p) => !claimsAFolder(p))].filter(counts);
+  return sharedPaths(mine.filter(counts), theirs);
 }
 
 /** What `me` (a unit's id, branch, owns and changed files) shares with the other units in flight, by the files
