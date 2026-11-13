@@ -138,13 +138,27 @@ export function local(p) {
   return { id, branch, owns: arr(id ? unitAt(p, null, id)?.data.owns : []), changed };
 }
 
-/** What `me` (a unit's id, branch, owns and changed files) shares with the other units in flight. `wait` lists
- * those that started earlier than `started`: `me` lands only after them. */
+/** Screenshot images (Playwright's `*-snapshots/` folders) are made again by the later unit after it merges
+ * main, never hand-merged, so they never decide landing order (Tertia, 13 Nov 2026: every screen unit waited on
+ * every other one for its key-screen images). */
+export const regenerated = (f) => /(^|\/)[^/]*-snapshots\//.test(f);
+const claimsAFolder = (p) => /[*?]/.test(p) || p.endsWith('/');
+
+/** The files `mine` (what a unit has changed) shares with another unit in flight: what that unit has changed, and
+ * the exact files it claims but may not have changed yet. A folder or glob claim (`src/surfaces/**`) holds back
+ * only the files the unit has actually changed in it (Tertia, 13 Nov 2026: WU-0850's few dashboard files waited
+ * hours behind WU-0847's claim of all of src/surfaces/**). Screenshot images hold nothing back. */
+export function landingShares(mine, other) {
+  const theirs = [...other.changed, ...other.owns.filter((p) => !claimsAFolder(p))].filter((f) => !regenerated(f));
+  return sharedPaths(mine.filter((f) => !regenerated(f)), theirs);
+}
+
+/** What `me` (a unit's id, branch, owns and changed files) shares with the other units in flight, by the files
+ * `me` has changed (`landingShares`). `wait` lists those that started earlier than `started`: `me` lands only after them. */
 function against(units, me, mine, started) {
-  const holds = [...me.owns, ...me.changed];
   const shared = units
     .filter((u) => u !== mine && !(me.id && u.id === me.id) && !u.stale && !u.resting)
-    .map((u) => ({ unit: u, files: sharedPaths(holds, [...u.owns, ...u.changed]) }))
+    .map((u) => ({ unit: u, files: landingShares(me.changed, u) }))
     .filter((s) => s.files.length);
   const earlier = (u) => u.started < started || (u.started === started && u.branch < (me.branch ?? ''));
   return { me, wait: shared.filter((s) => earlier(s.unit)), after: shared.filter((s) => !earlier(s.unit)) };
