@@ -32,8 +32,8 @@ const lines = (s) => (s ?? '').split('\n').filter(Boolean);
 /** Open pull requests as [{ number, branch }], or null when gh can't answer. */
 function openPulls(root) {
   try {
-    const out = execFileSync('gh', ['pr', 'list', '--state', 'open', '--json', 'number,headRefName,isDraft', '--limit', '200'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-    return JSON.parse(out).map((p) => ({ number: p.number, branch: p.headRefName, draft: !!p.isDraft }));
+    const out = execFileSync('gh', ['pr', 'list', '--state', 'open', '--json', 'number,headRefName,isDraft,title', '--limit', '200'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    return JSON.parse(out).map((p) => ({ number: p.number, branch: p.headRefName, draft: !!p.isDraft, building: /: building$/.test(p.title ?? '') }));
   } catch { return null; }
 }
 
@@ -50,8 +50,8 @@ export function heads(p, { fetch = true, gh = true } = {}) {
     .map((ref) => ({ ref, branch: ref.replace('refs/remotes/origin/', ''), pr: null, draft: false }));
   for (const x of pulls ?? []) {
     const same = list.find((h) => h.branch === x.branch);
-    if (same) Object.assign(same, { pr: x.number, draft: x.draft });
-    else if (p.git(['rev-parse', '--verify', '--quiet', `refs/kompass/pull/${x.number}`])) list.push({ ref: `refs/kompass/pull/${x.number}`, branch: x.branch, pr: x.number, draft: x.draft });
+    if (same) Object.assign(same, { pr: x.number, draft: x.draft, building: x.building });
+    else if (p.git(['rev-parse', '--verify', '--quiet', `refs/kompass/pull/${x.number}`])) list.push({ ref: `refs/kompass/pull/${x.number}`, branch: x.branch, pr: x.number, draft: x.draft, building: x.building });
   }
   return { list, pullsChecked: pulls !== null };
 }
@@ -84,8 +84,9 @@ function unitOf(p, ref, branch, changed) {
  * marked resting: listed, but it holds nothing back. Tertia, 27 Oct 2026: WU-0159's kept branch (`waiting` on main, draft closed) held WU-0177 back.
  * A head with no push for `staleHours` and no pull request, or only its draft `building` one, is marked stale:
  * listed, but it holds nothing back, so a dead session's draft can't hold files for ever.
- * A draft pull request with no new commit for `idleHours` (and not yet stale) is marked idle: still in flight
- * and still holding its files, but shown, so whoever waits on it can ask. WU-0179 waited on WU-0227's quiet draft. */
+ * A draft pull request with no new commit for `idleHours` (and not yet stale) is marked idle: listed, but it holds
+ * nothing back. It can't land as it stands, and its unit merges main when it resumes (WU-0179 waited on WU-0227's
+ * quiet draft; Tertia, 13 Nov 2026: WU-0804's draft, sent back for conflicts, held WU-0850 back for hours). */
 export function inFlight(p, { fetch = true, gh = true, staleHours = 24, idleHours = 2, now = Date.now() } = {}) {
   const { list: all, pullsChecked } = heads(p, { fetch, gh });
   const units = [];
@@ -109,6 +110,8 @@ export function inFlight(p, { fetch = true, gh = true, staleHours = 24, idleHour
       started: Math.min(...times) * 1000, updated,
       stale: (!h.pr || h.draft) && now - updated > staleHours * 3600_000,
       idle: !!h.pr && h.draft && now - updated > idleHours * 3600_000 && now - updated <= staleHours * 3600_000,
+      // A `…: building` draft is a unit at work, however long since its last push; only a draft left as it is yields.
+      building: !!h.building,
       resting, onMain: onMain ?? null,
     });
   }
@@ -157,7 +160,7 @@ export function landingShares(mine, other) {
  * `me` has changed (`landingShares`). `wait` lists those that started earlier than `started`: `me` lands only after them. */
 function against(units, me, mine, started) {
   const shared = units
-    .filter((u) => u !== mine && !(me.id && u.id === me.id) && !u.stale && !u.resting)
+    .filter((u) => u !== mine && !(me.id && u.id === me.id) && !u.stale && !u.resting && !(u.idle && !u.building))
     .map((u) => ({ unit: u, files: landingShares(me.changed, u) }))
     .filter((s) => s.files.length);
   const earlier = (u) => u.started < started || (u.started === started && u.branch < (me.branch ?? ''));

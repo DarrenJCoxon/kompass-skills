@@ -200,10 +200,10 @@ else process.stdout.write('{}');
     branch('kompass/WU-0015-done', 'x', 'sed -i.bak s/delivered/building/ docs/kompass/units/WU-0015-done.md && rm docs/kompass/units/*.bak && ');
     sh(dir, `git clone -q ${o} ${later}`);
     sh(later, 'git checkout -qb kompass/WU-0020-later && sed -i.bak s/waiting/building/ docs/kompass/units/WU-0020-later.md && rm docs/kompass/units/*.bak && git commit -qam started');
-    made = { later, check: (file) => {
+    made = { later, check: (file, ...more) => {
       sh(later, 'git checkout -q -- src');
       put(join(later, `src/${file}.ts`), 'the later unit changes this too\n');
-      const r = spawnSync('node', [join(here, 'in-flight.mjs'), '--check'], { cwd: later, encoding: 'utf8', env: { ...process.env, ...id, PATH: `${rbin}:${process.env.PATH}` } });
+      const r = spawnSync('node', [join(here, 'in-flight.mjs'), '--check', ...more], { cwd: later, encoding: 'utf8', env: { ...process.env, ...id, PATH: `${rbin}:${process.env.PATH}` } });
       return { code: r.status, out: r.stdout + r.stderr };
     }, list: () => {
       const r = spawnSync('node', [join(here, 'in-flight.mjs'), '--json'], { cwd: later, encoding: 'utf8', env: { ...process.env, ...id, PATH: `${rbin}:${process.env.PATH}` } });
@@ -230,7 +230,7 @@ test('a kept branch of a parked unit, its pull request closed, is resting: liste
 });
 
 test('a branch with an open draft pull request still holds its files, whatever main says', () => {
-  const r = rest().check('d');
+  const r = rest().check('d', '--idle-hours', '4');
   assert.equal(r.code, 3, r.out);
   assert.match(r.out, /wait: WU-0013 \(PR #13\) started earlier and holds src\/d\.ts/);
   assert.equal(rest().list()['WU-0013'].resting, false);
@@ -263,15 +263,16 @@ const inRest = (...args) => {
   return { code: r.status, out: r.stdout + r.stderr };
 };
 
-test('a draft pull request with no new commit for 2 hours is shown as idle, and still holds its files', () => {
+// Tertia, 13 Nov 2026: WU-0804's draft, sent back by the lander for conflicts at 04:53 and untouched since,
+// held WU-0850 back for hours. An idle draft can't land as it stands; it merges main when its unit resumes.
+test('a draft pull request with no new commit for 2 hours is shown as idle, and holds nothing back', () => {
   const by = rest().list();
   assert.equal(by['WU-0013'].idle, true, 'draft, last commit 3 hours ago');
   assert.equal(by['WU-0014'].idle, false, 'no pull request: not an idle draft');
   assert.match(inRest().out, /WU-0013 {2}waiting, idle since \d{4}-\d\d-\d\d \d\d:\d\d UTC {2}kompass\/WU-0013-draft/);
   assert.match(inRest('--notice').out, /- WU-0013 \(PR #13\) waiting, idle since \d{4}-\d\d-\d\d \d\d:\d\d UTC, started/);
   const r = rest().check('d');
-  assert.equal(r.code, 3, 'idle is still in flight');
-  assert.match(r.out, /WU-0013 \(PR #13\) has had no new commit since .* UTC/);
+  assert.doesNotMatch(r.out, /wait: WU-0013/, 'an idle draft holds nothing back');
 });
 
 test('a draft is not idle within --idle-hours of its last commit', () => {

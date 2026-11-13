@@ -3,7 +3,7 @@
 // checkout's work against them: a unit that shares files with one that started earlier lands after it.
 // A kept branch of a unit not being worked on (no open pull request, not `building`) is listed as resting and
 // holds nothing back; so is one with no push for --stale-hours.
-// A draft pull request with no new commit for --idle-hours is shown as idle: still in flight, so it still holds its files.
+// A draft pull request with no new commit for --idle-hours, not titled `…: building`, is shown as idle and holds nothing back.
 // usage: in-flight.mjs [docs/kompass] [--json | --check | --wait | --notice | --unit WU-NNNN] [--branch NAME] [--stale-hours 24] [--idle-hours 2] [--no-gh] [--no-fetch]
 //   (list)     each unit: id, branch, status, owns, files changed against main so far, record numbers taken
 //   --check    exit 0 when nothing earlier shares this checkout's files, 3 when it must wait (and for what),
