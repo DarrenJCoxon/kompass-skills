@@ -45,7 +45,8 @@ Body:
 
 - **One capability per unit,** usually inside one module. Prefer fewer, complete units to many fragments.
 - **A front-door change is its own unit,** first in line: it changes the front door and updates every caller in the same unit, so nothing is left half-moved.
-- **`owns` lists are honest.** Include the tests and callers the unit must touch. A builder that needs a file outside `owns` records why in the log and carries on; it does not need a new unit.
+- **`owns` lists are honest.** Include the tests and callers the unit must touch. Name files and narrow folders, not a whole area (`src/surfaces/dashboard/`, not `src/surfaces/**`): `owns` decides which units can be built side by side. Landing order follows the files each unit actually changed. A builder that needs a file outside `owns` records why in the log and carries on; it does not need a new unit.
+- **A sweeping unit lands in pieces.** One that touches a whole area (a browser-suite clean-up, a restyle of every screen, a dead-code sweep) is cut into units of a few modules each, so none holds the queue for hours (Tertia, 13 Nov 2026).
 - **Large files get split first.** If a unit must change a file already over the size limit (5,000 tokens, see `scripts/size-check.mjs`), and the change can't go in a new module beside it, put a unit before it that splits that file along its real seams, behind its existing front door, with no change in behaviour. The split unit's proof is that the existing tests pass unchanged.
 - **Dependencies are real.** A unit depends on another only if it needs that unit's merged code. Units with no dependency between them and no shared files can run at the same time.
 - **UI units point at an approved mockup** and name the variant. The mockup sits directly in `mockups/`, where the project's checks read it: `next-unit` will not start a unit whose mockup is anywhere else, except the unit that owns that mockup.
