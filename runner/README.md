@@ -11,6 +11,7 @@ Follow Part 3 of [`SETUP.md`](../SETUP.md), or give your coding agent this repos
    - **`CLAUDE_CODE_OAUTH_TOKEN`**: run `claude setup-token` on your own computer and paste the token.
    - **`GH_TOKEN`**: a fine-grained GitHub token for the repositories the runner builds.
    - **`NOTIFY_URL`** (optional): an ntfy topic for phone notifications.
+   - **`KOMPASS_OPTIONAL_CHECKS`** (optional): comma-separated workflow names that never decide landing, for a job that is not a required check (for example `Pictures`). merge-when-green and the lander ignore their results.
 3. Build the image: `docker compose build`.
 
 The tokens are yours to create and paste in; no agent handles them.
