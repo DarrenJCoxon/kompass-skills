@@ -23,6 +23,9 @@ services:
       # was priced on tertia's 26-29 Oct helpers: its dearer writes cost about what it saved. Helpers wait in steps of
       # at most 4 minutes instead (agents/*.md), so their cache doesn't lapse during test runs.
     restart: "no"
+    # CI comes first (runner/compose.test.sh): the runner may use every free CPU, but when CI's jobs (weight 1024) want the
+    # CPUs too they get four times its share, so a Pictures job's dev server is not starved by the runner's own test suites.
+    cpu_shares: 256
     volumes:
       - work:/work
       - claude-state:/home/kompass/.claude/projects
