@@ -13,8 +13,13 @@ const latest = (xs, key) => Object.values(xs.reduce((m, x) => ((m[key(x)]?.id ??
 /** 'pending', 'failed', 'skipped' or 'green', from gh's actions/runs answer and commit statuses (null when
  * gh did not answer). No run yet is pending. GitHub counts a skipped required check as passing (Tertia
  * WU-0165, #221, merged with CI never run), so skipped is its own answer, never green. */
-export function checksState(runsAnswer, statuses) {
-  const runs = latest(runsAnswer?.workflow_runs || [], (x) => x.name);
+/** Workflows that never decide landing, by name, from KOMPASS_OPTIONAL_CHECKS (comma-separated): a job that is not
+ * a required check, such as Tertia's Pictures, which runs browser specs that may fail for reasons of their own
+ * (Tertia, 13 Nov 2026: a failed Pictures run held WU-0800 and WU-0858 back after their CI had passed). */
+export const optionalChecks = (env = process.env) => new Set((env.KOMPASS_OPTIONAL_CHECKS || '').split(',').map((x) => x.trim()).filter(Boolean));
+
+export function checksState(runsAnswer, statuses, optional = optionalChecks()) {
+  const runs = latest((runsAnswer?.workflow_runs || []).filter((x) => !optional.has(x.name)), (x) => x.name);
   const sts = latest(Array.isArray(statuses) ? statuses : [], (x) => x.context);
   if (!runsAnswer || !Array.isArray(statuses) || !runs.length || runs.some((x) => x.status !== 'completed') || sts.some((x) => x.state === 'pending')) return 'pending';
   if (runs.some((x) => BAD.includes(x.conclusion)) || sts.some((x) => ['failure', 'error'].includes(x.state))) return 'failed';
