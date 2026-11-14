@@ -23,5 +23,5 @@ if tmux has-session -t kompass-monitor 2>/dev/null; then echo "Kompass monitor a
 # GitHub access for records pull requests: the runner's own token, read inside the session so it never
 # appears in a process list.
 tmux new-session -d -s kompass-monitor -c "$home_dir" \
-  "export GH_TOKEN=\"\$(grep -m1 '^GH_TOKEN=' '$here/.env' | cut -d= -f2-)\" PATH=\"\$HOME/.local/bin:\$PATH\"; unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN CLAUDE_CODE_OAUTH_TOKEN; gh auth setup-git >/dev/null 2>&1; while true; do claude remote-control --name 'Kompass monitor'; echo 'Kompass monitor stopped; restarting in 30 s'; sleep 30; done"
+  "export GH_TOKEN=\"\$(grep -m1 '^GH_TOKEN=' '$here/.env' | cut -d= -f2- | sed -E 's/^\"(.*)\"\$/\\1/')\" PATH=\"\$HOME/.local/bin:\$PATH\"; unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN CLAUDE_CODE_OAUTH_TOKEN; gh auth setup-git >/dev/null 2>&1; while true; do claude remote-control --name 'Kompass monitor'; echo 'Kompass monitor stopped; restarting in 30 s'; sleep 30; done"
 echo "Kompass monitor started (tmux attach -t kompass-monitor)"

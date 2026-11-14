@@ -8,7 +8,7 @@ set -uo pipefail
 
 container="${1:?usage: notify.sh CONTAINER}"
 here="$(cd "$(dirname "$0")" && pwd)"
-NOTIFY_URL="${NOTIFY_URL:-$(grep -m1 '^NOTIFY_URL=' "$here/.env" 2>/dev/null | cut -d= -f2-)}"
+NOTIFY_URL="${NOTIFY_URL:-$(grep -m1 '^NOTIFY_URL=' "$here/.env" 2>/dev/null | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/')}"
 : "${NOTIFY_URL:?NOTIFY_URL is not set in runner/.env}"
 export NOTIFY_URL
 
