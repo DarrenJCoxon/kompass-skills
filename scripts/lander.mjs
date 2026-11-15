@@ -83,6 +83,8 @@ async function poll() {
   for (const c of todo.comments) comment(c.n, c.body);
   for (const a of todo.alerts) alert(a);
   for (const n of todo.draft) toDraft(n);
+  // Its only run on this commit was the CI's draft refusal: draft and ready again starts the real run.
+  for (const n of todo.reready) log(gh(p.root, ['pr', 'ready', String(n), '--undo']) !== null && gh(p.root, ['pr', 'ready', String(n)]) !== null ? `#${n}: its only CI run was the draft refusal; marked ready again so CI runs` : `#${n} could not be marked ready again`);
   for (const n of todo.update) {
     const it = items.find((i) => i.n === n);
     if (gh(p.root, ['pr', 'update-branch', String(n)]) !== null) { log(`#${n}: the unit it waited for has landed; brought up to date with main so CI runs on both`); continue; }

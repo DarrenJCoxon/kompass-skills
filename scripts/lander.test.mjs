@@ -29,6 +29,7 @@ const pr = (n) => g.pulls.find((x) => x.number === Number(n));
 const out = (x) => process.stdout.write(typeof x === 'string' ? x : JSON.stringify(x));
 if (a[0] === 'pr' && a[1] === 'list' && a.includes('merged')) out([...g.merged, ...merged.map((n) => ({ number: n, title: pr(n).title, createdAt: pr(n).createdAt, mergedAt: new Date().toISOString() }))]);
 else if (a[0] === 'pr' && a[1] === 'list') out(g.pulls.filter((x) => !merged.includes(x.number)));
+else if (a[0] === 'api' && /actions\\/runs\\/\\d+\\/jobs/.test(a[1])) out({ jobs: (g.jobs ?? {})[a[1].match(/runs\\/(\\d+)\\/jobs/)[1]] ?? [] });
 else if (a[0] === 'api' && /actions\\/runs\\?head_sha=/.test(a[1])) out({ workflow_runs: g.runs.filter((r) => a[1].includes('head_sha=' + r.head_sha + '&')) });
 else if (a[0] === 'api' && /actions\\/runs/.test(a[1])) out({ workflow_runs: g.runs });
 else if (a[0] === 'api' && /statuses/.test(a[1])) out([]);
@@ -36,6 +37,7 @@ else if (a[0] === 'pr' && a[1] === 'view') { const p = pr(a[2]); out({ state: me
 else if (a[0] === 'pr' && a[1] === 'diff') out(pr(a[2]).files.join('\\n') + '\\n');
 else if (a[0] === 'pr' && a[1] === 'merge' && a.includes('--auto')) fs.appendFileSync(d + '/merged', a[2] + '\\n');
 else if (a[0] === 'pr' && a[1] === 'ready' && a.includes('--undo')) { pr(a[2]).isDraft = true; fs.writeFileSync(d + '/gh.json', JSON.stringify(g)); }
+else if (a[0] === 'pr' && a[1] === 'ready') { pr(a[2]).isDraft = false; fs.writeFileSync(d + '/gh.json', JSON.stringify(g)); }
 `;
 
 /** A project with these open pull requests. Each: n, branch, files {path: text}, hours (opened that long ago,
@@ -154,6 +156,33 @@ test('a failure from a run a newer run on the same commit replaced does not leav
   writeFileSync(join(t.dir, 'gh.json'), JSON.stringify(g));
   t.poll();
   assert.deepEqual(t.merges().map((a) => a[2]), ['52'], 'the newer green run on the same commit lands it');
+});
+
+// Tertia #870 (15 Nov 01:59) and #862 (05:26): a push landed while the pull request was still a draft and the
+// ready event ran on the commit before, so the only run on the head was the CI's draft refusal ("This pull request
+// is a draft"). The lander read it as failed checks and sent the unit back; the monitor re-marked each ready by hand.
+test('a draft refusal on a ready pull request is not a failure: it is marked ready again once, so CI runs', () => {
+  const t = project([code(54, 'kompass/WU-0001-a', 'src/a.ts', 2, { ci: 'failure' })]);
+  const g = JSON.parse(readFileSync(join(t.dir, 'gh.json'), 'utf8'));
+  g.jobs = { 54: [{ name: 'checks', conclusion: 'failure', steps: [{ name: 'Draft', conclusion: 'failure' }] }] };
+  writeFileSync(join(t.dir, 'gh.json'), JSON.stringify(g));
+  t.poll();
+  t.poll();
+  assert.equal(t.comments(54).length, 0, 'not left for its unit');
+  assert.equal(t.merges().length, 0);
+  const ready = t.calls().filter((a) => a[0] === 'pr' && a[1] === 'ready').map((a) => a.join(' '));
+  assert.deepEqual(ready, ['ready 54 --undo', 'ready 54'].map((x) => `pr ${x}`), 'marked ready again once');
+  assert.doesNotMatch(t.page('txt'), /Left for its unit \(1\)/);
+});
+
+test('a real failure in another step still leaves the unit', () => {
+  const t = project([code(55, 'kompass/WU-0001-a', 'src/a.ts', 2, { ci: 'failure' })]);
+  const g = JSON.parse(readFileSync(join(t.dir, 'gh.json'), 'utf8'));
+  g.jobs = { 55: [{ name: 'tests', conclusion: 'failure', steps: [{ name: 'Draft', conclusion: 'skipped' }, { name: 'Unit tests', conclusion: 'failure' }] }] };
+  writeFileSync(join(t.dir, 'gh.json'), JSON.stringify(g));
+  t.poll();
+  assert.equal(t.comments(55).length, 1);
+  assert.equal(t.calls().filter((a) => a.join(' ') === 'pr ready 55').length, 0);
 });
 
 test('a failure that has only just finished waits a few minutes for the run that replaces it', () => {
