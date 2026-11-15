@@ -56,7 +56,7 @@
       ],
       "produces": [
         "Brief and approval record",
-        "Module map: purpose, front door, owned files, rules with their tests",
+        "Module map: purpose, front door, owned files, rules with their tests, and a boundary check that fails the build when the map is broken",
         "Architecture with diagrams of each key journey",
         "Design system from the start: chosen scale, one tokens file, a raw-value test, shared components and written UI rules, with protected checks",
         "Interactive mockups for each UI decision",

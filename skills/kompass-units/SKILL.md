@@ -44,7 +44,8 @@ Body:
 ## How to cut units
 
 - **One capability per unit,** usually inside one module. Prefer fewer, complete units to many fragments.
-- **A front-door change is its own unit,** first in line: it changes the front door and updates every caller in the same unit, so nothing is left half-moved.
+- **The boundary check comes first.** The first sequence opens with the unit that adds the plan's boundary check (config from `modules.md`, the suppression count, the count file in an existing project, the protected-check entry in `CLAUDE.md`). Every other unit depends on it, so no code lands before the map is enforced.
+- **A front-door change is its own unit,** first in line: it changes the front door, updates every caller and the boundary check's config in the same unit, so nothing is left half-moved.
 - **`owns` lists are honest.** Include the tests and callers the unit must touch. Name files and narrow folders, not a whole area (`src/surfaces/dashboard/`, not `src/surfaces/**`): `owns` decides which units can be built side by side. Landing order follows the files each unit actually changed. A builder that needs a file outside `owns` records why in the log and carries on; it does not need a new unit.
 - **A sweeping unit lands in pieces.** One that touches a whole area (a browser-suite clean-up, a restyle of every screen, a dead-code sweep) is cut into units of a few modules each, so none holds the queue for hours (Tertia, 13 Nov 2026).
 - **Large files get split first.** If a unit must change a file already over the size limit (5,000 tokens, see `scripts/size-check.mjs`), and the change can't go in a new module beside it, put a unit before it that splits that file along its real seams, behind its existing front door, with no change in behaviour. The split unit's proof is that the existing tests pass unchanged.
@@ -70,6 +71,7 @@ Check the set once:
 - Every "done looks like" result in the plan is covered by some unit.
 - Every unit's `owns` sits inside its module, or says why not.
 - There are no dependency cycles, and every id in `depends:` has a unit file in `units/`.
+- The boundary-check unit is first, and every other unit depends on it.
 - Every criterion names its test.
 - Every UI unit has the design-system criterion, and every unit's mockup is directly in `mockups/` or owned by that unit (`next-unit` holds the rest back).
 
