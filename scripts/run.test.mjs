@@ -74,3 +74,38 @@ ${join(bin, 'deliver.sh')} "$unit"
   assert.ok(startB > 0 && endA > 0, log);
   assert.ok(startB < endA, `WU-0002 should start while WU-0001 is still running:\n${log}`);
 });
+
+// Tertia, 14 Nov 2026: WU-0901's second session found it must wait for WU-0889 (main's red CI), recorded
+// `depends: [WU-0889]` and ended. The run counted that as a failed attempt and skipped WU-0901 for the rest of the
+// run (18:53), so when WU-0889 landed at 23:54 the free slot stayed empty until the run ended (00:20). A session that
+// leaves its unit waiting on an undelivered unit has not failed: it is not counted, and the unit starts once that lands.
+test('a unit left waiting on another unit is not counted as an attempt, and starts again once that lands', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'run-'));
+  const origin = join(dir, 'origin.git'), root = join(dir, 'project'), bin = join(dir, 'bin'), seed = join(dir, 'seed');
+  const sh = (cwd, cmd) => execSync(cmd, { cwd, stdio: 'ignore', env: { ...process.env, ...who } });
+  sh(dir, `git init -q --bare -b main ${origin} && git clone -q ${origin} ${root}`);
+  put(join(root, 'docs/kompass/units/WU-0001-a.md'), '---\nid: WU-0001\ntitle: A\nsequence: 1\nstatus: waiting\nowns: [src/a.ts]\n---\n');
+  put(join(root, 'docs/kompass/units/WU-0002-b.md'), '---\nid: WU-0002\ntitle: B\nsequence: 1\nstatus: waiting\nowns: [src/b.ts]\n---\n');
+  sh(root, 'git add -A && git commit -qm main && git push -q origin main');
+  sh(dir, `git clone -q ${origin} ${seed}`);
+  // WU-0001: session 1 ends with nothing done; session 2 records that it waits on WU-0002; session 3 delivers.
+  put(join(bin, 'claude'), `#!/bin/sh
+unit=$(echo "$*" | grep -o 'WU-[0-9]*' | head -1)
+[ -z "$unit" ] && exit 0
+n=$(cat ${join(dir, 'n')}-$unit 2>/dev/null || echo 0); n=$((n+1)); echo $n > ${join(dir, 'n')}-$unit
+cd ${seed} && git pull -q origin main
+if [ "$unit" = WU-0001 ] && [ $n = 1 ]; then exit 0; fi
+if [ "$unit" = WU-0001 ] && [ $n = 2 ]; then sed -i 's/^owns: /depends: [WU-0002]\\nowns: /' docs/kompass/units/WU-0001-*.md
+else sed -i 's/^status: waiting$/status: delivered/' docs/kompass/units/$unit-*.md; fi
+git commit -qam "$unit $n" && git push -q origin main
+`, 0o755);
+  put(join(bin, 'gh'), '#!/bin/sh\necho "[]"\n', 0o755);
+  const r = spawnSync('node', [join(here, 'run.mjs'), join(root, 'docs/kompass'), '--claude', join(bin, 'claude'), '--lander-poll', '0.3'], { cwd: root, encoding: 'utf8', timeout: 60_000, env: { ...process.env, ...who, PATH: `${bin}:${process.env.PATH}` } });
+  const log = readFileSync(join(root, '.kompass/run.log'), 'utf8');
+  assert.equal(r.status, 0, r.stdout + r.stderr + log);
+  assert.doesNotMatch(log, /skip WU-0001/, log);
+  assert.match(log, /WU-0001 waits on WU-0002; it starts again once that lands, not counted as an attempt/, log);
+  assert.equal(log.match(/start WU-0001/g)?.length, 3, log);
+  assert.ok(log.lastIndexOf('start WU-0001') > log.indexOf('end WU-0002'), log);
+  assert.match(log, /end WU-0001: session exit 0, status on main delivered/, log);
+});
