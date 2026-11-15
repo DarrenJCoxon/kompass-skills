@@ -21,6 +21,18 @@ _Written when every unit in the sequence is delivered or parked._
 - **Known issues:**
 - **Where the next sequence starts:**
 
+## Quality
+
+_Written with the hand-over: the numbers from `quality-report.mjs`, pasted as they are, then the independent audit from `kompass-auditor`._
+
+- **Overall:**
+- **Numbers:** the report's table, with its hidden line.
+- **Audit scores:** structure, duplication, tests, clarity, ease of change (1 to 5).
+- **Stranger test:**
+- **Guard counts:**
+- **Concerns:** each serious or minor, for the walkthrough to decide.
+- **What it means:**
+
 ## Walkthrough guide
 
 _Written with the hand-over: everything the operator needs to test this sequence in the running product, with nothing assumed._

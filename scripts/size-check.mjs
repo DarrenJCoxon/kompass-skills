@@ -6,30 +6,15 @@
 // docs/kompass/size.json.
 // usage: size-check.mjs [--base origin/main]   (exits 1 and says how to split when a file is too big)
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
+import { sizeSettings, tok } from './lib/size.mjs';
 
 const args = process.argv.slice(2);
 const at = args.indexOf('--base');
 const base = at >= 0 ? args[at + 1] : 'origin/main';
 const git = (...a) => execFileSync('git', a, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 
-const config = existsSync('docs/kompass/size.json') ? JSON.parse(readFileSync('docs/kompass/size.json', 'utf8')) : {};
-const limit = config.limit ?? 5000;
-// Files agents don't author: dependency locks, generated or built output, binaries and test snapshots.
-const IGNORE = [
-  '**/pnpm-lock.yaml', '**/package-lock.json', '**/yarn.lock', '**/bun.lock', '**/bun.lockb', '**/npm-shrinkwrap.json', '**/*.lock',
-  '**/__generated__/**', '**/*.generated.*', '**/*.gen.*', '**/generated/**', '**/*.min.js', '**/*.min.css', '**/*.map',
-  '**/dist/**', '**/build/**', '**/.next/**', '**/coverage/**',
-  '**/*-snapshots/**', '**/__snapshots__/**', '**/*.snap',
-  '**/*.{png,jpg,jpeg,gif,webp,ico,pdf,zip,gz,woff,woff2,ttf,otf,mp4,mov,sqlite,db}',
-  'docs/kompass/plan.html', 'docs/kompass/mockups/**', // generated page; self-contained design prototypes
-];
-const glob = (g) => new RegExp(`^${g.replace(/[.+^$()|[\]\\]/g, '\\$&').replace(/\{([^}]+)\}/g, (_, alts) => `(${alts.split(',').join('|')})`)
-  .replace(/\*\*\//g, '\u0000').replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]').replace(/\u0000/g, '(.*/)?')}$`);
-const ignored = [...IGNORE, ...(config.ignore ?? [])].map(glob);
-const skip = (path) => ignored.some((r) => r.test(path));
-
-const tok = (bytes) => Math.round(bytes / 4);
+const { limit, skip } = sizeSettings();
 const fmt = (n) => n.toLocaleString('en-GB');
 const sizeAt = (path) => { try { return Number(git('cat-file', '-s', `${base}:${path}`).trim()); } catch { return null; } };
 
