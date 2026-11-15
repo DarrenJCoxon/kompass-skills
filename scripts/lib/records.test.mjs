@@ -1,7 +1,7 @@
 // node --test scripts/lib/records.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { blockers, mockupOutOfReach, nextUnit, readUnits, source, stalled } from './records.mjs';
+import { blockers, mockupOutOfReach, nextUnit, notCompared, readMockups, readUnits, source, stalled } from './records.mjs';
 
 const unit = (id, sequence, status, depends = []) => ({ id, sequence, status, depends, owns: [] });
 
@@ -227,4 +227,28 @@ test('the unit that owns an out-of-reach mockup starts, since it brings the mock
   assert.equal(nextUnit([tokens])?.id, 'WU-0001');
   const file = drawing('WU-0002', 'mockups/direction/a.html', ['docs/kompass/mockups/direction/a.html']);
   assert.equal(nextUnit([file])?.id, 'WU-0002');
+});
+
+// Tertia, 15 Nov 2026: three mockups took their app frame from an older mockup and a stylesheet kept for mockups.
+// The product's frame had changed the day before, so the operator was shown a look the product no longer had. The
+// mockups used only tokens, so the raw-value check passed. A proposed mockup now says what it was compared with.
+const mockupSrc = (files) => ({ list: () => Object.keys(files), read: (f) => files[f.replace('mockups/', '')] });
+const page = (metas) => `<title>T</title>${Object.entries(metas).map(([k, v]) => `<meta name="kompass:${k}" content="${v}">`).join('')}`;
+
+test('a mockup records what it was compared with', () => {
+  const [m] = readMockups(mockupSrc({ 'a.html': page({ status: 'proposed', compared: 'the running app, 15 Nov 2026' }) }));
+  assert.equal(m.compared, 'the running app, 15 Nov 2026');
+});
+
+test('a proposed mockup that was not compared with the product is flagged; an approved one is left alone', () => {
+  const [bare, compared, old, blank] = readMockups(mockupSrc({
+    'a.html': page({ status: 'proposed' }),
+    'b.html': page({ status: 'proposed', compared: 'key-screen pictures on main, 15 Nov 2026' }),
+    'c.html': page({ status: 'approved' }),
+    'd.html': page({ status: 'proposed', compared: '  ' }),
+  }));
+  assert.equal(notCompared(bare), true);
+  assert.equal(notCompared(compared), false);
+  assert.equal(notCompared(old), false);
+  assert.equal(notCompared(blank), true);
 });

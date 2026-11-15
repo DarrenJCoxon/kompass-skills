@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { esc, inline, markdown } from './lib/markdown.mjs';
-import { currentSequence, parseFrontMatter, readDecisions, readMockups, readModules, readSequences, readUnits, sections, source, STATUSES } from './lib/records.mjs';
+import { currentSequence, parseFrontMatter, readDecisions, readMockups, readModules, readSequences, readUnits, sections, source, STATUSES, notCompared } from './lib/records.mjs';
 import { tokensCss } from './lib/tokens.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -91,6 +91,7 @@ const uiSection = mockups.length ? `
       <div><h3>${esc(m.title)}</h3>${m.summary ? `<p>${inline(m.summary)}</p>` : ''}</div>
       <div class="mock-meta">${chip(m.status === 'approved' ? 'delivered' : 'waiting', m.status === 'approved' ? `Approved${m.chosen ? `: ${m.chosen}` : ''}` : 'Proposed')}
         ${m.decision ? `<span>Decision ${decisionLink(m.decision)}</span>` : ''}
+        ${notCompared(m) ? `<span>${chip('parked', 'Not compared with the product')}</span>` : m.compared && m.status !== 'approved' ? `<span>Compared with ${esc(m.compared)}</span>` : ''}
         <a href="mockups/${esc(m.file)}" target="_blank" rel="noopener">Open full size</a></div>
     </header>
     <iframe src="mockups/${esc(m.file)}" title="${esc(m.title)}" loading="lazy"></iframe>

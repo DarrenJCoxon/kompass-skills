@@ -113,9 +113,14 @@ export function readMockups(src) {
     .map((file) => {
       const html = src.read(`mockups/${file}`);
       const meta = (name) => html.match(new RegExp(`<meta\\s+name="kompass:${name}"\\s+content="([^"]*)"`, 'i'))?.[1] ?? '';
-      return { file, title: html.match(/<title>([^<]*)<\/title>/i)?.[1] ?? file, decision: meta('decision'), status: meta('status') || 'proposed', chosen: meta('chosen'), summary: meta('summary') };
+      return { file, title: html.match(/<title>([^<]*)<\/title>/i)?.[1] ?? file, decision: meta('decision'), status: meta('status') || 'proposed', chosen: meta('chosen'), summary: meta('summary'), compared: meta('compared') };
     });
 }
+
+/** A proposed mockup that does not say what it was compared with (the running product or its latest screen pictures).
+ * The planning page flags it, so the operator is never shown a look the product has left (Tertia, 15 Nov 2026).
+ * Approved mockups are history and are left alone. */
+export const notCompared = (mockup) => mockup.status !== 'approved' && !mockup.compared.trim();
 
 /** Ids of units with an open pull request on a kompass/WU-… branch (empty when gh is unavailable). A draft (a unit's
  * `building` pull request) counts only with `drafts: true` (a local "build next", which mustn't take a unit the runner
