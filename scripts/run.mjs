@@ -84,10 +84,16 @@ function startNext(open = openUnitIds(root)) {
     active.delete(unit.id);
     sessionSlots.free(slot);
     try { log(execFileSync('bash', [join(here, 'reclaim-worktrees.sh')], { cwd: root, encoding: 'utf8' }).trim() || 'no merged worktrees to remove'); } catch (e) { log(`worktree clean-up failed: ${e.message}`); }
-    const after = mainUnits().find((u) => u.id === unit.id);
+    const units = mainUnits(), after = units.find((u) => u.id === unit.id);
     log(`end ${unit.id}: session exit ${code}, status on main ${after?.status ?? 'missing'}`);
+    // A session that leaves its unit waiting on an undelivered unit has not failed: it is not counted, and nextUnit
+    // starts it once that lands (Tertia WU-0901, 14 Nov 2026: skipped at 18:53 while waiting on WU-0889; L-019).
+    const waitsOn = after?.status === 'waiting' ? after.depends.filter((d) => units.find((u) => u.id === d)?.status !== 'delivered') : [];
     const unfinished = after && !['delivered', 'parked'].includes(after.status) && !openUnitIds(root).includes(unit.id);
-    if (unfinished && attempts.get(unit.id) >= maxAttempts) {
+    if (waitsOn.length) {
+      attempts.delete(unit.id);
+      log(`${unit.id} waits on ${waitsOn.join(', ')}; it starts again once that lands, not counted as an attempt`);
+    } else if (unfinished && attempts.get(unit.id) >= maxAttempts) {
       skipped.add(unit.id);
       log(`skip ${unit.id}: not delivered or parked after ${maxAttempts} sessions; needs a look`);
     } else if (unfinished) {
