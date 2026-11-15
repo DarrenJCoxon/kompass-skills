@@ -58,10 +58,13 @@ Body:
 
 Every unit belongs to one sequence from the plan. For each sequence, create `docs/kompass/sequences/S-NN-<slug>.md` from `templates/sequence.md` with its **Goal** (what the operator will be able to try at the end), leaving Hand-over and Walkthrough empty. Don't list the units in it: each unit's `sequence:` says where it belongs and the planning page lists them from that, so there is one copy. A run builds one sequence and stops at its end for the walkthrough, so put each unit in the first sequence that needs it, and keep dependencies inside the same or an earlier sequence.
 
+**What only the operator can do comes before the sequence, in one list.** When a unit needs a setting, account or outside step only the operator holds (a secret in the hosting provider, a production database), add a `## Before this sequence starts` section to its sequence file with one `- [ ] …` step per setting: its exact name, every environment it must be in (Production, Preview, Development) and where to set it. The runner does not start the sequence until every step is ticked, so no unit parks mid-run for one (Tertia, 10–14 Nov 2026: WU-0332, WU-0341, WU-0342 and WU-0892 each parked mid-run for a production setting, and WU-0892's Preview question went unanswered).
+
 ## Defects and follow-ups
 
 - **A problem found in a walkthrough becomes a unit at the start of the next sequence,** so it is fixed before new work builds on it.
 - **A defect found later becomes a new unit** titled `Defect: <what goes wrong>`. Its first criterion is the failing test that reproduces it, and it names the unit that introduced the problem, found with `kompass-find`.
+- **A required check red on main is a defect unit at once,** first in the current sequence, so the runner builds it next; a unit that fails on the same check depends on it (Tertia, 13–14 Nov 2026: main was red on Trivy for 35 hours before WU-0889 was written).
 - **A follow-up from a hand-over becomes a unit** when it is real work.
 - **Never re-scope a merged unit.** Write a new one.
 
@@ -73,6 +76,7 @@ Check the set once:
 - There are no dependency cycles, and every id in `depends:` has a unit file in `units/`.
 - The boundary-check unit is first, and every other unit depends on it.
 - Every criterion names its test.
+- Every setting a unit needs from the operator is a step in its sequence's `Before this sequence starts`, for every environment.
 - Every UI unit has the design-system criterion, and every unit's mockup is directly in `mockups/` or owned by that unit (`next-unit` holds the rest back).
 
 Then make the planning page locally, so the operator sees the ordered list (it isn't committed):
