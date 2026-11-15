@@ -28,7 +28,22 @@ export function look(p, now) {
   const runs = json(gh(p.root, ['api', 'repos/{owner}/{repo}/actions/runs?per_page=100']), null)?.workflow_runs ?? [];
   const merged = json(gh(p.root, ['pr', 'list', '--state', 'merged', '--json', 'number,title,mergedAt,createdAt', '--limit', '50']), []);
   const { units, pullsChecked } = inFlight(p, { now });
-  return { pulls, runs, merged: Array.isArray(merged) ? merged : [], units, pullsChecked };
+  const heads = new Set(pulls.filter((pr) => !pr.isDraft).map((pr) => pr.headRefOid));
+  const refused = new Set(runs.filter((r) => heads.has(r.head_sha) && r.conclusion === 'failure' && draftRefusal(p, r.id)).map((r) => r.id));
+  return { pulls, runs, merged: Array.isArray(merged) ? merged : [], units, pullsChecked, refused };
+}
+
+/** Whether a failed run failed only at the CI's draft refusal (a failed step named Draft): the run started while the
+ * pull request was a draft, so it says nothing about the code. Asked once per run (one GitHub call), then kept. */
+const refusals = new Map();
+export function draftRefusal(p, id) {
+  if (!refusals.has(id)) {
+    const jobs = json(gh(p.root, ['api', `repos/{owner}/{repo}/actions/runs/${id}/jobs`]), null)?.jobs;
+    if (!Array.isArray(jobs)) return false; // not known: judged as a failure, as before
+    const failed = jobs.flatMap((j) => j.steps ?? []).filter((st) => st.conclusion === 'failure');
+    refusals.set(id, failed.length > 0 && failed.every((st) => /\bdraft\b/i.test(st.name)));
+  }
+  return refusals.get(id);
 }
 
 const unitName = (u) => `${u.id ?? u.branch}${u.pr ? ` (#${u.pr})` : ''}`;
@@ -47,14 +62,18 @@ export function classify(p, seen, memory, now = Date.now()) {
   return [...seen.pulls].sort(oldest).map((pr) => {
     const unit = seen.units.find((u) => u.pr === pr.number);
     const records = !!unit?.changed.length && unit.changed.every((f) => f.startsWith(`${p.prefix}/`));
-    const onHead = seen.runs.filter((r) => r.head_sha === pr.headRefOid);
+    // A draft refusal is not a result. When it is the newest run of its workflow on a ready pull request, no real
+    // run is coming (Tertia #870 and #862, 15 Nov 2026: the push landed after the ready event), so it is marked ready again.
+    const all = seen.runs.filter((r) => r.head_sha === pr.headRefOid);
+    const onHead = all.filter((r) => !seen.refused?.has(r.id));
+    const rerun = !pr.isDraft && all.some((r) => seen.refused?.has(r.id) && !onHead.some((o) => o.name === r.name && o.id > r.id));
     const checks = checksState({ workflow_runs: onHead }, []);
     const newest = onHead.reduce((m, r) => (r.id > m.id ? r : m), { id: -1 });
     const it = {
       n: pr.number, title: pr.title, branch: pr.headRefName, sha: pr.headRefOid, created: Date.parse(pr.createdAt),
       checks, records, files: unit ? [...new Set([...unit.owns, ...unit.changed])] : [], updated: unit?.updated ?? null,
       runner: /^Being built on the runner/.test(pr.body ?? ''), idle: !!unit?.idle, unit: isUnit(pr.headRefName),
-      run: newest.id,
+      run: newest.id, rerun,
     };
     // A session pushes while its pull request is a draft (CI fails it at once, by design), then marks it ready,
     // which starts a new run on the same commit (Tertia WU-0318, WU-0330, 30 Oct 2026). A failure a newer run has
@@ -94,13 +113,14 @@ export function leave(it, why, memory, now, detail = '') {
  * (null when one is landing already, none is ready, or the units in flight could not be checked). Each comment
  * and alert is due once per item; `memory` keeps what was said, and is updated here. */
 export function plan(items, seen, memory, now, landing) {
-  const todo = { comments: [], alerts: [], update: [], draft: [], land: null };
+  const todo = { comments: [], alerts: [], update: [], draft: [], reready: [], land: null };
   const left = (it, why) => { const l = leave(it, why, memory, now); if (l) { todo.comments.push(l.comment); todo.alerts.push(l.alert); if (l.draft) todo.draft.push(l.draft); } };
   const once = (key, f) => { if (!memory.said[key]) { memory.said[key] = now; f(); } };
   const open = new Set(items.map((i) => i.n));
   for (const it of items) {
     if (it.state !== 'building' && it.state !== 'person') memory.readyAt[it.n] ??= now;
     if (it.state === 'left') left(it, it.why);
+    if (it.rerun && it.state === 'ci') once(`reready:${it.n}:${it.sha}`, () => todo.reready.push(it.n));
     if (it.state === 'waiting') {
       memory.waitingSince[it.n] ??= now;
       memory.waited[it.n] = true;
