@@ -14,6 +14,12 @@ RUN apt-get update \
 # Semgrep, the version tertia's CI pins, so sessions run CI's scan before they push.
 RUN python3 -m venv /opt/semgrep && /opt/semgrep/bin/pip install --no-cache-dir semgrep==1.176.1 && ln -s /opt/semgrep/bin/semgrep /usr/local/bin/semgrep
 
+# Trivy, the version trivy-action v0.36.0 runs in tertia's CI, so sessions scan dependencies and Dockerfiles before
+# they push. Tertia, 13-14 Nov 2026: Trivy refused a new Dockerfile only on main, which stayed red for 35 hours, and
+# the session that found it could not run Trivy here (D-478, WU-0889).
+RUN curl -fsSL https://github.com/aquasecurity/trivy/releases/download/v0.70.0/trivy_0.70.0_Linux-64bit.tar.gz | tar -xz -C /usr/local/bin trivy \
+ && trivy --version
+
 # Claude Code, and fnm so each project's .node-version picks its own Node, as in CI.
 RUN npm install -g @anthropic-ai/claude-code \
  && curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir /usr/local/bin --skip-shell \
