@@ -12,7 +12,8 @@ Each finding is **blocking** or **minor**. Only blocking findings justify a chan
 - wrong behaviour, or a criterion not met
 - a data, privacy, access or security risk
 - a fix with no test that failed before it, or a cause that was assumed and never reproduced; the unit's log must record, for each criterion, the behaviour the coordinator broke and the test that then failed
-- a check loosened to get green: a test expectation, lint or type rule, scanner setting, skipped test or locked file, or a file moved, renamed or excluded so a check no longer reads it
+- a check loosened to get green: a test expectation, lint, type or boundary rule, scanner setting, skipped test or locked file, a file moved, renamed or excluded so a check no longer reads it, or a new inline suppression (`eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `# type: ignore`, `# noqa`)
+- a comment that justifies a workaround ("temporary", "hack", "needed because …") where the cause could be fixed at its owner (name the owner); a reason that must stay belongs in a `decisions/` record
 - logic duplicated from the module that owns the decision, or a special case, list of cases or guess from wording standing in for the owner's decision (name the owner)
 - a module front door that grew without a decision record
 - a hand-over that leaves out or softens a failure, a held case or an unproven cause

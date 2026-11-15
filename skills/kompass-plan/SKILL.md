@@ -61,6 +61,8 @@ Before moving on, check:
 - No front door has more than about six entries; if it does, the module is doing two jobs.
 - Every value with a canonical home (design tokens, config, model ids, endpoints) is owned by exactly one module.
 
+**Make the map a check, not only a page.** Agents copy what the code already does, so one import past a front door soon looks like the house pattern, and a rule only the reviewer remembers is not kept (Lauren Tan, "All Code Is Slop (Except Mine)", 14 Nov 2026). Plan a **boundary check** that fails the build when the map is broken: a file reaches another module only through its front door, only modules under **Depends on**, and no cycles. Write its config from `modules.md` with the stack's own tool (for example dependency-cruiser or eslint-plugin-boundaries for TypeScript, import-linter for Python), with error messages that name the front door to use, so an agent fixes the cause instead of working round it. The same guard counts inline suppressions (`eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `# type: ignore`, `# noqa`). An existing project keeps a count file of today's breaches and suppressions that may fall and never rise. `CLAUDE.md` lists the check, its config and its count file as protected checks.
+
 For an existing codebase, read the code and map what is there before proposing changes. Mark proposed modules and proposed front-door changes clearly.
 
 ## Stage 3: Architecture (`architecture.md`)
@@ -119,6 +121,7 @@ Check the plan once against itself before asking for approval:
 - Every proposed mockup says what it was compared with, and none is flagged "Not compared with the product" on the planning page.
 - A project with a UI has the design system: scale decision, tokens file, raw-value test, shared components, rules page and protected checks, each owned by a module or a unit.
 - No proposed module overlaps another's files.
+- The boundary check is planned from `modules.md`, owned by a unit and listed as a protected check.
 - Every "must always be true" names its test.
 
 Fix what you find. Then render the page.
