@@ -40,6 +40,7 @@ COPY --chown=kompass:kompass scripts /opt/kompass/scripts
 COPY --chown=kompass:kompass assets /opt/kompass/assets
 COPY --chown=kompass:kompass templates /opt/kompass/templates
 COPY --chown=kompass:kompass runner/entrypoint.sh /opt/kompass/entrypoint.sh
+COPY --chmod=755 runner/claude-signed-in.sh /usr/local/sbin/claude
 
 WORKDIR /work
 ENTRYPOINT ["/bin/bash", "/opt/kompass/entrypoint.sh"]

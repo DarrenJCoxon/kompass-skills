@@ -11,6 +11,8 @@ repo="${1:?usage: entrypoint.sh [--lander] OWNER/REPO [--hours N] [--parallel N]
 : "${GH_TOKEN:?GH_TOKEN is not set in runner/.env}"
 if [ -z "$lander" ]; then
   : "${CLAUDE_CODE_OAUTH_TOKEN:?CLAUDE_CODE_OAUTH_TOKEN is not set in runner/.env (run: claude setup-token)}"
+  # A copy for `claude` started from a session's own commands, which never see CLAUDE_CODE_OAUTH_TOKEN (claude-signed-in.sh).
+  export KOMPASS_SUBSCRIPTION_TOKEN="$CLAUDE_CODE_OAUTH_TOKEN"
   history="$HOME/.claude/projects"
   [ -w "$history" ] || { echo "Session history folder $history is not writable; see runner/README.md (one-time fix for an old volume)" >&2; exit 1; }
 fi
