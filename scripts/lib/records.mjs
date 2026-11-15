@@ -191,6 +191,7 @@ export function mockupOutOfReach(u) {
   const path = (u.mockup || '').match(/\S+\.html\b/)?.[0];
   if (!path) return '';
   const parts = path.split('/');
+  if (parts.length === 1) return ''; // a bare name means a file in the mockups folder (Tertia #865, 14 Nov 2026)
   if (parts.at(-2) === 'mockups' && (parts.length === 2 || parts.slice(-4, -2).join('/') === 'docs/kompass')) return '';
   const tail = (x) => x.replace(/^docs\/kompass\//, '');
   if ((u.owns ?? []).some((o) => o === path || tail(o) === tail(path) || (o.endsWith('/') && tail(path).startsWith(tail(o))))) return '';

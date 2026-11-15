@@ -207,6 +207,15 @@ test('a mockup directly in the mockups folder is in reach, written either way, w
   }
 });
 
+// Tertia, 14 Nov 2026: WU-0903 to WU-0907 named `ai-overview-briefing.html` with no folder; the file was in the
+// mockups folder, but a bare name read as outside it and held three ready units back from 20:55 to 21:15 (#865).
+test('a bare mockup name is read as a file in the mockups folder', () => {
+  for (const m of ['ai-overview-briefing.html', 'ai-overview-briefing.html (variant B)']) {
+    assert.equal(mockupOutOfReach(drawing('WU-0001', m)), '', m);
+  }
+  assert.equal(nextUnit([drawing('WU-0001', 'a.html')])?.id, 'WU-0001');
+});
+
 test('a mockup in a subfolder or outside the mockups folder is out of reach', () => {
   for (const m of ['docs/kompass/mockups/direction/a.html', 'mockups/direction/a.html', 'docs/design/prototypes/x/index.html']) {
     assert.match(mockupOutOfReach(drawing('WU-0001', m)), /outside the mockups folder/, m);
