@@ -2,147 +2,81 @@
 
 What the runs taught us about the harness (the skills, agents, scripts and hooks), with the evidence and what was done. Written by `kompass-improve`; append only. Each review starts with a `## Review` heading, and its date starts the next review's period. Lessons are numbered `L-NNN`; a later review adds a `Checked L-NNN` entry rather than editing one.
 
-## Seed (26 to 28 Oct 2026; tertia)
+Lessons L-001 to L-022 (26 Oct to 15 Nov 2026) are in `docs/lessons/2026-10-26-to-2026-11-15.md`, unchanged.
 
-Fixed by hand by the operator and the Kompass monitor during tertia's first runs, before this review existed. Each was acted on; the first review checks whether it held.
+## Carried over (15 Nov 2026)
 
-### L-001 Builders cut off mid-job (26 Oct)
-- **Pattern:** a unit session ended its turn while a builder was still working; print mode stops background helpers after 10 minutes, so the builder was killed and the unit fell to a second attempt, beside the test servers the first left running.
-- **Evidence:** tertia WU-0119 attempt 1, 26 Oct; only sign was "Background tasks still running … stopping them" in the container log.
-- **Done:** runner waits up to 2 hours for helpers (`CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS` in `runner/compose.yaml`); kompass-build "stay until every builder and reviewer has reported"; sessions stopped as a whole process group (956da49, fc81353).
-- **Check:** no "stopping them" lines; no retry whose session ended with a helper running.
+- **L-020 UI drifted with nothing to stop it (5 Nov):** guard units first in a new project's first UI sequence; check that walkthroughs raise no drift findings and brownfield count files only fall. Too early: no new project started since.
+- **L-022 Mockups drew a look the product had left (15 Nov):** every proposed mockup carries `kompass:compared`; check no planning session or walkthrough raises a stale-style finding. Too early: merged today.
+- **L-001 to L-018 (seed):** acted on in October. The 15 Nov review checked L-004, L-008, L-010, L-013, L-017 and L-018 (below); the rest showed no recurrence in its sweep but were not checked one by one.
 
-### L-002 The run crashed when its log folder vanished (26 Oct)
-- **Pattern:** a unit's records commit put `.kompass/run.log` on main; a later branch switch deleted the folder and `run.mjs` crashed (12:35).
-- **Evidence:** tertia run, 26 Oct; tertia #136.
-- **Done:** tertia ignores `.kompass/` (#136); `lib/runlog.mjs` makes the folder for every line and never throws (fc81353).
-- **Check:** no `run log not written` lines, no runner crash, no `.kompass/` in a project's commits.
+## Review 2026-11-15 (2026-11-08 to 2026-11-15; tertia)
 
-### L-003 Fixes made on the server's copy were lost (26 Oct)
-- **Pattern:** the monitor fixed the runner by editing `~/kompass-skills` in place; the next sync overwrote it.
-- **Evidence:** the run-log and helper-wait fixes, 26 Oct ("something keeps overwriting").
-- **Done:** `runner/update.sh` is the one way to update the server and refuses local edits; changes go through pull requests (fc81353).
-- **Check:** `update.sh` never refuses for local edits.
+No earlier `## Review` heading, so the period is the last 7 days, to sequence 7's hand-over (15 Nov 08:20 UTC) and the afternoon after it. The operator's focus: the Linux Pictures saga, and being asked to approve things agents should settle.
 
-### L-004 Units parked on choices that were the agents' to make (26 Oct)
-- **Pattern:** units stopped for the operator over how the work is done, and the run stood still for hours.
-- **Evidence:** tertia WU-0119 (fold a follow-up in?), WU-0158 (test-server reuse), 26 Oct; settled as D-010 and D-011 by the desktop session.
-- **Done:** kompass-build: scope, order, owned files, test tooling and dropping an approach are decided, recorded and continued; a `dropped` status (a4d00d6).
-- **Check:** no park or question whose decision is about how, not what the product does.
+Looked at: 148 units over 232 unit sessions, 24 run starts (about 165 run-hours, 16 ended on the time limit), 22 "needs a look" skips, the 200 most recent merged pull requests (25 timed from ready to merged), 300 failed CI runs (13 to 15 Nov; 190 of them draft refusals, 42 on main). Asks to the operator 8 to 15 Nov, from unit logs, session comments and lander comments: about 12 on what the product does (several then decided by the monitor), 5 for production settings or tokens only he holds, 1 on spend, 0 protected; and about 13 the agents could have settled (10 CI-machine "needs a look" skips, WU-0762's unreadable report, WU-0798's captures "only on his computer", WU-0892's Preview question). Lander comments (185 "not landing") asked him nothing.
 
-### L-005 A sequence stopped with no reason given (26 Oct)
-- **Pattern:** units depended on work done before Kompass, with no unit record, so they never became ready; the run said only "not complete".
-- **Evidence:** tertia sequence 1, 26 Oct.
-- **Done:** `records.mjs` names missing or parked dependencies and the run log says what blocks the sequence; kompass-units drops a dependency on done work (fad5a83).
-- **Check:** every stopped run's last line names its blocker.
+Earlier lessons checked: L-004 didn't hold; L-008 held; L-010 held; L-013 didn't hold; L-017 held; L-018 recurs as memory, not queueing (L-024); L-019 recurred and is acted on; L-021 held, with a false alarm fixed (L-025).
 
-### L-006 Builders spent their time re-running whole browser files (26 Oct)
-- **Pattern:** a builder ran three full browser files four times while fixing.
-- **Evidence:** tertia WU-0119: 33 of 85 builder minutes.
-- **Done:** fix against single tests (`-g`), full files once at the end (867d231).
-- **Check:** unit logs and evidence files show full browser runs once per unit.
+### L-023 Main stayed red for 35 hours on a scanner no pull request ran (13 to 14 Nov)
+- **Pattern:** a required CI scanner failed only on main; units kept landing past it, and nothing turned the red main into work until a hand-over was being written.
+- **Evidence:** WU-0856 (#798, merged 13 Nov 12:24:25) added `scripts/pictures.Dockerfile` with no non-root user. Main's next run 43424880748 (12:24:28) failed Trivy DS-0002 (HIGH), and so did every main run until WU-0889 (#860) merged 14 Nov 23:54: 35.5 hours, 42 failed main runs. #798's own CI never ran Trivy on the file (its path filter, per WU-0889's evidence). #852, #853 and #854 merged past it (WU-0901's log, 14 Nov 18:50: "does not block landing"). WU-0889 was found "while writing sequence 7's hand-over" (14 Nov 18:54). WU-0901 could not fix it: D-478, "This box has neither Docker nor Trivy". WU-0889's fix then took three throwaway pull requests (#861, #863, #867, 14 Nov 19:00 to 23:35). Pictures-related branches used 62 CI runs (WU-0856 13 of 15 failed) and 60 Pictures runs, 13 to 15 Nov.
+- **Cause:** proven. Trivy was missing from the runner image (L-013 added only Semgrep), so no session could run it; no skill said a required check red on main is a defect to write at once, or forbade landing past it.
+- **Done:** Trivy v0.70.0 in the runner image (kompass-skills #49); kompass-build says to scan everything the unit changes whatever CI's path filters skip, and to treat a check red on main as main's defect (find or write the defect unit, depend on it, never land past it); kompass-units writes a red required check on main as a defect unit at once, first in the current sequence (#50).
+- **Check:** no main run red on Trivy; a red required check on main gets its defect unit within the hour; no unit merges while main is red on a required check.
 
-### L-007 Files too big for agents to edit well (26 Oct)
-- **Pattern:** units kept growing very large files (`src/core/gate/index.ts`, about 83k tokens).
-- **Evidence:** replayed on tertia's last 12 merged pull requests, 7 would have failed a 5,000-token ratchet.
-- **Done:** `scripts/size-check.mjs` in CI and in kompass-build (89f3966).
-- **Check:** size-check failures caught locally, not in CI; split units recorded rather than forced splits.
+### L-024 CI-machine failures came to the operator as questions and skips (10 to 15 Nov)
+- **Pattern:** CI workers killed for memory, or timing out under load, in files the unit never touched. Sessions retried, could not see the machines, and ended; the runner skipped the unit and sent "Needs a look", or the session ended on a question about the CI machines.
+- **Evidence:** WU-0749 (lint out of memory, run 42894908397, skipped 10 Nov 20:59); WU-0791 (16 timeouts and 3 SIGKILLed workers, "OOM not provable here", 11 Nov 22:43); WU-0805 (`tsc` killed, exit 137, 11 Nov 18:51); WU-0819 (two runs killed on load, 12 Nov 20:50); WU-0902 (shard 1 hook timeouts, run 43636114916, 14 Nov 20:33); WU-0892 (all 5,380 tests passed, workers SIGKILLed, run 43679298338, 15 Nov 05:21). About ten of the 22 skips 8 to 15 Nov were CI load or memory. On 15 Nov the cause was boat-ci-4's memory (home still on lazyfs, agent at 2.7 GB); the monitor fixed it about 07:50.
+- **Cause:** proven for the skill: kompass-build's only answer to red CI was "fix the cause; still red, park", with no way to tell a machine fault from a code fault and no owner for machines. Inferred: CI memory is the capacity limit now (see Checked L-018).
+- **Done:** kompass-build sorts a CI failure into own code, CI machine (rerun the failed jobs once, then log `ci-machine: run, runner, what was killed` and end saying so; never a park or a question for the operator) or main's own red check; park only for the listed stops (#50).
+- **Check:** no park or "needs a look" whose cause is a CI machine; sessions' last messages say `ci-machine` instead of asking. If machine faults keep recurring, the monitor's watch should act on `ci-machine` log lines itself.
 
-### L-008 Green pull requests sat unmerged (26 and 27 Oct)
-- **Pattern:** auto-merge on, green and up to date, and nothing happened; then the safeguard couldn't read check results with the server's fine-grained token, so it never re-armed.
-- **Evidence:** tertia #138, #139, #140 (26 Oct); #216 CLEAN for 30+ minutes (27 Oct).
-- **Done:** `merge-when-green.sh` re-arms once and reports stuck, never merges directly (44bc0a9); reads checks from workflow runs and statuses (kompass-skills #11).
-- **Check:** landing time (last ready to merged) under 30 minutes; any "stuck" exit.
+### L-025 A bare mockup name held ready units back (14 Nov)
+- **Pattern:** units naming their mockup without a folder were read as pointing outside the mockups folder, so `next-unit` held them back though the file was in place.
+- **Evidence:** WU-0903 to WU-0907 gave `mockup: ai-overview-briefing.html`; WU-0903, WU-0904 and WU-0906 were held from about 20:55 to 21:15 on 14 Nov, until the monitor's records pull request tertia #865 wrote the full path. WU-0903 started 21:15:49.
+- **Cause:** proven: `mockupOutOfReach` (L-021's check) treated a path with no folder as outside `mockups/`.
+- **Done:** a bare name is read as a file directly in `mockups/` (kompass-skills #46, test first).
+- **Check:** no unit held back with "its mockup <bare name>".
 
-### L-009 A unit read its records from a stale checkout (26 Oct)
-- **Pattern:** a session read its unit file from the runner's checkout, hours behind main, and parked to ask for a decision already made.
-- **Evidence:** tertia WU-0159 parked 22:06 asking for a rule settled in D-014 (merged 18:57).
-- **Done:** sessions read records from `origin/main`; the runner syncs its checkout before each unit (kompass-skills #2).
-- **Check:** no park or question already answered on main.
+### L-026 The lander read a draft refusal as failed checks (15 Nov)
+- **Pattern:** when a session's last push reached GitHub after its ready event, the only CI run on the head was the draft refusal; the lander sent the unit back to draft and alerted, and a person had to mark it ready again.
+- **Evidence:** #870 (WU-0906): ready 01:54, lander "checks failed on 1fe8a3b" 01:59, the monitor re-marked it ready at 02:09 (draft refusal run 43665232262). #862 (WU-0892): ready 05:21:03; the ready run 43680702969 tested the commit before (green), the only run on 5ec6153 was the refusal 43680704373 (8 s); left at 05:26, skipped by the runner at 05:27 and the run stopped; the monitor re-marked it ready at 06:09; merged 06:29.
+- **Cause:** proven: the lander judged checks by run conclusions only; the earlier fix (WU-0318) waits for a newer run, and none was coming.
+- **Done:** the lander asks for a failed run's jobs once; a run whose only failed step is named Draft is not a result, and when it is the newest on a ready pull request the lander marks it draft and ready again, once per commit (kompass-skills #48, tests first). kompass-build: mark ready only once the pull request's head is your last commit (#50).
+- **Check:** no "not landing (checks failed)" comment on a head whose only failure is a draft refusal.
 
-### L-010 Running two units at once collided (27 Oct)
-- **Pattern:** side-by-side sessions shared browser-test ports, and a unit with an empty `owns` list counted as touching nothing.
-- **Evidence:** `--parallel 2` on tertia, 27 Oct.
-- **Done:** per-session ports (`KOMPASS_SLOT`, `E2E_PORT`), empty `owns` and `alone: true` run alone, only running units hold others back (kompass-skills #3).
-- **Check:** no port clashes or unexpected overlaps in parallel runs.
+### L-027 Production settings asked for mid-run, one at a time (10 to 14 Nov)
+- **Pattern:** units parked mid-run for a setting only the operator holds, though the need was known when the unit was written; and a session asked him a technical choice it could have made.
+- **Evidence:** WU-0332 (Neon settings, 10 Nov), WU-0341 (Vercel and Neon production set-up, 11 Nov 07:44, done 22:20), WU-0342 (`DIRECTORY_DATABASE_URL`, 12 Nov 03:49, answered 13 Nov 18:50), WU-0892 (`CRON_SECRET`, parked 14 Nov 20:25; its criterion 2 made the setting required at start). WU-0892 also asked whether Preview should have the secret; it was never answered (unit log, 15 Nov) and preview builds failed until the monitor followed up. WU-0892 was parked from 20:25 to the next morning and sequence 7 stopped on it at 02:25.
+- **Cause:** proven: nothing put operator settings before a sequence; kompass-build's stop list allowed "the operator's own accounts" with no rule on how to ask.
+- **Done:** kompass-units puts each such setting, for every environment, in the sequence's `Before this sequence starts` steps, which the runner already refuses to start without; kompass-run asks for all of them in one message; kompass-build asks once, with exact names, every environment and choices already made (#50).
+- **Check:** no unit parks mid-run for a setting; any settings ask names every environment and has no either/or question for the operator.
 
-### L-011 Tests written after the code (27 Oct)
-- **Pattern:** a builder told "failing test first" wrote the code, then the tests; nobody could check the order afterwards.
-- **Evidence:** tertia WU-0148, gate builder 07:14 to 07:20.
-- **Done:** the coordinator breaks each behaviour and sees its test fail before committing; the reviewer blocks a log without that proof (kompass-skills #4).
-- **Check:** every unit log records the broken behaviour and failing test; review findings of "test passes with behaviour broken".
+### Checked L-019 (28 Oct, watch): recurred, acted on
+- WU-0901's second session (14 Nov 18:46 to 18:53) recorded `depends: [WU-0889]` and ended; the runner counted it as a failed attempt and skipped it for the rest of the run. WU-0889 merged 23:54; one slot sat empty from 23:43 to the 8-hour limit at 00:20, with "needs a look: WU-0901" sent to the operator. Next run, WU-0901 was delivered in 4 minutes.
+- Done: the runner no longer counts a session that leaves its unit waiting on an undelivered unit, and starts it once that lands (kompass-skills #47, test first). Check: no skip for a unit whose record says it waits on another unit.
 
-### L-012 Units invisible while building, and numbers taken twice (27 Oct)
-- **Pattern:** a unit built for 1.5 hours with nothing on GitHub while a laptop session changed code it depended on; separately, WU and D numbers clashed.
-- **Evidence:** tertia WU-0148 (22 tests to fix after); decisions renumbered in at least four units.
-- **Done:** a `building` draft pull request from the first minute (kompass-skills #5); `in-flight.mjs`, `next-id.mjs` and the land-first rule (#6).
-- **Check:** no rework from overlapping work; no renumbered records.
+### Checked L-004 (26 Oct): didn't hold
+- Parks and questions about how the work is done went on: CI machines (L-024), WU-0762 (a report "unreadable from the runner", parked 10 Nov 11:42; the defect was then not reproduced), WU-0798 (captures possible "only on his computer", 11 Nov 12:39), WU-0892's Preview question (L-027).
+- Why the first change failed: it named what agents decide, but parking still said "CI still red after a rethink" and gave no list of what is never a stop, so anything a session could not do on the runner became the operator's. Done: kompass-build now parks only for the listed stops and names what is never one (CI machines, slow or flaky tests, records, landing, where a proof is captured) (#50).
 
-### L-013 Scanner findings only in CI (27 Oct)
-- **Pattern:** the same Semgrep finding (a regular expression built from a variable) cost two units a CI round each.
-- **Evidence:** tertia WU-0148, WU-0123.
-- **Done:** run CI's scanners locally before pushing; Semgrep in the runner image; builders match exact text (kompass-skills #7).
-- **Check:** no CI failure at a scanner step.
+### Checked L-013 (27 Oct): didn't hold
+- Semgrep moved into local checks, but Trivy stayed CI-only and cost 35 hours of red main (L-023). Done: Trivy in the runner image (#49).
 
-### L-014 CI swamped by pushes (27 Oct)
-- **Pattern:** every partway push and records-only pull request ran full CI on two self-hosted runners; "the box is getting overwhelmed with PRs".
-- **Evidence:** Darren, 27 Oct; CI queues of 30+ minutes.
-- **Done:** drafts while building, one push when ready, no records-only pull requests (kompass-skills #8).
-- **Check:** CI runs per unit pull request (target one, plus fixes).
+### Checked L-018 (27 Oct): recurs as memory, not queueing
+- CI capacity now fails as killed workers and timeouts (L-024; SIGKILL in 8 runs, 14 to 15 Nov, on boat-ci-1 to 4) rather than queue time. Watch: judge with several pull requests open (the monitor's own rule), and record boat machines' memory with each `ci-machine` line.
 
-### L-015 Building drafts marked ready by hand (27 Oct)
-- **Pattern:** a `building` draft was marked ready, so each push ran full CI.
-- **Evidence:** tertia WU-0123.
-- **Done:** the draft's body asks not to; delivery re-drafts one marked by hand (kompass-skills #9); tertia CI refuses a `: building` pull request.
-- **Check:** no CI run on a `building` title.
+### Checked L-008, L-010, L-017: held
+- L-008: of 25 recent unit pull requests, 3 took over 30 minutes from ready to merged (#869 42 min, #879 36, #849 34); none sat green unmerged. L-010: no collision of two units at once seen. L-017: no merge on skipped checks seen.
 
-### L-016 Waits on the in-flight rule that protected nothing (27 Oct)
-- **Pattern:** units and records waited behind branches nobody was working on.
-- **Evidence:** WU-0159's `parked` records pull request waited 40 minutes behind code units (#10); WU-0159's parked branch held WU-0165 back for a day (#12); WU-0177 (#219, green) blocked by WU-0159's kept branch (#16); `gh` failing read as "clear" (#14).
-- **Done:** records-only pull requests skip the check (#10); parked, waiting, dropped and delivered units' branches rest (#12, #16); "couldn't check" is not clear (#14).
-- **Check:** no wait longer than 30 minutes behind a unit nobody is building.
+### Checked L-021 (9 Nov): held
+- No unit started with a mockup outside `mockups/`; the check's one false alarm (bare names) is L-025.
 
-### L-017 Merged on skipped checks (27 Oct)
-- **Pattern:** a pull request merged when its CI runs were skipped, not passed.
-- **Evidence:** tertia WU-0165 (#221).
-- **Done:** a skipped check never counts as passing (kompass-skills #13).
-- **Check:** no merge without a successful run on its head commit.
-
-### L-018 CI capacity, one job at a time (27 Oct)
-- **Pattern:** seven repositories shared one box-wide CI lock; CI, not the runner, limited throughput.
-- **Evidence:** `docs/plans/2026-10-27-scaling-the-pipeline.md` (10 to 17 minutes a run, queues longer).
-- **Done:** the plan (#15); CI box files into this repository and a counting lock (#17, #18); three slots on a 16 vCPU box (#19).
-- **Check:** CI queue time per run; ready-to-merged time.
-
-### L-019 Retries that could only wait (watch, 28 Oct)
-- **Pattern:** a session ended with its unit approved but waiting behind an earlier unit in flight, which in turn waited on the operator; the runner retried it, and attempt 2 found nothing to do but wait again, then skipped it.
-- **Evidence:** tertia run started 27 Oct 21:00: WU-0206 retry 23:59, skip 00:08; WU-0211 retry 00:01, skip 00:11; WU-0212 retry 02:37, skip 02:37. WU-0211 waited on WU-0206 (#239), which waited on WU-0252 (#232), which needed the operator's paid test run.
-- **Done:** watch. A retry is only useful when the first session failed; for a unit waiting on another unit or on the operator it costs a slot and an alert.
-- **Check:** retries whose session said it was waiting on another unit or the operator. If it recurs, the runner could leave such a unit as waiting without a retry.
-
-## Walkthrough finding (5 Nov 2026; tertia)
-
-Found by the operator in a walkthrough, not by a harness review; recorded here so the next review checks it held.
-
-### L-020 UI drifted with nothing to stop it (5 Nov)
-- **Pattern:** every screen chose its own text sizes and drew its own tiles and cards, because the plan set up no text-size or spacing tokens, no check against raw values, no shared component per pattern and no written UI rules. The UI was noisy: oversized cards, stat tiles, data in chip lists instead of tables, text sizes all over the place, headings like "Tertia noticed".
-- **Evidence:** tertia (DarrenJCoxon/tertia) S-04 walkthrough, 5 Nov 2026: 558 raw `font-size` values (37 distinct, none a token), five separate tile implementations, and the table and no-stat-card rules never written down. Darren stopped the walkthrough for a UI pass. Records on tertia's main: decisions D-271 to D-279, units WU-0596 to WU-0609, merged in DarrenJCoxon/tertia#535.
-- **Done:** kompass-plan's design-system stage sets up the scale decision, one tokens file, a raw-value test with a count file that may only fall, shared components, a written UI rules page and protected checks when a project starts; kompass-units puts the guard units first in the first UI sequence; the mockup template links the tokens and shared component CSS; the reviewer refuses raw values, copies of shared patterns, stat cards and anthropomorphic headings.
-- **Check:** a new project's first UI sequence opens with the guard units; walkthroughs raise no drift findings; brownfield count files only fall.
-
-## Operator rule (9 Nov 2026; tertia)
-
-### L-021 A redesign was moved out of the design checks' reach (8 Nov)
-- **Pattern:** a redesign's mockup was built and approved with its own colour block instead of the tokens file. When it reached main the project's mockup check failed on it, and the monitor moved it into a subfolder the check does not read; twelve screen units pointed at it there. The redesign would have been built against a page no test held.
-- **Evidence:** tertia D-338 and WU-0673 to WU-0684 (DarrenJCoxon/tertia#628); the move in tertia commit 6a5f94e7 ("the D-338 direction board moves to mockups/direction/ until its tokens exist"), with a README saying the board is outside the check. Darren, 9 Nov 2026: "the new design MUST be inside the design system tokens" and "the kompass skills should enforce this - no redesign should ever pass testing unless it follows the design system".
-- **Done:** `next-unit` (`mockupOutOfReach` in `lib/records.mjs`) holds back any unit whose mockup is not directly in `mockups/`, except the unit that owns it; moving, renaming or excluding a file from a check counts as loosening it (kompass-build, builder, reviewer, monitor); kompass-plan treats a redesign as a design-system change proposed as tokens, explored on the tokens file from the first draft; kompass-units gives every UI unit a proved design-system criterion and makes a redesign's token unit first, owning the mockup.
-- **Check:** no unit starts with a mockup outside `mockups/`; no commit moves a file out of a check's folder; redesign walkthroughs raise no raw-value or token findings.
-
-## Operator rule (15 Nov 2026; tertia)
-
-### L-022 Mockups drew a look the product had left (15 Nov)
-- **Pattern:** new mockups took their app frame and chat from an older approved mockup and a stylesheet kept for mockups, not from the product. The product's frame had changed since, so the operator was shown the old look: a rounded sheet inset on a dark background and a plain text rail.
-- **Evidence:** tertia, planning session of 15 Nov 2026, three coaching mockups (`coaching-in-chat.html`, `improvement-plan-page.html`, `finding-improvement-plans.html`), built from `ask-before-building.html` and `ui-foundation.css` (last changed 9 Nov) while `src/surfaces/Frame.module.css` had changed on 14 Nov (D-466). An audit for raw colours and inline styles passed, because the stale styles were made of tokens. The operator: "the chat surface is incorrectly styled. you are not using the most up to date styling ... this is concerning", then "this cannot happen moving forward - we need to ensure that kompass-plan only uses the most up to date styles as per the current site, never old styles or we will end up with drift".
-- **Cause:** proven. kompass-plan's mockup stage asked for the tokens file and the shared components' CSS, and said nothing about the frame or about comparing a mockup with the product; the builder was briefed to copy a reference mockup. Nothing mechanical could see the difference.
-- **Done:** kompass-plan's mockup stage says to draw with the product's styles as they are on main (link the product's own stylesheet, copy the markup from the component, never start from an older mockup or a mockups-only stylesheet) and to compare with the running product or its latest screen pictures before showing, recorded in `kompass:compared`. `notCompared` in `lib/records.mjs` flags a proposed mockup without it on the planning page, and the self-check names the flag. Approved mockups are left as they are.
-- **Check:** no walkthrough or planning session raises a stale-style finding on a mockup; every proposed mockup on a planning page carries what it was compared with. If one recurs with the meta filled in, the comparison was claimed and not done: make it a stored picture pair.
+### Seen once
+- The monitor's gh broke on 14 Nov because `runner/.env` held a quoted `GH_TOKEN`; fixed by kompass-skills #42.
+- The after-run restart helper is a monitor-side script, one-shot, re-armed by hand each run. Watch: if a run is left stopped because it was not re-armed, move it into the runner.
+- The runner's attempt count resets each run, so WU-0791 started five times across runs. Watch for a unit skipped in two runs in a row.
+- 9 Nov 17:35 to 19:04: nothing running for 89 minutes mid-run; cause not established.
+- Pictures runs flake on their own (D-514, 15 Nov: of the last 100, 48 passed, 17 failed, 34 cancelled). Not the harness: Tertia's own units (WU-0918, WU-0936 to WU-0938) own it, and Pictures no longer decides landing (#40).
+- Main failed again on 15 Nov (00:39, 04:52, 06:29, 15:55; green at 17:16) on test timeouts and SIGKILL, not Trivy: L-024's machines.
