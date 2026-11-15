@@ -16,7 +16,7 @@ plan approved
 
 ## Who does what
 
-The runner starts every unit session, and the hand-over session, on **Opus** as coordinator. Inside each unit, `kompass-build` gives the coding to `kompass-builder` (**Sonnet**), searches to `kompass-searcher` (**Haiku**) and review to `kompass-reviewer` (**Opus**). Writing the sequence hand-over and recording the walkthrough stay with Opus: they are what the next sequence relies on.
+The runner starts every unit session, and the hand-over session, on **Opus** as coordinator. Inside each unit, `kompass-build` gives the coding to `kompass-builder` (**Sonnet**), searches to `kompass-searcher` (**Haiku**) and review to `kompass-reviewer` (**Opus**). Writing the sequence hand-over and recording the walkthrough stay with Opus: they are what the next sequence relies on. The hand-over's quality audit goes to `kompass-auditor` (**Opus**), in its own fresh context, with no part in building the code.
 
 ## Start a sequence
 
@@ -47,8 +47,16 @@ Write the **Hand-over** in `docs/kompass/sequences/S-NN-….md` from the unit ha
 - **Parked, and the decision each needs:** with the evidence, quoted from the unit.
 - **State of main:** green or not, and the last CI run.
 - **Walkthrough:** points to the walkthrough guide below.
+- **Quality:** the overall light, and the auditor's paragraph (the **Quality** section below).
 - **Known issues:** anything the operator might notice that is already known.
 - **Where the next sequence starts:** its first units, anything they must read first, and any assumption that changed.
+
+Then write the **Quality** section, so the operator can judge the code without reading it (Darren, 15 Nov 2026: "we need to be able to audit the code at the end of each sequence"):
+1. **The numbers.** On an up-to-date main, from the project's root, run `node <kompass-skills>/scripts/quality-report.mjs docs/kompass --sequence N` (on the runner `/opt/kompass/scripts/quality-report.mjs`) and paste its output as it is: the overall light, the table of trends against the last report, and the hidden line holding the numbers, which the next sequence compares against. Never edit a number.
+2. **The audit.** Give `kompass-auditor` the sequence's range on main (the commit before its first unit merged, to the last), its unit list and `modules.md`. Paste its scores, stranger test and guard counts, and its concerns as it gave them, each **serious** or **minor**. Don't soften or drop one.
+3. **What it means,** in two or three plain sentences: is the code getting better or worse, and which concern to fix first. A red light or a serious concern is also named in **Known issues**.
+
+Concerns are proposals, not units: the operator decides in the walkthrough which become units.
 
 Then write the **Walkthrough guide** section, from the template. A sequence holds several changes, so it covers every one of them, and the operator follows it without asking anything:
 - **Before you start:** a ready-to-paste instruction the operator can give a brand-new Claude Code chat in the project, in a code block, that names this guide's file and spells out every setup step (save leftover work, update to main, the fresh data folder, the seed and account commands, the prepared files, how to start the app). Never rely on a phrase such as "I'm ready to try it": a new chat may not load this skill, and on 30 Oct 2026 it did not. Then the address, and which seeded account to use for which part. Check that these accounts and data really exist in the project's seed, and name them exactly.
@@ -57,7 +65,7 @@ Then write the **Walkthrough guide** section, from the template. A sequence hold
 - **Not ready to test:** each parked unit and why. **Known issues:** what the operator might notice that is already known.
 - **Telling us how it went:** each step marked worked, or what they saw instead.
 
-Set `status: handed-over` and deliver the sequence file in a small pull request titled `S-NN: hand-over`, landed with `scripts/merge-when-green.sh` as units are. Your final message is what reaches the operator's phone: start it with the link to the sequence file on GitHub (`https://github.com/<owner/repo>/blob/main/docs/kompass/sequences/<file>`), then give the whole walkthrough guide, not a summary.
+Set `status: handed-over` and deliver the sequence file in a small pull request titled `S-NN: hand-over`, landed with `scripts/merge-when-green.sh` as units are. Your final message is what reaches the operator's phone: start it with the link to the sequence file on GitHub (`https://github.com/<owner/repo>/blob/main/docs/kompass/sequences/<file>`), then the overall quality light in one line, then the whole walkthrough guide, not a summary.
 
 A handed-over sequence is also the time for the **harness review** (`kompass-improve`): what kept going wrong in this sequence's units, and what to change in the Kompass skills because of it. Don't do it in the hand-over session, whose final message is the walkthrough guide. The Kompass monitor, or the operator's own session, runs `/kompass-improve` once the hand-over has landed (see `runner/README.md`).
 
@@ -77,6 +85,7 @@ After the operator has tried it, write their feedback into the sequence's **Walk
 - The date, and the operator's own words, quoted.
 - Each walkthrough step: worked, or did not, with what they saw.
 - Each problem becomes a new unit at the start of the next sequence (`kompass-units`), titled `Defect: …` or with the change they asked for, and listed here by id.
+- For each **Quality** concern, ask the operator whether to fix it now, later or not at all, recommending now for a serious one. Each they choose to fix becomes a unit the same way; record each answer in their words.
 - Anything that changes the approved outcome is recorded in `plan.md` with their yes.
 
 Set `status: walked-through` and deliver in a pull request titled `S-NN: walkthrough`. The next sequence can now start.

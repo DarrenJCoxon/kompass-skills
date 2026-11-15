@@ -37,6 +37,7 @@ Each model does the work it is best at:
 | `kompass-builder` | Sonnet | Writes the code from one bounded brief, test first |
 | `kompass-searcher` | Haiku | Broad read-only searches and research, returning pointers |
 | `kompass-reviewer` | Opus | Checks each unit adversarially, in its own fresh context |
+| `kompass-auditor` | Opus | Audits a whole sequence's code cold at its hand-over and scores it in plain English |
 
 Every model runs at **medium effort by default** and is pushed to **high effort when needed**: when one cause fails twice, for a builder's repeated failure, or for a review of privacy, figures or access. Models are named by family (`opus`, `sonnet`, `haiku`), so each role moves to the newest model of its family automatically.
 

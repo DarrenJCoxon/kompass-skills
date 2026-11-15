@@ -136,6 +136,7 @@
         "Units built back to back in fresh sessions",
         "Parked units with written reasons",
         "The sequence hand-over with walkthrough steps",
+        "A quality report for each sequence: numbers with trends against the last sequence, and an independent audit scored in plain English",
         "Your walkthrough feedback, recorded with your words",
         "Your copy brought up to date and the app started for the walkthrough, without you thinking about where the code lives",
         "New units for problems you found"
@@ -149,7 +150,8 @@
         "Should two units run at once by default when they share no files?"
       ],
       "decided": [
-        "The runner lives on the Hetzner box, in its own container. Darren: \"runner has to sit on hetzner. - that's what we built it for\"."
+        "The runner lives on the Hetzner box, in its own container. Darren: \"runner has to sit on hetzner. - that's what we built it for\".",
+        "Every sequence hand-over carries a quality report and an independent audit, so the operator can judge the code without reading it. Darren, 15 Nov 2026: \"yes I agree we need to be able to audit the code at the end of each sequence\"."
       ]
     },
     "kompass-find": {
@@ -215,6 +217,13 @@
       "why": "Searching and reading at volume: Haiku is fast and cheap, so wide sweeps cost little and keep the coordinator's context clean.",
       "questions": [
         "Should it also do outside research (other products, library documentation), or should that stay with Opus?"
+      ]
+    },
+    "kompass-auditor": {
+      "plain": "Audits the code a whole sequence changed, cold, and scores its structure, duplication, tests, clarity and ease of change in plain English, with a stranger test and at most five concerns.",
+      "why": "Judgement over a whole sequence: a third Opus, in a fresh context, with no part in building or reviewing the units, so it sees what the reviewer may have got used to.",
+      "questions": [
+        "Should a human developer also review a sample of the code at the end of each phase?"
       ]
     }
   },
