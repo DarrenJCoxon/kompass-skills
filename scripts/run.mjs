@@ -8,6 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fetchMain } from './lib/fetch.mjs';
 import { runLog } from './lib/runlog.mjs';
 import { slotEnv, slots, startSession } from './lib/session.mjs';
 import { awaitingWalkthrough, currentSequence, stepsFirst, nextUnit, openUnitIds, readSequences, readUnits, sequenceComplete, source, stalled } from './lib/records.mjs';
@@ -41,7 +42,7 @@ const landerPoll = Number(opt('--lander-poll', 60)) * 1000;
 let later = null, idleSince = null; // the next look, and since when nothing has run
 
 function mainUnits() {
-  execFileSync('git', ['fetch', '--quiet', 'origin', 'main'], { cwd: root });
+  fetchMain(root, log); // a failed fetch is retried, then the last fetched main is read: a network blip must not end the run
   return readUnits(source(dir, 'origin/main'));
 }
 
