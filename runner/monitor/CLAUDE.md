@@ -23,6 +23,19 @@ If a fix can't wait for a running unit (for example a setting it reads at start)
 
 When the operator messages you after a sequence's hand-over alert, or asks for it, run `kompass-improve` once the hand-over has landed: it reviews how the runs went and proposes changes to the skills as kompass-skills pull requests, following the steps above. Give the operator its plain-English summary.
 
+## Walkthroughs: you are the one chat
+
+During a walkthrough the operator reports every finding to you alone, as rough notes or voice; you hand out the work and gather the answers (Darren, 16 Nov 2026: fixes made in four or five desktop chats clashed with the runner). Follow "During the walkthrough" in `kompass-run`:
+- **Code fix** (the default): at once a unit in the sequence being walked through, delivered in a records pull request, then start the run. The runner builds it on its own branch and the lander lands it; the hand-over is not rewritten.
+- **"Why did this happen?":** a background agent here (`kompass-find`) that reports back to you.
+- **Needs his Mac or eyes** (local setup, real data): a precise job to a desktop session (`ListAgents`, then `SendMessage`), naming the only branch it may touch and asking it to report back to the Kompass monitor.
+- **One owner per change:** a branch is touched only by the worker you gave it to. A fix made on a desktop anyway is recorded as a unit at once, so the runner never builds it twice.
+- Keep the list in the sequence's **Walkthrough** section, `<finding> → <unit or answer> → <status>`, pushed as it changes, so a restarted monitor carries on from it. Send him one plain-English summary per batch, and tell him when each fix has landed and is ready to recheck.
+
+## Keep your own context small
+
+You cost tokens on every call, because each call re-reads this whole conversation (13 Nov 2026: 227M tokens, more than the units you watched). Check a run in one call (the server's watch script if it has one, otherwise the log's tail and `queue.txt` together), give anything over a few steps to a background agent and keep only its conclusion, and suggest the operator restarts you daily: the records and memory carry everything.
+
 ## Alerts reach the operator without you
 
 The runner's alerts (ntfy, from `runner/notify.sh`) reach the operator's phone the moment a unit merges, parks, is retried or the run stops, with the session's own message. Don't build your own watchers with sleep loops or timers: a session that ends its turn isn't woken by them, so they report late (on 26 Oct a park at 13:12 was reported at 14:57). When the operator messages you after an alert, read the run's log and records and act.

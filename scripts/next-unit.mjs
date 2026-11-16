@@ -9,7 +9,7 @@ const opt = (name) => { const i = args.indexOf(name); return i < 0 ? null : args
 
 const src = source(dir, opt('--ref'));
 const units = readUnits(src);
-const walkthrough = awaitingWalkthrough(readSequences(src));
+const walkthrough = awaitingWalkthrough(readSequences(src), currentSequence(units));
 // Locally, a unit with an open pull request, a runner's `building` draft included, is being changed now:
 // never pick it, and never pick a unit that shares its files.
 const running = [...(opt('--in-progress')?.split(',').filter(Boolean) ?? []), ...(args.includes('--no-gh') ? [] : openUnitIds(dir, { drafts: true }))];

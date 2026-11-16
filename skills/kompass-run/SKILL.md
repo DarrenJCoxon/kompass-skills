@@ -9,8 +9,8 @@ Work is built in **sequences**: runs of units that end at a point the operator c
 
 ```
 plan approved
-  → sequence 1: units built back to back → sequence hand-over → operator walkthrough → walkthrough recorded
-  → sequence 2: walkthrough fixes first, then its units → hand-over → walkthrough → recorded
+  → sequence 1: units built back to back → sequence hand-over → operator walkthrough (its fixes built at once) → walkthrough recorded
+  → sequence 2: its units → hand-over → walkthrough → recorded
   → …
 ```
 
@@ -22,7 +22,7 @@ The runner starts every unit session, and the hand-over session, on **Opus** as 
 
 Check, once:
 - `plan.md` has a recorded approval, and main is green.
-- The previous sequence, if any, has its walkthrough recorded (status `walked-through`). If it is `handed-over` and waiting for the operator, say so and stop.
+- The previous sequence, if any, has its walkthrough recorded (status `walked-through`). If it is `handed-over`, a run builds only the walkthrough fixes added to it (below); otherwise say so and stop.
 - The sequence's own **Before this sequence starts** section, if it has one, is done first: it holds steps the operator approved for the coordinator (for example a protected change) and settings only the operator can make (`kompass-units`). Each step is a tick box (`- [ ]`); do yours, ask the operator for all of theirs in one message, tick each (`- [x]`) on main once done or confirmed, and only then start the runner. The runner won't start a sequence with an unticked step, and says which. Never give these steps to a unit session.
 - The repository has its safety settings: a required check, up-to-date branches before merging, auto-merge allowed, and no bypassing for admins. If any is missing, tell the operator what is missing and stop. Changing repository settings is theirs to approve.
 
@@ -77,18 +77,29 @@ The operator never has to think about where the code lives. When they want to tr
 3. Start the app the way the project runs it locally, with its sample accounts and data.
 4. Give the walkthrough steps from the sequence hand-over, with the local address to open.
 
-If any step fails, say plainly what failed and what you did; do not start the walkthrough on stale code.
+If any step fails, say plainly what failed and what you did; do not start the walkthrough on stale code. This chat is for walking and checking: when the operator finds a fault, don't fix it here; it goes to the Kompass monitor (below).
+
+## During the walkthrough: one chat
+
+Darren, 16 Nov 2026: faults found in a walkthrough were fixed in new desktop chats, not by the runner, and clashed with its work; he was juggling four or five chats. So the operator talks to one chat, the **Kompass monitor** on the runner server, and it hands out the work and gathers the answers:
+- **The operator reports each finding only to the monitor,** rough notes or voice as they come. Desktop sessions walk and check; they fix nothing the monitor didn't assign them.
+- **The monitor triages each finding:**
+  - **A code fix** (the default): at once a unit in the sequence being walked through (`kompass-units`: `sequence: N`, titled `Defect: …` or with the change asked for), merged to main and the run started. The runner builds a handed-over sequence's new units straight away without rewriting its hand-over (the fast lane); the lander lands them. Only the next sequence waits for the walkthrough to be recorded.
+  - **A "why did this happen" question:** a background agent on the server (`kompass-find`), which reports back to the monitor.
+  - **Anything that needs the operator's Mac or eyes** (the local walkthrough setup, a check on real data): a precise job sent to a desktop session (`ListAgents` to find it, `SendMessage` to send it) naming the one branch it may touch, if any, and asking it to report back to the Kompass monitor by name.
+- **One owner per change.** A branch is touched only by the worker it was given to. If a fix was made on a desktop anyway, the monitor records it as a unit (delivered, or building on that branch) so the runner never builds it twice.
+- **Findings are kept in the records,** in the sequence's **Walkthrough** section, one line each: `<finding> → <WU-NNNN, or the answer> → <status>`, pushed as they change, so a restarted monitor picks up where it left off. The monitor sends the operator one plain-English summary per batch of findings, and tells him when each fix is landed and ready to recheck.
 
 ## Record the walkthrough ("record the walkthrough")
 
-After the operator has tried it, write their feedback into the sequence's **Walkthrough** section:
+After the operator has tried it, complete the sequence's **Walkthrough** section (the monitor's findings list is already there):
 - The date, and the operator's own words, quoted.
 - Each walkthrough step: worked, or did not, with what they saw.
-- Each problem becomes a new unit at the start of the next sequence (`kompass-units`), titled `Defect: …` or with the change they asked for, and listed here by id.
+- Each problem not yet in the findings list becomes a unit in this sequence, as above, and is listed by id.
 - For each **Quality** concern, ask the operator whether to fix it now, later or not at all, recommending now for a serious one. Each they choose to fix becomes a unit the same way; record each answer in their words.
 - Anything that changes the approved outcome is recorded in `plan.md` with their yes.
 
-Set `status: walked-through` and deliver in a pull request titled `S-NN: walkthrough`. The next sequence can now start.
+Set `status: walked-through` and deliver in a pull request titled `S-NN: walkthrough`. The next sequence can now start; the runner finishes any of this sequence's fixes still open first.
 
 ## While it runs
 

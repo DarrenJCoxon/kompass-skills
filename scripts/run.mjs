@@ -128,7 +128,7 @@ function tick() {
 }
 
 const sequences = readSequences(source(dir, 'origin/main'));
-const waiting = awaitingWalkthrough(sequences);
+const waiting = awaitingWalkthrough(sequences, sequence); // fixes added to a sequence while it is walked through are built at once
 const first = sequence === null ? [] : stepsFirst(sequences, sequence);
 if (waiting !== null) {
   log(`run not started: sequence ${waiting} is handed over and waiting for its walkthrough; record the walkthrough first`);
