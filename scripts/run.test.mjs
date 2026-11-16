@@ -109,3 +109,28 @@ git commit -qam "$unit $n" && git push -q origin main
   assert.ok(log.lastIndexOf('start WU-0001') > log.indexOf('end WU-0002'), log);
   assert.match(log, /end WU-0001: session exit 0, status on main delivered/, log);
 });
+
+// Darren, 16 Nov 2026: a fault found in a walkthrough is written as a unit in the sequence being walked through, and the
+// runner builds it at once, without writing the hand-over again.
+test('a fix unit added to a handed-over sequence is built, and the hand-over is not rewritten', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'run-'));
+  const origin = join(dir, 'origin.git'), root = join(dir, 'project'), bin = join(dir, 'bin'), seed = join(dir, 'seed');
+  const sh = (cwd, cmd) => execSync(cmd, { cwd, stdio: 'ignore', env: { ...process.env, ...who } });
+  sh(dir, `git init -q --bare -b main ${origin} && git clone -q ${origin} ${root}`);
+  put(join(root, 'docs/kompass/sequences/S-01-a.md'), '---\nid: S-01\nsequence: 1\nstatus: handed-over\n---\n');
+  put(join(root, 'docs/kompass/units/WU-0001-a.md'), '---\nid: WU-0001\ntitle: A\nsequence: 1\nstatus: delivered\nowns: [src/a.ts]\n---\n');
+  put(join(root, 'docs/kompass/units/WU-0002-fix.md'), '---\nid: WU-0002\ntitle: Defect\nsequence: 1\nstatus: waiting\nowns: [src/a.ts]\n---\n');
+  sh(root, 'git add -A && git commit -qm main && git push -q origin main');
+  sh(dir, `git clone -q ${origin} ${seed}`);
+  put(join(bin, 'claude'), `#!/bin/sh
+echo "$*" >> ${join(dir, 'calls')}
+cd ${seed} && git pull -q origin main && sed -i 's/^status: waiting$/status: delivered/' docs/kompass/units/WU-0002-*.md && git commit -qam fix && git push -q origin main
+`, 0o755);
+  put(join(bin, 'gh'), '#!/bin/sh\necho "[]"\n', 0o755);
+  const r = spawnSync('node', [join(here, 'run.mjs'), join(root, 'docs/kompass'), '--claude', join(bin, 'claude')], { cwd: root, encoding: 'utf8', timeout: 60_000, env: { ...process.env, ...who, PATH: `${bin}:${process.env.PATH}` } });
+  const log = readFileSync(join(root, '.kompass/run.log'), 'utf8');
+  assert.equal(r.status, 0, r.stdout + r.stderr + log);
+  assert.match(log, /start WU-0002/);
+  assert.match(log, /run finished: sequence 1 already handed over/);
+  assert.doesNotMatch(readFileSync(join(dir, 'calls'), 'utf8'), /hand over/);
+});

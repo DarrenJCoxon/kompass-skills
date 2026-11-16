@@ -164,9 +164,12 @@ export function stepsFirst(sequences, n) {
   return [...text.matchAll(/^- \[ \] (.+)$/gm)].map((m) => m[1].trim());
 }
 
-/** The sequence whose hand-over is written but whose walkthrough is not yet recorded, or null. Work on the next sequence waits for it. */
-export function awaitingWalkthrough(sequences) {
-  return sequences.find((s) => s.status === 'handed-over')?.number ?? null;
+/** The sequence whose hand-over is written but whose walkthrough is not yet recorded, or null. Work on the next sequence waits
+ * for it. When `current` (the sequence being built) is that sequence, its walkthrough fixes are being built (units added to
+ * it while it is walked through), so nothing waits: null. */
+export function awaitingWalkthrough(sequences, current = null) {
+  const n = sequences.find((s) => s.status === 'handed-over')?.number ?? null;
+  return n !== null && n === current ? null : n;
 }
 
 const settled = (u) => u.status === 'delivered' || u.status === 'parked' || u.status === 'dropped';

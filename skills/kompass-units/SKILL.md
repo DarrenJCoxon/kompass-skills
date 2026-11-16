@@ -62,7 +62,7 @@ Every unit belongs to one sequence from the plan. For each sequence, create `doc
 
 ## Defects and follow-ups
 
-- **A problem found in a walkthrough becomes a unit at the start of the next sequence,** so it is fixed before new work builds on it.
+- **A problem found in a walkthrough becomes a unit in the sequence being walked through,** so the runner builds it at once, before new work builds on it (`kompass-run`, "During the walkthrough").
 - **A defect found later becomes a new unit** titled `Defect: <what goes wrong>`. Its first criterion is the failing test that reproduces it, and it names the unit that introduced the problem, found with `kompass-find`.
 - **A required check red on main is a defect unit at once,** first in the current sequence, so the runner builds it next; a unit that fails on the same check depends on it (Tertia, 13–14 Nov 2026: main was red on Trivy for 35 hours before WU-0889 was written).
 - **A follow-up from a hand-over becomes a unit** when it is real work.

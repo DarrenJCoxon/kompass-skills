@@ -41,7 +41,7 @@ _Written with the hand-over: everything the operator needs to test this sequence
 - How to start it: open a new Claude Code chat in the project on your computer and paste this:
 
   ```
-  Prepare the S-NN walkthrough for me. Pull the latest main first (save any uncommitted work on a backup branch, never discard it). Then follow "Before you start" in docs/kompass/sequences/<this file> exactly: <the fresh data folder, the seed and account commands, the prepared files, how to start the app>. When it's running, tell me the address and where the passwords are, then walk me through part 1.
+  Prepare the S-NN walkthrough for me. Pull the latest main first (save any uncommitted work on a backup branch, never discard it). Then follow "Before you start" in docs/kompass/sequences/<this file> exactly: <the fresh data folder, the seed and account commands, the prepared files, how to start the app>. When it's running, tell me the address and where the passwords are, then walk me through part 1. Don't fix anything we find: I report it to the Kompass monitor.
   ```
 - Address to open, and which sample account to use for which part (seeded accounts only, never your own logins).
 - Any data or setting a part needs first.
@@ -66,7 +66,7 @@ For each numbered step: worked, or what you saw instead. Screenshots help.
 
 ## Walkthrough
 
-_Recorded from the operator's feedback after they try it._
+_Kept by the Kompass monitor while the operator tries it, one line per finding: `<finding> → <WU-NNNN, or the answer> → <status>`. Then the operator's feedback, recorded._
 
 ## Log
 

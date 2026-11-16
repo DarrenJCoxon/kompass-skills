@@ -261,3 +261,15 @@ test('a proposed mockup that was not compared with the product is flagged; an ap
   assert.equal(notCompared(old), false);
   assert.equal(notCompared(blank), true);
 });
+
+// Darren, 16 Nov 2026: faults found in a walkthrough were fixed in desktop chats, clashing with the runner. The monitor now
+// writes each fix as a unit in the sequence being walked through, and the runner builds it at once; only the next
+// sequence waits for the walkthrough to be recorded.
+test('a handed-over sequence holds back the next one, but not its own walkthrough fixes', async () => {
+  const { awaitingWalkthrough } = await import('./records.mjs');
+  const sequences = [{ number: 1, status: 'walked-through' }, { number: 2, status: 'handed-over' }, { number: 3, status: 'planned' }];
+  assert.equal(awaitingWalkthrough(sequences), 2);
+  assert.equal(awaitingWalkthrough(sequences, 3), 2);
+  assert.equal(awaitingWalkthrough(sequences, 2), null);
+  assert.equal(awaitingWalkthrough([{ number: 1, status: 'walked-through' }], 2), null);
+});
