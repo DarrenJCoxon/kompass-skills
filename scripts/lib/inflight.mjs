@@ -208,10 +208,21 @@ export function nextIds(p, opts = {}) {
       if (existsSync(join(tree, dir))) names.push(...readdirSync(join(tree, dir)));
     }
   }
-  const next = (kind, width) => {
-    const nums = names.map((n) => n.match(new RegExp(`^${kind}-(\\d+)`))?.[1]).filter(Boolean);
-    const top = Math.max(0, ...nums.map(Number));
-    return (n) => `${kind}-${String(top + n).padStart(Math.max(width, ...nums.map((x) => x.length)), '0')}`;
-  };
-  return { D: next('D', 3), WU: next('WU', 4) };
+  return { D: nextId(names, 'D', 3), WU: nextId(names, 'WU', 4) };
+}
+
+// The highest id of a kind among file or branch names, as a function giving the nth id after it. A loop, not
+// Math.max(...names): main, every branch and every worktree list tens of thousands of names, more arguments
+// than a call can take (next-id.mjs crashed on Tertia, 20 Nov 2026).
+export function nextId(names, kind, width) {
+  const re = new RegExp(`^${kind}-(\\d+)`);
+  let top = 0;
+  let digits = width;
+  for (const name of names) {
+    const m = re.exec(name);
+    if (!m) continue;
+    top = Math.max(top, Number(m[1]));
+    digits = Math.max(digits, m[1].length);
+  }
+  return (n) => `${kind}-${String(top + n).padStart(digits, '0')}`;
 }
