@@ -40,3 +40,13 @@ test('the project records never hold a unit back: they merge on their merits', (
   const other = { owns: ['docs/kompass/modules.md'], changed: ['docs/kompass/modules.md', 'src/surfaces/brand.tsx'] };
   assert.deepEqual(landingShares(['docs/kompass/modules.md', '.github/workflows/ci.yml'], other), []);
 });
+
+// Tertia, 20 Nov 2026: next-id.mjs crashed with "Maximum call stack size exceeded" once main, every open branch
+// and every worktree listed their units: Math.max(...names) spread tens of thousands of names as arguments.
+test('the next id is found from more names than a spread can take', async () => {
+  const { nextId } = await import('./inflight.mjs');
+  const names = Array.from({ length: 300000 }, (_, i) => `WU-${String((i % 1027) + 1).padStart(4, '0')}-x.md`);
+  assert.equal(nextId(names, 'WU', 4)(1), 'WU-1028');
+  assert.equal(nextId(['D-007-a.md', 'D-1200-b.md'], 'D', 3)(2), 'D-1202');
+  assert.equal(nextId([], 'D', 3)(1), 'D-001');
+});
