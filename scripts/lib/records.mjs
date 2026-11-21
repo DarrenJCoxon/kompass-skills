@@ -1,7 +1,7 @@
 // Reads a project's Kompass records (docs/kompass) from the working tree or from a git ref.
 // Shared by render-plan, next-unit and run so every script sees the records the same way.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 
 /** dropped: decided against, or folded into another unit (its log says which); settled like delivered, never built. */
@@ -35,32 +35,76 @@ export function sections(body) {
   return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.join('\n').trim()]));
 }
 
-/** A file source over the working tree, or over `ref` (e.g. origin/main) via git show. */
+/** Reads multiple git blobs in a single `git cat-file --batch` call, avoiding O(N) git subprocesses. */
+function batchRead(root, entries) {
+  if (!entries.length) return [];
+  const input = entries.map((e) => `${e.oid}\n`).join('');
+  let buf;
+  try {
+    buf = execFileSync('git', ['cat-file', '--batch'], { cwd: root, input, stdio: ['pipe', 'pipe', 'ignore'], maxBuffer: 128 << 20 });
+  } catch {
+    return [];
+  }
+  const out = [];
+  let offset = 0;
+  for (const e of entries) {
+    const nl = buf.indexOf(0x0a, offset);
+    if (nl < 0) break;
+    const header = buf.subarray(offset, nl).toString('utf8');
+    offset = nl + 1;
+    if (header.endsWith(' missing')) continue;
+    const size = Number(header.split(' ')[2]);
+    if (!Number.isFinite(size)) break;
+    out.push({ file: e.file, text: buf.subarray(offset, offset + size).toString('utf8') });
+    offset += size + 1; // trailing LF after each object
+  }
+  return out;
+}
+
+/** A file source over the working tree, or over `ref` (e.g. origin/main) via git cat-file --batch / git show. */
 export function source(dir, ref) {
-  const abs = resolve(dir);
+  const resolved = resolve(dir);
+  const abs = existsSync(resolved) ? realpathSync(resolved) : resolved;
   if (!ref) {
+    const list = (sub) => (existsSync(join(abs, sub)) ? readdirSync(join(abs, sub)).sort() : []);
+    const read = (path) => (existsSync(join(abs, path)) ? readFileSync(join(abs, path), 'utf8') : null);
     return {
-      list: (sub) => (existsSync(join(abs, sub)) ? readdirSync(join(abs, sub)).sort() : []),
-      read: (path) => (existsSync(join(abs, path)) ? readFileSync(join(abs, path), 'utf8') : null),
+      list,
+      read,
+      readAll: (sub, filter = () => true) => list(sub).filter(filter).map((file) => ({ file, text: read(`${sub}/${file}`) })).filter((x) => x.text !== null),
     };
   }
   const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: abs, encoding: 'utf8' }).trim();
-  const prefix = relative(root, abs);
+  const prefix = relative(existsSync(root) ? realpathSync(root) : root, abs);
   const git = (args) => {
-    try { return execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); }
+    try { return execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 << 20 }); }
     catch { return null; }
+  };
+  const listEntries = (sub) => {
+    const raw = git(['ls-tree', `${ref}:${join(prefix, sub)}`]) ?? '';
+    return raw.split('\n').filter(Boolean).map((line) => {
+      const tab = line.indexOf('\t');
+      if (tab < 0) return null;
+      const parts = line.slice(0, tab).split(' ');
+      if (parts[1] !== 'blob') return null;
+      return { oid: parts[2], file: line.slice(tab + 1) };
+    }).filter(Boolean).sort((a, b) => a.file.localeCompare(b.file));
   };
   return {
     list: (sub) => (git(['ls-tree', '--name-only', `${ref}:${join(prefix, sub)}`]) ?? '').split('\n').filter(Boolean).sort(),
     read: (path) => git(['show', `${ref}:${join(prefix, path)}`]),
+    readAll: (sub, filter = () => true) => batchRead(root, listEntries(sub).filter((e) => filter(e.file))),
   };
 }
 
+const loadAll = (src, sub, filter) =>
+  typeof src.readAll === 'function'
+    ? src.readAll(sub, filter)
+    : src.list(sub).filter(filter).map((file) => ({ file, text: src.read(`${sub}/${file}`) })).filter((x) => x.text !== null);
+
 export function readUnits(src) {
-  return src.list('units')
-    .filter((f) => /^WU-\d+.*\.md$/.test(f))
-    .map((file) => {
-      const text = src.read(`units/${file}`);
+  return loadAll(src, 'units', (f) => /^WU-\d+.*\.md$/.test(f))
+    .map(({ file, text }) => {
       const { data, body } = parseFrontMatter(text);
       return {
         file,
@@ -85,10 +129,9 @@ export function readUnits(src) {
 }
 
 export function readDecisions(src) {
-  return src.list('decisions')
-    .filter((f) => f.endsWith('.md'))
-    .map((file) => {
-      const { data, body } = parseFrontMatter(src.read(`decisions/${file}`));
+  return loadAll(src, 'decisions', (f) => f.endsWith('.md'))
+    .map(({ file, text }) => {
+      const { data, body } = parseFrontMatter(text);
       return { file, id: data.id || file.replace(/\.md$/, ''), title: data.title || file, date: data.date || '', status: data.status || '', mockup: data.mockup || '', body, sections: sections(body) };
     })
     .sort((a, b) => a.id.localeCompare(b.id, 'en', { numeric: true }));
@@ -108,10 +151,8 @@ export function readModules(src) {
 }
 
 export function readMockups(src) {
-  return src.list('mockups')
-    .filter((f) => f.endsWith('.html'))
-    .map((file) => {
-      const html = src.read(`mockups/${file}`);
+  return loadAll(src, 'mockups', (f) => f.endsWith('.html'))
+    .map(({ file, text: html }) => {
       const meta = (name) => html.match(new RegExp(`<meta\\s+name="kompass:${name}"\\s+content="([^"]*)"`, 'i'))?.[1] ?? '';
       return { file, title: html.match(/<title>([^<]*)<\/title>/i)?.[1] ?? file, decision: meta('decision'), status: meta('status') || 'proposed', chosen: meta('chosen'), summary: meta('summary'), compared: meta('compared') };
     });
@@ -148,10 +189,9 @@ const conflicts = (a, b) => runsAlone(a) || runsAlone(b) || overlaps(a.owns, b.o
 
 /** Sequences from sequences/S-NN-….md: a run of units that ends in a walkthrough and a written hand-over. */
 export function readSequences(src) {
-  return src.list('sequences')
-    .filter((f) => /^S-\d+.*\.md$/.test(f))
-    .map((file) => {
-      const { data, body } = parseFrontMatter(src.read(`sequences/${file}`));
+  return loadAll(src, 'sequences', (f) => /^S-\d+.*\.md$/.test(f))
+    .map(({ file, text }) => {
+      const { data, body } = parseFrontMatter(text);
       return { file, id: data.id || file.match(/^(S-\d+)/)[1], number: Number(data.sequence) || Number(file.match(/^S-(\d+)/)[1]), title: data.title || file, status: data.status || 'planned', date: data.date || '', body, sections: sections(body) };
     })
     .sort((a, b) => a.number - b.number);

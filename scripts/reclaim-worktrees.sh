@@ -16,8 +16,12 @@ main_tree=$(cd "$common/.." && pwd -P)
 [ -d "$main_tree/docs/kompass" ] || [ "${KOMPASS_RECLAIM_ANY:-}" = 1 ] || exit 0   # Kompass projects only
 here=$(git rev-parse --show-toplevel 2>/dev/null && true)
 here=$(cd "$here" 2>/dev/null && pwd -P)
-git -C "$main_tree" fetch --quiet origin main 2>/dev/null || { echo "Kompass: could not reach GitHub; no worktrees removed."; exit 0; }
+if [ "${KOMPASS_NO_FETCH:-0}" != "1" ]; then
+  git -C "$main_tree" fetch --quiet origin main 2>/dev/null || { echo "Kompass: could not reach GitHub; no worktrees removed."; exit 0; }
+fi
 
+prune_idle_hours="${KOMPASS_PRUNE_IDLE_HOURS:-0}"
+pruned=0
 removed=0; kept=()
 while IFS= read -r line; do
   case "$line" in
@@ -39,6 +43,19 @@ while IFS= read -r line; do
         else
           kept+=("$real (git refused to remove it)")
         fi
+      elif [ "$prune_idle_hours" -gt 0 ] 2>/dev/null; then
+        # Prune regenerable build/install caches in idle unmerged worktrees without touching git or source files.
+        last_commit=$(git -C "$real" log -1 --format=%ct 2>/dev/null || echo 0)
+        now_s=$(date +%s)
+        age_h=$(( (now_s - last_commit) / 3600 ))
+        if [ "$age_h" -ge "$prune_idle_hours" ]; then
+          for cache_dir in "$real/node_modules" "$real/.next"; do
+            if [ -d "$cache_dir" ]; then
+              if [ "$dry" = 1 ]; then echo "would prune cache: $cache_dir"; else rm -rf "$cache_dir"; fi
+              pruned=$((pruned+1))
+            fi
+          done
+        fi
       fi
       path="" ;;
   esac
@@ -46,5 +63,6 @@ done < <(git -C "$main_tree" worktree list --porcelain; echo)
 
 [ "$dry" = 1 ] || git -C "$main_tree" worktree prune
 [ "$removed" -gt 0 ] && echo "Kompass: $([ "$dry" = 1 ] && echo "would remove" || echo "removed") $removed merged worktree(s)."
+[ "$pruned" -gt 0 ] && echo "Kompass: $([ "$dry" = 1 ] && echo "would prune" || echo "pruned") $pruned idle worktree cache dir(s)."
 for k in ${kept[@]+"${kept[@]}"}; do echo "Kompass: kept $k. Save anything needed from it, then it can go."; done
 exit 0

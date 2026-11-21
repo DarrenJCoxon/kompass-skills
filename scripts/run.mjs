@@ -30,7 +30,18 @@ const deadline = Date.now() + hours * 3600_000;
 const active = new Map(); // id -> child process
 const sessionSlots = slots(); // each running unit session gets its own slot, and so its own browser-test ports
 const attempts = new Map();
+const rebases = new Map();
 const skipped = new Set();
+
+/** Returns the draft PR number if the lander bounced `unitId` back to draft solely for merge conflicts. */
+function conflictDraftPr(unitId) {
+  try {
+    const out = execFileSync('gh', ['pr', 'list', '--state', 'open', '--json', 'number,headRefName,isDraft,comments', '--limit', '200'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    const pr = JSON.parse(out).find((p) => p.isDraft && p.headRefName?.startsWith(`kompass/${unitId}`));
+    const last = pr?.comments?.at(-1)?.body ?? '';
+    return /^Kompass lander: not landing this \(conflicts with main\b/.test(last) ? pr.number : null;
+  } catch { return null; }
+}
 // With the lander running (start.sh sets KOMPASS_LANDER=1), a session ends once its pull request is handed over,
 // before it merges. Units that depend on it become ready only when it lands, so the run looks again every minute
 // while unit pull requests are open (every --lander-poll seconds), for at most --lander-wait hours (2) with nothing
@@ -68,18 +79,30 @@ function startNext(open = openUnitIds(root)) {
   const unit = nextUnit(units, inProgress, [...active.keys()]); // skipped and open-PR units are not picked, but only running sessions hold others back
   if (!unit || unit.sequence !== sequence) return false;
   // A unit can come back after its session ended with a pull request open: the lander puts it back to draft when
-  // its checks fail, it conflicts or it sticks. It is resumed as a retry, never more than --attempts sessions.
-  if ((attempts.get(unit.id) ?? 0) >= maxAttempts) {
+  // its checks fail, it conflicts or it sticks. A pure merge conflict gets a lightweight Sonnet rebase without
+  // spending a full Opus attempt (capped at 2 rebases per unit); other retries count against --attempts.
+  const conflictPr = lander ? conflictDraftPr(unit.id) : null;
+  const isRebase = conflictPr !== null && (rebases.get(unit.id) ?? 0) < 2;
+  if (!isRebase && (attempts.get(unit.id) ?? 0) >= maxAttempts) {
     skipped.add(unit.id);
     log(`skip ${unit.id}: not delivered after ${maxAttempts} sessions; needs a look`);
     return startNext(open);
   }
-  attempts.set(unit.id, (attempts.get(unit.id) ?? 0) + 1);
-  log(`start ${unit.id} (attempt ${attempts.get(unit.id)}): ${unit.title}`);
+  if (isRebase) {
+    rebases.set(unit.id, (rebases.get(unit.id) ?? 0) + 1);
+    log(`rebase ${unit.id} (PR #${conflictPr}, sonnet): ${unit.title}`);
+  } else {
+    attempts.set(unit.id, (attempts.get(unit.id) ?? 0) + 1);
+    log(`start ${unit.id} (attempt ${attempts.get(unit.id)}): ${unit.title}`);
+  }
   // The session starts in this checkout, so bring it to main first: a stale copy once made a session ask for a decision already made (WU-0159).
   try { const said = execFileSync('bash', [join(here, 'sync-main.sh')], { cwd: root, encoding: 'utf8' }).trim(); if (said && !said.includes('on the latest main')) log(said); } catch (e) { log(`main sync failed: ${e.message}`); }
   const slot = sessionSlots.take();
-  const child = startSession(claude, ['-p', `/kompass-build ${unit.id}`, '--model', model, '--permission-mode', 'bypassPermissions'], { cwd: root, env: slotEnv(slot) });
+  const prompt = isRebase
+    ? `Resolve merge conflicts with origin/main for ${unit.id} (PR #${conflictPr}). Run node ${join(here, 'prepare-unit.mjs')} ${dir} ${unit.id} to open its worktree, merge origin/main, resolve each conflicted file cleanly (keep both sides of protected-checks/lock files, never hand-merge screenshots), run node ${join(here, 'preflight-check.mjs')} and the unit's proving tests, commit, push, confirm headRefOid matches, mark PR #${conflictPr} ready (gh pr ready ${conflictPr}), and remove the worktree. Do not change unrelated code.`
+    : `/kompass-build ${unit.id}`;
+  const sessionModel = isRebase ? 'sonnet' : model;
+  const child = startSession(claude, ['-p', prompt, '--model', sessionModel, '--permission-mode', 'bypassPermissions'], { cwd: root, env: slotEnv(slot) });
   active.set(unit.id, child);
   child.on('ended', (code) => {
     active.delete(unit.id);

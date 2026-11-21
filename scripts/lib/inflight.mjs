@@ -38,8 +38,10 @@ function openPulls(root) {
 }
 
 /** Every head another builder may be working on, fetched now: remote kompass/* branches and open pull request heads. */
-export function heads(p, { fetch = true, gh = true } = {}) {
-  const pulls = gh ? openPulls(p.root) : [];
+export function heads(p, { fetch = true, gh = true, pulls: preloaded = undefined } = {}) {
+  const pulls = preloaded !== undefined
+    ? preloaded.map((x) => ({ number: x.number, branch: x.headRefName ?? x.branch, draft: !!x.isDraft || !!x.draft, building: x.building ?? /: building$/.test(x.title ?? '') }))
+    : (gh ? openPulls(p.root) : []);
   if (fetch) {
     p.git(['fetch', '--quiet', '--prune', 'origin', '+refs/heads/main:refs/remotes/origin/main', '+refs/heads/kompass/*:refs/remotes/origin/kompass/*']);
     const spec = (x) => `+refs/pull/${x.number}/head:refs/kompass/pull/${x.number}`;
@@ -87,8 +89,8 @@ function unitOf(p, ref, branch, changed) {
  * A draft pull request with no new commit for `idleHours` (and not yet stale) is marked idle: listed, but it holds
  * nothing back. It can't land as it stands, and its unit merges main when it resumes (WU-0179 waited on WU-0227's
  * quiet draft; Tertia, 13 Nov 2026: WU-0804's draft, sent back for conflicts, held WU-0850 back for hours). */
-export function inFlight(p, { fetch = true, gh = true, staleHours = 24, idleHours = 2, now = Date.now() } = {}) {
-  const { list: all, pullsChecked } = heads(p, { fetch, gh });
+export function inFlight(p, { fetch = true, gh = true, pulls = undefined, staleHours = 24, idleHours = 2, now = Date.now() } = {}) {
+  const { list: all, pullsChecked } = heads(p, { fetch, gh, pulls });
   const units = [];
   for (const h of all) {
     if (p.git(['merge-base', '--is-ancestor', h.ref, 'refs/remotes/origin/main']) !== null) continue;

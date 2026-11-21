@@ -27,7 +27,8 @@ export function look(p, now) {
   if (!Array.isArray(pulls)) return null;
   const runs = json(gh(p.root, ['api', 'repos/{owner}/{repo}/actions/runs?per_page=100']), null)?.workflow_runs ?? [];
   const merged = json(gh(p.root, ['pr', 'list', '--state', 'merged', '--json', 'number,title,mergedAt,createdAt', '--limit', '50']), []);
-  const { units, pullsChecked } = inFlight(p, { now });
+  if (!pulls.length) return { pulls, runs, merged: Array.isArray(merged) ? merged : [], units: [], pullsChecked: true, refused: new Set() };
+  const { units, pullsChecked } = inFlight(p, { now, pulls });
   const heads = new Set(pulls.filter((pr) => !pr.isDraft).map((pr) => pr.headRefOid));
   const refused = new Set(runs.filter((r) => heads.has(r.head_sha) && r.conclusion === 'failure' && draftRefusal(p, r.id)).map((r) => r.id));
   return { pulls, runs, merged: Array.isArray(merged) ? merged : [], units, pullsChecked, refused };
