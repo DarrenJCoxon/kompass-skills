@@ -3,7 +3,7 @@
 // Reads unit status from origin/main after each unit, so it only ever sees merged state.
 // A run builds one sequence. When every unit in it is delivered or parked, a fresh session writes the
 // sequence hand-over for the walkthrough, and the run stops; the next sequence starts after the walkthrough.
-// usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 2] [--model opus] [--claude claude] [--lander-wait 2] [--lander-poll 60]
+// usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 2] [--engine claude|agy] [--model opus] [--rebase-model sonnet] [--claude claude] [--agy agy] [--lander-wait 2] [--lander-poll 60]
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -20,8 +20,20 @@ const opt = (name, fallback) => { const i = args.indexOf(name); return i < 0 ? f
 const hours = Number(opt('--hours', 8));
 const parallel = Math.max(1, Number(opt('--parallel', 1)));
 const maxAttempts = Number(opt('--attempts', 2));
+const engine = opt('--engine', process.env.KOMPASS_ENGINE || 'claude');
 const claude = opt('--claude', 'claude');
-const model = opt('--model', 'opus'); // the coordinator; builder, searcher and reviewer models come from their agent files
+const agyBin = opt('--agy', 'agy');
+const defaultModel = engine === 'agy' ? (process.env.KOMPASS_MODEL || '') : (process.env.KOMPASS_MODEL || 'opus');
+const model = opt('--model', defaultModel); // the coordinator; builder, searcher and reviewer models come from their agent files
+const rebaseModel = opt('--rebase-model', engine === 'agy' ? (process.env.KOMPASS_REBASE_MODEL || '') : (process.env.KOMPASS_REBASE_MODEL || 'sonnet'));
+
+function sessionCmd(prompt, sessionModel) {
+  if (engine === 'agy') {
+    const argv = ['-p', prompt, ...(sessionModel ? ['--model', sessionModel] : []), '--dangerously-skip-permissions'];
+    return { bin: agyBin, argv };
+  }
+  return { bin: claude, argv: ['-p', prompt, '--model', sessionModel, '--permission-mode', 'bypassPermissions'] };
+}
 
 const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: dir, encoding: 'utf8' }).trim();
 const log = runLog(root);
@@ -65,7 +77,8 @@ function handOver() {
   const written = readSequences(source(dir, 'origin/main')).some((s) => s.number === sequence && s.status === 'handed-over');
   if (!done || written) return finish(done ? `sequence ${sequence} already handed over` : `sequence ${sequence} not complete: ${stalled(units, sequence) || 'no unit is ready'}`);
   log(`hand over sequence ${sequence}`);
-  const child = startSession(claude, ['-p', `/kompass-run hand over sequence ${sequence}`, '--model', model, '--permission-mode', 'bypassPermissions'], { cwd: root });
+  const { bin, argv } = sessionCmd(`/kompass-run hand over sequence ${sequence}`, model);
+  const child = startSession(bin, argv, { cwd: root });
   child.on('ended', (code) => finish(`sequence ${sequence} hand-over session exit ${code}`));
 }
 
@@ -101,8 +114,9 @@ function startNext(open = openUnitIds(root)) {
   const prompt = isRebase
     ? `Resolve merge conflicts with origin/main for ${unit.id} (PR #${conflictPr}). Run node ${join(here, 'prepare-unit.mjs')} ${dir} ${unit.id} to open its worktree, merge origin/main, resolve each conflicted file cleanly (keep both sides of protected-checks/lock files, never hand-merge screenshots), run node ${join(here, 'preflight-check.mjs')} and the unit's proving tests, commit, push, confirm headRefOid matches, mark PR #${conflictPr} ready (gh pr ready ${conflictPr}), and remove the worktree. Do not change unrelated code.`
     : `/kompass-build ${unit.id}`;
-  const sessionModel = isRebase ? 'sonnet' : model;
-  const child = startSession(claude, ['-p', prompt, '--model', sessionModel, '--permission-mode', 'bypassPermissions'], { cwd: root, env: slotEnv(slot) });
+  const sessionModel = isRebase ? rebaseModel : model;
+  const { bin, argv } = sessionCmd(prompt, sessionModel);
+  const child = startSession(bin, argv, { cwd: root, env: slotEnv(slot) });
   active.set(unit.id, child);
   child.on('ended', (code) => {
     active.delete(unit.id);
