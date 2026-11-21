@@ -16,9 +16,10 @@ fi
 # It is not committed: as a generated file it made most merge conflicts (Tertia, 27 Oct 2026).
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # A project still tracking plan.html is left alone, or the new page would show as an uncommitted change.
-page() { [ -d docs/kompass ] && ! git ls-files --error-unmatch docs/kompass/plan.html >/dev/null 2>&1 && node "$here/render-plan.mjs" docs/kompass >/dev/null 2>&1 && echo "Kompass: planning page made locally at docs/kompass/plan.html (not committed)."; }
+# On headless runners (KOMPASS_HEADLESS=1) nobody opens plan.html, so skip rebuilding it on every unit start.
+page() { [ "${KOMPASS_HEADLESS:-0}" = "1" ] && return 0; [ -d docs/kompass ] && ! git ls-files --error-unmatch docs/kompass/plan.html >/dev/null 2>&1 && node "$here/render-plan.mjs" docs/kompass >/dev/null 2>&1 && echo "Kompass: planning page made locally at docs/kompass/plan.html (not committed)."; }
 trap page EXIT
-if [ ! -d docs/kompass ]; then :
+if [ ! -d docs/kompass ] || [ "${KOMPASS_NO_FETCH:-0}" = "1" ]; then :
 else
   # A network blip at session start left the copy unchecked (Tertia, 2 Nov 2026), so try three times before giving up.
   fetched=""

@@ -19,12 +19,25 @@ set -uo pipefail
 
 pr="${1:?usage: merge-when-green.sh <pull request number>}"
 # Every look costs three GitHub requests, and every session, the lander and the monitor share one account's
-# 5,000 an hour: at 30 s, five units waiting at once spent it twice running (Tertia, 12 Nov 2026), so look every 2 minutes.
-poll="${MWG_POLL:-120}"         # seconds between looks
+# 5,000 an hour: at 30 s, five units waiting at once spent it twice running (Tertia, 12 Nov 2026), so steady-state
+# polling caps at 2 minutes, while fresh actions (arming auto-merge, marking ready, updating branch) back off
+# 15 -> 30 -> 60 -> 120 s so an already-green pull request clears the landing queue in seconds.
+poll="${MWG_POLL:-120}"         # maximum seconds between looks (0 in tests)
 if [ "$poll" -gt 0 ]; then def_stuck=$(( (180 + poll - 1) / poll )) def_max=$(( 7200 / poll )); else def_stuck=6 def_max=240; fi
 stuck_polls="${MWG_STUCK_POLLS:-$def_stuck}" # looks while green and ready before acting (about 3 minutes)
 max_polls="${MWG_MAX_POLLS:-$def_max}"       # give up after this many looks (2 hours)
 say() { echo "merge-when-green #$pr: $*"; }
+wait_step=0
+nap() {
+  if [ "$poll" -le 0 ]; then return 0; fi
+  local steps=(15 30 60 "$poll")
+  local idx=$wait_step
+  [ "$idx" -ge "${#steps[@]}" ] && idx=$(( ${#steps[@]} - 1 ))
+  local secs="${steps[$idx]}"
+  [ "$secs" -gt "$poll" ] && secs="$poll"
+  wait_step=$((wait_step + 1))
+  sleep "$secs"
+}
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 top=$(git rev-parse --show-toplevel 2>/dev/null)
@@ -57,7 +70,7 @@ for ((i = 0; i < max_polls; i++)); do
   esac
   if [ "$draft" = draft ]; then
     gh pr ready "$pr" >/dev/null 2>&1 || { say "a draft that could not be marked ready; needs a person"; exit 3; }
-    say "draft marked ready for review"; sleep "$poll"; continue
+    say "draft marked ready for review"; wait_step=0; nap; continue
   fi
   # GitHub counts a skipped required check as passing (Tertia WU-0165, #221, merged with CI never run), so a
   # skipped check never turns auto-merge on, turns it off if it was on, and stops after the wait.
@@ -65,11 +78,11 @@ for ((i = 0; i < max_polls; i++)); do
     if [ "$armed" = 1 ]; then gh pr merge "$pr" --disable-auto >/dev/null 2>&1; armed=0; say "checks skipped on the head commit; auto-merge turned off"; fi
     if [ "$waited" -lt "$stuck_polls" ]; then
       [ "$waited" = 0 ] && say "waiting for CI to start on the ready pull request"
-      waited=$((waited + 1)); sleep "$poll"; continue
+      waited=$((waited + 1)); nap; continue
     fi
     say "CI skipped its checks on the head commit, and a skipped check is never taken as passing. Make CI run (mark it ready, or push), then run this again"; exit 3
   fi
-  if [ "$armed" = 0 ]; then gh pr merge "$pr" --auto --merge --delete-branch >/dev/null 2>&1 || true; armed=1; fi
+  if [ "$armed" = 0 ]; then gh pr merge "$pr" --auto --merge --delete-branch >/dev/null 2>&1 || true; armed=1; wait_step=0; fi
   if [ "$checks" = failed ] && [ "$merge" != CLEAN ]; then say "checks failed; fix the cause"; exit 2; fi
   # DIRTY twice in a row (GitHub briefly reports UNKNOWN while it works a merge out): stop and name the files.
   if [ "$merge" = DIRTY ]; then dirty=$((dirty + 1)); else dirty=0; fi
@@ -77,15 +90,15 @@ for ((i = 0; i < max_polls; i++)); do
     files=$(git fetch -q origin main "$head" 2>/dev/null && git merge-tree --write-tree --name-only --no-messages origin/main "origin/$head" 2>/dev/null | tail -n +2 | tr '\n' ' ')
     say "conflicts with main${files:+ in: $files}. Merge origin/main into the branch, resolve each file (a generated file is made again, never hand-merged), run the checks, push, then run this again"; exit 5
   fi
-  if [ "$merge" = BEHIND ]; then gh pr update-branch "$pr" >/dev/null 2>&1 && say "brought up to date with main"; green=0
+  if [ "$merge" = BEHIND ]; then gh pr update-branch "$pr" >/dev/null 2>&1 && say "brought up to date with main"; green=0; wait_step=0
   elif [ "$merge" = CLEAN ]; then green=$((green + 1))
   else green=0; fi
   if [ "$rearmed" = 0 ] && [ "$green" -ge "$stuck_polls" ]; then
     gh pr merge "$pr" --disable-auto >/dev/null 2>&1; gh pr merge "$pr" --auto --merge --delete-branch >/dev/null 2>&1
-    say "green and ready but not merging; re-armed auto-merge"; rearmed=1 green=0
+    say "green and ready but not merging; re-armed auto-merge"; rearmed=1 green=0; wait_step=0
   elif [ "$rearmed" = 1 ] && [ "$green" -ge $((stuck_polls * 2)) ]; then
     say "stuck: green and ready, auto-merge re-armed, still not merging; needs a person (never merged directly)"; exit 3
   fi
-  sleep "$poll"
+  nap
 done
 say "not merged after $max_polls looks"; exit 4

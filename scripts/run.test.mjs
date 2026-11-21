@@ -59,7 +59,7 @@ test('a free slot is filled when a unit becomes ready while another is still run
   // WU-0001's session runs 4 s; after 1 s WU-0003 lands on main (as another merge would), readying WU-0002.
   // Each session then marks its own unit delivered on main, so the run ends.
   put(join(bin, 'deliver.sh'), `#!/bin/sh
-cd ${seed} && git pull -q origin main && sed -i 's/^status: waiting$/status: delivered/' docs/kompass/units/$1-*.md && git commit -qam "$1" && git push -q origin main
+cd ${seed} && git pull -q origin main && node -e 'const fs=require("fs"); for(const f of process.argv.slice(1)) fs.writeFileSync(f, fs.readFileSync(f,"utf8").replace(/^status: waiting$/m,"status: delivered"));' docs/kompass/units/$1-*.md && git commit -qam "$1" && git push -q origin main
 `, 0o755);
   put(join(bin, 'claude'), `#!/bin/sh
 unit=$(echo "$*" | grep -o 'WU-[0-9]*' | head -1)
@@ -95,8 +95,8 @@ unit=$(echo "$*" | grep -o 'WU-[0-9]*' | head -1)
 n=$(cat ${join(dir, 'n')}-$unit 2>/dev/null || echo 0); n=$((n+1)); echo $n > ${join(dir, 'n')}-$unit
 cd ${seed} && git pull -q origin main
 if [ "$unit" = WU-0001 ] && [ $n = 1 ]; then exit 0; fi
-if [ "$unit" = WU-0001 ] && [ $n = 2 ]; then sed -i 's/^owns: /depends: [WU-0002]\\nowns: /' docs/kompass/units/WU-0001-*.md
-else sed -i 's/^status: waiting$/status: delivered/' docs/kompass/units/$unit-*.md; fi
+if [ "$unit" = WU-0001 ] && [ $n = 2 ]; then node -e 'const fs=require("fs"); for(const f of process.argv.slice(1)) fs.writeFileSync(f, fs.readFileSync(f,"utf8").replace(/^owns: /m,"depends: [WU-0002]\\nowns: "));' docs/kompass/units/WU-0001-*.md
+else node -e 'const fs=require("fs"); for(const f of process.argv.slice(1)) fs.writeFileSync(f, fs.readFileSync(f,"utf8").replace(/^status: waiting$/m,"status: delivered"));' docs/kompass/units/$unit-*.md; fi
 git commit -qam "$unit $n" && git push -q origin main
 `, 0o755);
   put(join(bin, 'gh'), '#!/bin/sh\necho "[]"\n', 0o755);
@@ -124,7 +124,7 @@ test('a fix unit added to a handed-over sequence is built, and the hand-over is 
   sh(dir, `git clone -q ${origin} ${seed}`);
   put(join(bin, 'claude'), `#!/bin/sh
 echo "$*" >> ${join(dir, 'calls')}
-cd ${seed} && git pull -q origin main && sed -i 's/^status: waiting$/status: delivered/' docs/kompass/units/WU-0002-*.md && git commit -qam fix && git push -q origin main
+cd ${seed} && git pull -q origin main && node -e 'const fs=require("fs"); for(const f of process.argv.slice(1)) fs.writeFileSync(f, fs.readFileSync(f,"utf8").replace(/^status: waiting$/m,"status: delivered"));' docs/kompass/units/WU-0002-*.md && git commit -qam fix && git push -q origin main
 `, 0o755);
   put(join(bin, 'gh'), '#!/bin/sh\necho "[]"\n', 0o755);
   const r = spawnSync('node', [join(here, 'run.mjs'), join(root, 'docs/kompass'), '--claude', join(bin, 'claude')], { cwd: root, encoding: 'utf8', timeout: 60_000, env: { ...process.env, ...who, PATH: `${bin}:${process.env.PATH}` } });

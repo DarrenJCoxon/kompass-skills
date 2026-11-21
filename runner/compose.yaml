@@ -22,10 +22,22 @@ services:
       # Helpers keep Claude Code's 5-minute prompt cache. A 1-hour cache for them (CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL=1h)
       # was priced on tertia's 26-29 Oct helpers: its dearer writes cost about what it saved. Helpers wait in steps of
       # at most 4 minutes instead (agents/*.md), so their cache doesn't lapse during test runs.
+      # Headless runner: skip regenerating plan.html on every sync, and prune idle worktree caches older than 24 h.
+      KOMPASS_HEADLESS: "1"
+      KOMPASS_PRUNE_IDLE_HOURS: "24"
+      # Shared package caches on /work so worktrees hard-link from one store and survive container rebuilds.
+      npm_config_cache: /work/.cache/npm
+      npm_config_store_dir: /work/.cache/pnpm-store
+      COREPACK_HOME: /work/.cache/corepack
+      YARN_CACHE_FOLDER: /work/.cache/yarn
+      TURBO_CACHE_DIR: /work/.cache/turbo
+      NODE_OPTIONS: "--max-old-space-size=2048"
     restart: "no"
     # CI comes first (runner/compose.test.sh): the runner may use every free CPU, but when CI's jobs (weight 1024) want the
     # CPUs too they get four times its share, so a Pictures job's dev server is not starved by the runner's own test suites.
     cpu_shares: 256
+    mem_limit: ${RUNNER_MEM_LIMIT:-8g}
+    pids_limit: 512
     volumes:
       - work:/work
       - claude-state:/home/kompass/.claude/projects

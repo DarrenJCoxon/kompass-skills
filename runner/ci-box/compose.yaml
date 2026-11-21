@@ -13,6 +13,7 @@ services:
     image: docker:29-dind
     privileged: true
     restart: unless-stopped
+    mem_limit: ${DIND_MEM_LIMIT:-10g}
     environment:
       DOCKER_TLS_CERTDIR: ""
     command: ["--tls=false"]
