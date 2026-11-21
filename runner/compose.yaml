@@ -41,6 +41,8 @@ services:
     volumes:
       - work:/work
       - claude-state:/home/kompass/.claude/projects
+      # Antigravity CLI (agy) Google AI Ultra subscription auth/settings (bind-mount host ~/.gemini/antigravity-cli via AGY_AUTH_DIR, or named volume).
+      - ${AGY_AUTH_DIR:-agy-state}:/home/kompass/.gemini/antigravity-cli
       # Playwright's browser, installed once by the first session that needs it and kept across restarts.
       - browsers:/home/kompass/.cache/ms-playwright
 
@@ -49,5 +51,7 @@ volumes:
     name: kompass-work
   claude-state:
     name: kompass-claude-state
+  agy-state:
+    name: kompass-agy-state
   browsers:
     name: kompass-browsers

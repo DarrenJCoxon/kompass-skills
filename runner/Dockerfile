@@ -27,14 +27,18 @@ RUN npm install -g @anthropic-ai/claude-code \
 
 RUN useradd --create-home --shell /bin/bash kompass
 USER kompass
-ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 HOME=/home/kompass
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 HOME=/home/kompass PATH=/home/kompass/.local/bin:$PATH
 
-# Session histories and Playwright's browser live on volumes. Their folders must exist in the image, owned by
+# Antigravity CLI (agy) for Google AI Ultra subscription runs (KOMPASS_ENGINE=agy).
+RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
+
+# Session histories, Antigravity CLI auth/config, and Playwright's browser live on volumes. Their folders must exist in the image, owned by
 # the runner's user, or Docker creates the mount points as root and nothing can be written there.
-RUN mkdir -p /home/kompass/.claude/projects /home/kompass/.cache/ms-playwright
+RUN mkdir -p /home/kompass/.claude/projects /home/kompass/.gemini/antigravity-cli /home/kompass/.gemini/config/skills /home/kompass/.cache/ms-playwright
 
-# The skills and agents, installed for the runner's user so every session finds them.
+# The skills and agents, installed for both Claude Code and Antigravity CLI so every session finds them.
 COPY --chown=kompass:kompass skills /home/kompass/.claude/skills
+COPY --chown=kompass:kompass skills /home/kompass/.gemini/config/skills
 COPY --chown=kompass:kompass agents /home/kompass/.claude/agents
 COPY --chown=kompass:kompass scripts /opt/kompass/scripts
 COPY --chown=kompass:kompass assets /opt/kompass/assets

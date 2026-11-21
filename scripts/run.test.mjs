@@ -134,3 +134,23 @@ cd ${seed} && git pull -q origin main && node -e 'const fs=require("fs"); for(co
   assert.match(log, /run finished: sequence 1 already handed over/);
   assert.doesNotMatch(readFileSync(join(dir, 'calls'), 'utf8'), /hand over/);
 });
+
+test('--engine agy invokes agy in headless print mode with --model and --dangerously-skip-permissions', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'run-agy-'));
+  const origin = join(dir, 'origin.git'), root = join(dir, 'project'), bin = join(dir, 'bin'), seed = join(dir, 'seed');
+  const sh = (cwd, cmd) => execSync(cmd, { cwd, stdio: 'ignore', env: { ...process.env, ...who } });
+  sh(dir, `git init -q --bare -b main ${origin} && git clone -q ${origin} ${root}`);
+  put(join(root, 'docs/kompass/sequences/S-01-a.md'), '---\nid: S-01\nsequence: 1\nstatus: handed-over\n---\n');
+  put(join(root, 'docs/kompass/units/WU-0001-a.md'), '---\nid: WU-0001\ntitle: A\nsequence: 1\nstatus: waiting\nowns: [src/a.ts]\n---\n');
+  sh(root, 'git add -A && git commit -qm main && git push -q origin main');
+  sh(dir, `git clone -q ${origin} ${seed}`);
+  put(join(bin, 'agy'), `#!/bin/sh
+echo "$*" >> ${join(dir, 'agy-calls')}
+cd ${seed} && git pull -q origin main && node -e 'const fs=require("fs"); for(const f of process.argv.slice(1)) fs.writeFileSync(f, fs.readFileSync(f,"utf8").replace(/^status: waiting$/m,"status: delivered"));' docs/kompass/units/WU-0001-*.md && git commit -qam done && git push -q origin main
+`, 0o755);
+  put(join(bin, 'gh'), '#!/bin/sh\necho "[]"\n', 0o755);
+  const r = spawnSync('node', [join(here, 'run.mjs'), join(root, 'docs/kompass'), '--engine', 'agy', '--agy', join(bin, 'agy'), '--model', 'Gemini 4 Neon'], { cwd: root, encoding: 'utf8', timeout: 60_000, env: { ...process.env, ...who, PATH: `${bin}:${process.env.PATH}` } });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const calls = readFileSync(join(dir, 'agy-calls'), 'utf8');
+  assert.match(calls, /-p \/kompass-build WU-0001 --model Gemini 4 Neon --dangerously-skip-permissions/);
+});
