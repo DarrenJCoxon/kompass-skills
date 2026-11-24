@@ -66,3 +66,17 @@ test('a project can add its own ignores and limit', () => {
   assert.equal(run({}, { 'data/seed.json': tokens(9000) }, { ignore: ['data/**'] }).code, 0);
   assert.equal(run({}, { 'src/a.ts': tokens(3000) }, { limit: 2000 }).code, 1);
 });
+
+test('uncommitted working-tree edits over the limit also fail before commit', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'size-check-'));
+  const git = (...a) => execFileSync('git', a, { cwd: dir, stdio: 'pipe' });
+  git('init', '-q', '-b', 'main'); git('config', 'user.email', 't@t'); git('config', 'user.name', 't');
+  mkdirSync(join(dir, 'src'), { recursive: true });
+  writeFileSync(join(dir, 'src/old.ts'), tokens(6000));
+  git('add', '-A'); git('commit', '-qm', 'base'); git('checkout', '-qb', 'unit');
+  writeFileSync(join(dir, 'src/old.ts'), tokens(6050)); // uncommitted growth
+  const r = spawnSync('node', [check, '--base', 'main'], { cwd: dir, encoding: 'utf8' });
+  rmSync(dir, { recursive: true, force: true });
+  assert.equal(r.status, 1);
+  assert.match(r.stdout + r.stderr, /grew from 6,000 to 6,050 tokens/);
+});

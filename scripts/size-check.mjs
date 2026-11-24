@@ -18,8 +18,13 @@ const { limit, skip } = sizeSettings();
 const fmt = (n) => n.toLocaleString('en-GB');
 const sizeAt = (path) => { try { return Number(git('cat-file', '-s', `${base}:${path}`).trim()); } catch { return null; } };
 
+const mergeBase = git('merge-base', base, 'HEAD').trim();
+const entries = [
+  ...git('diff', '--name-status', '-M', mergeBase).split('\n').filter(Boolean),
+  ...git('ls-files', '--others', '--exclude-standard').split('\n').filter(Boolean).map((p) => `A\t${p}`),
+];
 const problems = [];
-for (const line of git('diff', '--name-status', '-M', `${base}...HEAD`).split('\n').filter(Boolean)) {
+for (const line of entries) {
   const [status, a, b] = line.split('\t');
   if (status === 'D') continue;
   const path = b ?? a;

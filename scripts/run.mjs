@@ -3,7 +3,7 @@
 // Reads unit status from origin/main after each unit, so it only ever sees merged state.
 // A run builds one sequence. When every unit in it is delivered or parked, a fresh session writes the
 // sequence hand-over for the walkthrough, and the run stops; the next sequence starts after the walkthrough.
-// usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 2] [--engine claude|agy] [--model opus] [--rebase-model sonnet] [--claude claude] [--agy agy] [--lander-wait 2] [--lander-poll 60]
+// usage: run.mjs <docs/kompass> [--hours 8] [--parallel 1] [--attempts 4] [--engine claude|agy] [--model opus] [--rebase-model sonnet] [--claude claude] [--agy agy] [--lander-wait 2] [--lander-poll 60]
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -19,7 +19,7 @@ const dir = resolve(args.find((a) => !a.startsWith('--')) ?? 'docs/kompass');
 const opt = (name, fallback) => { const i = args.indexOf(name); return i < 0 ? fallback : args[i + 1]; };
 const hours = Number(opt('--hours', 8));
 const parallel = Math.max(1, Number(opt('--parallel', 1)));
-const maxAttempts = Number(opt('--attempts', 2));
+const maxAttempts = Number(opt('--attempts', 4));
 const engine = opt('--engine', process.env.KOMPASS_ENGINE || 'claude');
 const claude = opt('--claude', 'claude');
 const agyBin = opt('--agy', 'agy');

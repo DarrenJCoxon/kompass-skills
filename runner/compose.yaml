@@ -37,7 +37,8 @@ services:
     # CPUs too they get four times its share, so a Pictures job's dev server is not starved by the runner's own test suites.
     cpu_shares: 256
     mem_limit: ${RUNNER_MEM_LIMIT:-8g}
-    pids_limit: 512
+    init: true
+    pids_limit: 1024
     volumes:
       - work:/work
       - claude-state:/home/kompass/.claude/projects

@@ -36,11 +36,11 @@ else process.stdout.write('[]');
   const r = spawnSync('node', [join(here, 'run.mjs'), join(root, 'docs/kompass'), '--claude', join(bin, 'claude'), '--lander-poll', '0.3'], { cwd: root, encoding: 'utf8', timeout: 60_000, env: { ...process.env, ...who, PATH: `${bin}:${process.env.PATH}`, KOMPASS_LANDER: '1' } });
   const log = r.stdout + r.stderr;
   assert.equal(r.status, 0, log);
-  assert.equal(log.match(/start WU-0001/g)?.length, 2, log);
+  assert.equal(log.match(/start WU-0001/g)?.length, 4, log);
   assert.match(log, /waiting for the lander to land WU-0001/);
-  assert.match(log, /skip WU-0001: not delivered after 2 sessions; needs a look/);
+  assert.match(log, /skip WU-0001: not delivered after 4 sessions; needs a look/);
   assert.match(log, /run finished: .*needs a look: WU-0001/);
-  assert.doesNotMatch(readFileSync(join(root, '.kompass/run.log'), 'utf8'), /start WU-0001 \(attempt 3\)/);
+  assert.doesNotMatch(readFileSync(join(root, '.kompass/run.log'), 'utf8'), /start WU-0001 \(attempt 5\)/);
 });
 
 // Tertia, 1-3 Nov 2026: with one unit running and the other slot free, a unit that became ready when main moved
