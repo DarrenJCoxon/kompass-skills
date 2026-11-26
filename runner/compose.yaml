@@ -28,6 +28,8 @@ services:
       # Shared package caches on /work so worktrees hard-link from one store and survive container rebuilds.
       npm_config_cache: /work/.cache/npm
       npm_config_store_dir: /work/.cache/pnpm-store
+      # Never block on interactive pnpm TTY prompts (e.g. node_modules purge confirmation) under pts/0.
+      npm_config_confirm_modules_purging: "false"
       COREPACK_HOME: /work/.cache/corepack
       YARN_CACHE_FOLDER: /work/.cache/yarn
       TURBO_CACHE_DIR: /work/.cache/turbo
