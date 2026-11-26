@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 # usage (inside the container): entrypoint.sh OWNER/REPO [run.mjs options, e.g. --hours 8 --parallel 2]
 #                           or: entrypoint.sh --lander OWNER/REPO
+#                           or: entrypoint.sh --triage OWNER/REPO [--poll 180] [--daily-cap 3]
 # Clones or updates the repository under /work, then runs the current sequence with scripts/run.mjs. With
-# --lander it runs the project's lander (scripts/lander.mjs) instead, in its own clone under /work/.lander, so
-# its fetches never race the run's git work in /work/<repo>.
+# --lander it runs scripts/lander.mjs in /work/.lander; with --triage it runs scripts/triage.mjs in /work/.triage,
+# so its fetches never race the run's git work in /work/<repo>.
 set -euo pipefail
 
-lander=""; [ "${1:-}" = --lander ] && { lander=1; shift; }
-repo="${1:?usage: entrypoint.sh [--lander] OWNER/REPO [--hours N] [--parallel N]}"; shift
+lander=""; triage=""
+case "${1:-}" in
+  --lander) lander=1; shift ;;
+  --triage) triage=1; shift ;;
+esac
+repo="${1:?usage: entrypoint.sh [--lander|--triage] OWNER/REPO [options]}"; shift
 : "${GH_TOKEN:?GH_TOKEN is not set in runner/.env}"
 if [ -z "$lander" ]; then
   if [ "${KOMPASS_ENGINE:-claude}" = "agy" ]; then
@@ -28,6 +33,7 @@ git config --global user.email "${GIT_AUTHOR_EMAIL:-kompass-runner@users.noreply
 
 dir="/work/${repo##*/}"
 [ -n "$lander" ] && { dir="/work/.lander/${repo##*/}"; mkdir -p /work/.lander; }
+[ -n "$triage" ] && { dir="/work/.triage/${repo##*/}"; mkdir -p /work/.triage; }
 if [ -d "$dir/.git" ]; then
   git -C "$dir" fetch --quiet origin
   git -C "$dir" checkout --quiet main
@@ -40,4 +46,5 @@ cd "$dir"
 [ -n "$lander" ] && exec node /opt/kompass/scripts/lander.mjs "$@"
 eval "$(fnm env)"
 fnm use --install-if-missing >/dev/null
+[ -n "$triage" ] && exec node /opt/kompass/scripts/triage.mjs "$repo" "$@"
 exec node /opt/kompass/scripts/run.mjs "$dir/docs/kompass" "$@"
