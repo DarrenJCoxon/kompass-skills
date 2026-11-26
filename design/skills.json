@@ -6,7 +6,8 @@
     "kompass-run",
     "kompass-build",
     "kompass-find",
-    "kompass-improve"
+    "kompass-improve",
+    "modern-web-guidance"
   ],
   "lifecycle": [
     {
@@ -194,6 +195,19 @@
       "questions": [
         "Is two occurrences the right bar for a lesson, or should a costly one-off count?",
         "Should the replay check be required for every change to kompass-build, or stay optional?"
+      ]
+    },
+    "modern-web-guidance": {
+      "plain": "Searches and retrieves standardized modern web platform best practices (HTML, CSS, client-side JS, accessibility, forms, performance, and fallbacks) before writing UI or client code.",
+      "when": "Before implementing or updating HTML, CSS, forms, overlays, dark mode, animations, typography, accessibility, or client-side JS.",
+      "reads": [
+        "The live modern-web-guidance catalog via pnpx/npx modern-web-guidance@latest"
+      ],
+      "produces": [
+        "Modern web platform implementations with Baseline-appropriate fallbacks and a short disclosure of applied guides"
+      ],
+      "stops": [
+        "Never"
       ]
     }
   },

@@ -38,6 +38,7 @@ Run `node <kompass-skills>/scripts/prepare-unit.mjs docs/kompass WU-NNNN` (on th
 - **Keep files small.** `scripts/size-check.mjs` fails new files over 5,000 tokens (4 bytes/token) and oversized files that grow. Split along real module seams with a small front door and extend `owns` with a log line; never add pass-through wrappers.
 - **Fix where the decision is owned.** Change the owning module through its front door; never duplicate logic, add special-case lists, or guess from wording. Reuse existing helpers/tokens before adding new ones.
 - **Hand bounded coding to `kompass-builder`.** Give it outcome, owned files, criteria, proving command, and excerpts already read. Run disjoint pieces in parallel. Edit directly only for trivial changes.
+- **Consult `modern-web-guidance` for UI and client-side JS work.** Before implementing or updating HTML, CSS, forms, modals/popovers, animations, dark mode, or client-side JS, search and retrieve the relevant guide via `modern-web-guidance` and apply its required fallbacks.
 - **Never loosen a check to get green:** test expectations, lint/type/boundary rules, scanner settings, skipped tests, locked files, inline suppressions (`eslint-disable`, `@ts-ignore`, `# noqa`), or moving/excluding files out of a check's reach (L-021). A change to a protected file stops the unit: park and ask the operator, quoting the failing test.
 
 ## 3. Check locally
