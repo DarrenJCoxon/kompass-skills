@@ -27,6 +27,7 @@ Most of the time goes into planning. You and the agent map the modules, the arch
 | `kompass-find` | When something breaks later | Finds which unit changed what, and why, from the hand-overs, decisions and git history. |
 | `kompass-improve` | After each sequence, or weekly | The harness review: reads how the runs went (run log, unit logs, parks, retries, review rounds, stalls, CI failures), records each lesson with its evidence in `docs/lessons.md`, and proposes changes to these skills as pull requests. |
 | `modern-web-guidance` | Before any HTML, CSS, or client-side JS work | Searches and retrieves standardized modern web platform patterns (overlays, forms, dark mode, animations, accessibility, modern JS) and Baseline fallbacks via `modern-web-guidance@latest`. |
+| `deep-research` | For broad planning spikes or multi-angle comparisons | Orchestrates parallel research subagents with bounded search budgets, primary-source verification, and cited synthesis (adapted from `google-gemini/demolab`, Apache-2.0). |
 
 ## Who does what
 

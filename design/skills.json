@@ -7,7 +7,8 @@
     "kompass-build",
     "kompass-find",
     "kompass-improve",
-    "modern-web-guidance"
+    "modern-web-guidance",
+    "deep-research"
   ],
   "lifecycle": [
     {
@@ -208,6 +209,19 @@
       ],
       "stops": [
         "Never"
+      ]
+    },
+    "deep-research": {
+      "plain": "Orchestrates parallel research subagents to investigate complex topics, verify primary sources, avoid straggler stalls, and synthesize cited reports with explicit unresolved gaps.",
+      "when": "During broad planning spikes, architectural comparisons, or multi-angle domain research (e.g. SEND/IB standards or library evaluations). Not for simple lookups.",
+      "reads": [
+        "Primary web sources, official documentation, and repository records via parallel research subagents"
+      ],
+      "produces": [
+        "Cited synthesis report with top-line summary and explicit Unresolved section"
+      ],
+      "stops": [
+        "When scope is genuinely ambiguous before spawning subagents"
       ]
     }
   },
