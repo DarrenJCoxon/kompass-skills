@@ -57,7 +57,7 @@ function project(pulls, { merged = [] } = {}) {
     for (const [f, text] of Object.entries(x.files)) put(join(seed, f), text);
     sh(seed, `git add -A && git commit -qm work && git push -q origin HEAD:refs/heads/${x.branch} HEAD:refs/pull/${x.n}/head && git checkout -q main`, at);
     const sha = sh(seed, `git rev-parse ${x.branch}`).trim();
-    gh.pulls.push({ number: x.n, title: x.title ?? `${x.branch.split('/').pop()}: work`, headRefName: x.branch, headRefOid: sha, isDraft: !!x.draft, createdAt: iso(at), body: x.body ?? '', files: Object.keys(x.files), autoMergeRequest: x.auto ? { enabledAt: iso(at) } : null });
+    gh.pulls.push({ number: x.n, title: x.title ?? `${x.branch.split('/').pop()}: work`, headRefName: x.branch, headRefOid: sha, isDraft: !!x.draft, createdAt: iso(at), body: x.body ?? '', files: Object.keys(x.files), autoMergeRequest: x.auto ? { enabledAt: iso(at) } : null, mergeStateStatus: x.mergeState ?? 'CLEAN', mergeable: x.mergeable ?? 'MERGEABLE' });
     const ci = x.ci ?? 'success';
     if (ci !== 'none') gh.runs.push({ id: x.n, name: 'CI', head_sha: sha, head_branch: x.branch, created_at: iso(x.ciQueued ?? at), status: ['in_progress', 'queued'].includes(ci) ? ci : 'completed', conclusion: ['in_progress', 'queued'].includes(ci) ? null : ci });
   }
@@ -270,4 +270,21 @@ test('a unit that waited is brought up to date with main once the earlier unit l
   assert.deepEqual(t.merges(), [], 'not landed on the CI run from before');
   t.poll();
   assert.deepEqual(t.merges().map((a) => a[2]), ['101'], 'then landed when green');
+});
+
+// Tertia #1091 and #1093 (26-27 Nov 2026): a ready unit PR that conflicts with main (DIRTY / CONFLICTING)
+// never starts CI, so the lander classified it as waiting for CI forever while the runner sat idle waiting
+// for the lander. Detecting DIRTY / CONFLICTING sends it straight back to draft so the runner resolves it.
+test('a ready unit PR with merge conflicts (DIRTY) is sent straight back to draft instead of stalling in ci', () => {
+  const t = project([
+    code(102, 'kompass/WU-0001-a', 'src/a.ts', 2, { ci: 'none', mergeState: 'DIRTY', mergeable: 'CONFLICTING' }),
+  ]);
+  const first = t.poll();
+  const second = t.poll();
+  assert.equal(t.merges().length, 0);
+  assert.equal(t.comments(102).length, 1, 'commented once about conflicts with main');
+  assert.match(t.comments(102)[0].join(' '), /conflicts with main .* back to draft, so the runner resumes the unit/);
+  assert.equal((first + second).match(/\[demo: Needs its unit: #102\]/g)?.length, 1);
+  assert.equal(t.calls().filter((a) => a.join(' ') === 'pr ready 102 --undo').length, 1);
+  assert.match(t.page('txt'), /Left for its unit \(1\)\n- #102 .*: conflicts with main/);
 });

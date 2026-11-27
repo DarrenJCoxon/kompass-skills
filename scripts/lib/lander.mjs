@@ -23,7 +23,7 @@ export const gh = (root, args) => {
 
 /** Everything one poll needs from GitHub, or null when gh can't list the open pull requests. */
 export function look(p, now) {
-  const pulls = json(gh(p.root, ['pr', 'list', '--state', 'open', '--json', 'number,title,headRefName,headRefOid,isDraft,createdAt,body,autoMergeRequest', '--limit', '200']), null);
+  const pulls = json(gh(p.root, ['pr', 'list', '--state', 'open', '--json', 'number,title,headRefName,headRefOid,isDraft,createdAt,body,autoMergeRequest,mergeStateStatus,mergeable', '--limit', '200']), null);
   if (!Array.isArray(pulls)) return null;
   const runs = json(gh(p.root, ['api', 'repos/{owner}/{repo}/actions/runs?per_page=100']), null)?.workflow_runs ?? [];
   const merged = json(gh(p.root, ['pr', 'list', '--state', 'merged', '--json', 'number,title,mergedAt,createdAt', '--limit', '50']), []);
@@ -86,6 +86,7 @@ export function classify(p, seen, memory, now = Date.now()) {
     if (left?.sha === pr.headRefOid) Object.assign(it, { state: 'left', why: left.why });
     else if (pr.isDraft || /: building$/.test(pr.title)) it.state = 'building';
     else if (!it.unit && !pr.autoMergeRequest) it.state = 'person';
+    else if (pr.mergeStateStatus === 'DIRTY' || pr.mergeable === 'CONFLICTING') Object.assign(it, { state: 'left', why: 'conflicts with main' });
     else if (checks === 'failed' && !justFailed) Object.assign(it, { state: 'left', why: 'checks failed' });
     else if (wait.length) Object.assign(it, { state: 'waiting', on: wait.map((s) => `${unitName(s.unit)} on ${s.files.slice(0, 5).join(', ')}${s.files.length > 5 ? ` (+${s.files.length - 5} more)` : ''}`) });
     else if (records || checks === 'green') it.state = 'ready';
