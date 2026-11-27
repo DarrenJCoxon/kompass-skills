@@ -31,7 +31,15 @@ export function look(p, now) {
   const { units, pullsChecked } = inFlight(p, { now, pulls });
   const heads = new Set(pulls.filter((pr) => !pr.isDraft).map((pr) => pr.headRefOid));
   const refused = new Set(runs.filter((r) => heads.has(r.head_sha) && r.conclusion === 'failure' && draftRefusal(p, r.id)).map((r) => r.id));
-  return { pulls, runs, merged: Array.isArray(merged) ? merged : [], units, pullsChecked, refused };
+  const picturesDrafts = new Set(pulls.filter((pr) => pr.isDraft && !/: building$/.test(pr.title) && isPicturesCommit(p.root, pr.headRefOid)).map((pr) => pr.number));
+  return { pulls, runs, merged: Array.isArray(merged) ? merged : [], units, pullsChecked, refused, picturesDrafts };
+}
+
+function isPicturesCommit(root, sha) {
+  try {
+    const subject = execFileSync('git', ['log', '-1', '--format=%s', sha], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    return /^Pictures: remade on Linux\b/.test(subject);
+  } catch { return false; }
 }
 
 /** Whether a failed run failed only at the CI's draft refusal (a failed step named Draft): the run started while the
@@ -74,7 +82,7 @@ export function classify(p, seen, memory, now = Date.now()) {
       n: pr.number, title: pr.title, branch: pr.headRefName, sha: pr.headRefOid, created: Date.parse(pr.createdAt),
       checks, records, files: unit ? [...new Set([...unit.owns, ...unit.changed])] : [], updated: unit?.updated ?? null,
       runner: /^Being built on the runner/.test(pr.body ?? ''), idle: !!unit?.idle, unit: isUnit(pr.headRefName),
-      run: newest.id, rerun,
+      run: newest.id, rerun, picturesBounced: pr.isDraft && !/: building$/.test(pr.title) && (seen.picturesDrafts?.has(pr.number) ?? false),
     };
     // A session pushes while its pull request is a draft (CI fails it at once, by design), then marks it ready,
     // which starts a new run on the same commit (Tertia WU-0318, WU-0330, 30 Oct 2026). A failure a newer run has
@@ -115,12 +123,13 @@ export function leave(it, why, memory, now, detail = '') {
  * (null when one is landing already, none is ready, or the units in flight could not be checked). Each comment
  * and alert is due once per item; `memory` keeps what was said, and is updated here. */
 export function plan(items, seen, memory, now, landing) {
-  const todo = { comments: [], alerts: [], update: [], draft: [], reready: [], land: null };
+  const todo = { comments: [], alerts: [], update: [], draft: [], reready: [], picturesReady: [], land: null };
   const left = (it, why) => { const l = leave(it, why, memory, now); if (l) { todo.comments.push(l.comment); todo.alerts.push(l.alert); if (l.draft) todo.draft.push(l.draft); } };
   const once = (key, f) => { if (!memory.said[key]) { memory.said[key] = now; f(); } };
   const open = new Set(items.map((i) => i.n));
   for (const it of items) {
     if (it.state !== 'building' && it.state !== 'person') memory.readyAt[it.n] ??= now;
+    if (it.picturesBounced) once(`pictures-ready:${it.n}:${it.sha}`, () => todo.picturesReady.push(it.n));
     if (it.state === 'left') left(it, it.why);
     if (it.rerun && it.state === 'ci') once(`reready:${it.n}:${it.sha}`, () => todo.reready.push(it.n));
     if (it.state === 'waiting') {

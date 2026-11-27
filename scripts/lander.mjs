@@ -85,6 +85,12 @@ async function poll() {
   for (const n of todo.draft) toDraft(n);
   // Its only run on this commit was the CI's draft refusal: draft and ready again starts the real run.
   for (const n of todo.reready) log(gh(p.root, ['pr', 'ready', String(n), '--undo']) !== null && gh(p.root, ['pr', 'ready', String(n)]) !== null ? `#${n}: its only CI run was the draft refusal; marked ready again so CI runs` : `#${n} could not be marked ready again`);
+  // Pictures remade Linux snapshots and bounced a ready PR back to draft; mark it ready again and re-arm auto-merge so CI runs.
+  for (const n of todo.picturesReady) {
+    const ok = gh(p.root, ['pr', 'ready', String(n)]) !== null;
+    if (ok) gh(p.root, ['pr', 'merge', String(n), '--auto', '--merge', '--delete-branch']);
+    log(ok ? `#${n}: Pictures updated snapshots; marked ready again and armed auto-merge so CI runs` : `#${n} could not be marked ready after Pictures`);
+  }
   for (const n of todo.update) {
     const it = items.find((i) => i.n === n);
     if (gh(p.root, ['pr', 'update-branch', String(n)]) !== null) { log(`#${n}: the unit it waited for has landed; brought up to date with main so CI runs on both`); continue; }

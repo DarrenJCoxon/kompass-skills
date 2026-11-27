@@ -288,3 +288,20 @@ test('a ready unit PR with merge conflicts (DIRTY) is sent straight back to draf
   assert.equal(t.calls().filter((a) => a.join(' ') === 'pr ready 102 --undo').length, 1);
   assert.match(t.page('txt'), /Left for its unit \(1\)\n- #102 .*: conflicts with main/);
 });
+
+// Tertia #1089, #1094, #1097, #1100 (26-27 Nov 2026): Pictures commits updated Linux snapshots and converts a
+// ready PR back to draft (which also disables auto-merge and starts no CI run). Automatically marking it ready
+// again and re-arming auto-merge once per head SHA keeps CI moving with zero manual babysitting.
+test('a non-building draft PR whose head commit is Pictures: remade on Linux is automatically marked ready again once', () => {
+  const t = project([code(103, 'fix/ui-polish', 'src/a.ts', 1, { draft: true, ci: 'none', title: 'fix(ui): polish' })]);
+  const seed = join(t.dir, 'seed');
+  sh(seed, 'git checkout -q fix/ui-polish && echo v2 >> src/a.ts && git add -A && git commit -qm "Pictures: remade on Linux by CI\'s picture job (D-449)" && git push -q origin HEAD:refs/heads/fix/ui-polish HEAD:refs/pull/103/head && git checkout -q main');
+  const sha = sh(seed, 'git rev-parse fix/ui-polish').trim();
+  const g = JSON.parse(readFileSync(join(t.dir, 'gh.json'), 'utf8'));
+  g.pulls[0].headRefOid = sha;
+  writeFileSync(join(t.dir, 'gh.json'), JSON.stringify(g));
+  t.poll();
+  t.poll();
+  assert.equal(t.calls().filter((a) => a.join(' ') === 'pr ready 103').length, 1, 'marked ready once for the Pictures commit');
+  assert.ok(t.calls().some((a) => a[0] === 'pr' && a[1] === 'merge' && a[2] === '103' && a.includes('--auto')), 're-armed auto-merge');
+});
