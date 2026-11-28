@@ -18,7 +18,7 @@ import {
   classifyPrRisk,
   filterCandidates,
   formatTelegramApprovalCard,
-  formatTelegramEscalation,
+  formatTelegramEscalationCard,
   freshLedger,
   hotfixBranchName,
   normalizeSentryIssue,
@@ -202,7 +202,7 @@ async function handleCandidate(item) {
     log(`triage inconclusive for ${item.shortId}; escalating`);
     ledger.seen[item.key] = { status: 'escalated', attempts, shortId: item.shortId, lastUpdated: Date.now() };
     save();
-    await sendTelegram({ text: formatTelegramEscalation({ item, reason: 'Triage agent did not return a clear classification', evidence: triaged.out.slice(-400) }) });
+    await sendTelegram(formatTelegramEscalationCard({ item, reason: 'Triage agent did not return a clear classification', evidence: triaged.out.slice(-400) }));
     return;
   }
 
@@ -218,7 +218,7 @@ async function handleCandidate(item) {
     ledger.seen[item.key] = { status: 'escalated', attempts, shortId: item.shortId, tier: 'tier3', lastUpdated: Date.now() };
     save();
     await patchTicketStatus(item, { status: 'triaged', triage_notes: result.reason || result.summary });
-    await sendTelegram({ text: formatTelegramEscalation({ item, reason: result.reason || 'Needs reproduction / decision', evidence: result.summary }) });
+    await sendTelegram(formatTelegramEscalationCard({ item, reason: result.reason || 'Needs reproduction / decision', evidence: result.summary }));
     log(`triage escalated ${item.shortId} (tier3)`);
     return;
   }
@@ -242,7 +242,7 @@ async function handleCandidate(item) {
     const why = build.out.split('TRIAGE_PARKED:').pop().trim().slice(0, 400);
     ledger.seen[item.key] = { status: 'escalated', attempts, shortId: item.shortId, tier: 'tier3', lastUpdated: Date.now() };
     save();
-    await sendTelegram({ text: formatTelegramEscalation({ item, reason: 'Could not reproduce with a failing test', evidence: why }) });
+    await sendTelegram(formatTelegramEscalationCard({ item, reason: 'Could not reproduce with a failing test', evidence: why }));
     log(`hotfix parked ${item.shortId}: ${why}`);
     return;
   }

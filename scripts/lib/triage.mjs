@@ -221,6 +221,35 @@ export function formatTelegramEscalation({ item, reason, evidence }) {
   ].filter(Boolean).join('\n');
 }
 
+const TICKET_ID_RE = /^[0-9a-fA-F-]{1,36}$/;
+const TICKET_CALLBACK_RE = /^ticket:(dismiss|issue):([0-9a-fA-F-]{1,36})$/;
+
+/** Format a Tier 3 escalation Telegram payload, attaching Dismiss / Create GitHub issue buttons for support tickets. */
+export function formatTelegramEscalationCard({ item, reason, evidence }) {
+  const text = formatTelegramEscalation({ item, reason, evidence });
+  const id = item?.source === 'ticket' ? String(item.externalId ?? item.id ?? '') : '';
+  if (!TICKET_ID_RE.test(id)) return { text };
+  return {
+    text,
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: 'Dismiss (close ticket)', callback_data: `ticket:dismiss:${id}` },
+          { text: 'Create GitHub issue', callback_data: `ticket:issue:${id}` },
+        ],
+      ],
+    },
+  };
+}
+
+/** Strictly parse and validate a Telegram ticket callback_data string. Returns null on any malformed input. */
+export function parseTicketCallback(data) {
+  if (typeof data !== 'string') return null;
+  const m = data.match(TICKET_CALLBACK_RE);
+  if (!m) return null;
+  return { action: m[1], ticketId: m[2] };
+}
+
 /** Strictly parse and validate a Telegram callback_data string. Returns null on any malformed input. */
 export function parseTriageCallback(data) {
   if (typeof data !== 'string') return null;

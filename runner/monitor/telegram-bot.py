@@ -10,6 +10,7 @@ STATE_FILE = MON_DIR / "state.md"
 SNAP_SCRIPT = MON_DIR / "monitor-snapshot.sh"
 
 TRIAGE_CB_RE = re.compile(r"^triage:(approve|hold|close):([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+):(\d+)$")
+TICKET_CB_RE = re.compile(r"^ticket:(dismiss|issue):([0-9a-fA-F-]{1,36})$")
 
 def load_env(path):
     env = {}
@@ -25,6 +26,9 @@ cfg = load_env(ENV_FILE)
 TOKEN = cfg["TELEGRAM_BOT_TOKEN"]
 ALLOWED_UID = int(cfg["TELEGRAM_ALLOWED_USER_ID"])
 GH_TOKEN = cfg.get("GH_TOKEN", "")
+TRIAGE_FEED_URL = cfg.get("TRIAGE_FEED_URL", "").rstrip("/")
+TRIAGE_API_TOKEN = cfg.get("TRIAGE_API_TOKEN", "")
+TRIAGE_REPO = cfg.get("TRIAGE_REPO", "DarrenJCoxon/tertia")
 API = f"https://api.telegram.org/bot{TOKEN}"
 
 def tg(method, payload=None, timeout=40):
@@ -45,6 +49,23 @@ def run_gh(args):
     r = subprocess.run(["gh", *args], env=env, capture_output=True, text=True, timeout=45)
     return r.returncode, (r.stdout + r.stderr).strip()
 
+def patch_ticket(ticket_id, payload):
+    if not TRIAGE_FEED_URL or not TRIAGE_API_TOKEN:
+        return False, "TRIAGE_FEED_URL / TRIAGE_API_TOKEN not configured"
+    base = re.sub(r"/feed/?$", "", TRIAGE_FEED_URL)
+    url = f"{base}/tickets/{ticket_id}"
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode(),
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {TRIAGE_API_TOKEN}"},
+        method="PATCH",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return 200 <= resp.status < 300, f"HTTP {resp.status}"
+    except Exception as e:
+        return False, str(e)[:180]
+
 def handle_triage_callback(cb):
     sender = (cb.get("from") or {}).get("id")
     cb_id = cb.get("id")
@@ -56,6 +77,31 @@ def handle_triage_callback(cb):
 
     if sender != ALLOWED_UID:
         return
+
+    tm = TICKET_CB_RE.match(data)
+    if tm:
+        action, ticket_id = tm.group(1), tm.group(2)
+        if action == "dismiss":
+            ok, detail = patch_ticket(ticket_id, {"status": "closed", "triage_notes": "Dismissed by Darren via Telegram."})
+            status_line = "Dismissed — ticket closed." if ok else f"Dismiss failed: {detail}"
+        else:
+            title_line = next((ln.replace("Title:", "").strip() for ln in orig_text.splitlines() if ln.startswith("Title:")), f"Support ticket {ticket_id[:8]}")
+            code, out = run_gh(["issue", "create", "--repo", TRIAGE_REPO, "--title", f"Triage: {title_line[:100]}", "--body", orig_text])
+            if code == 0:
+                issue_url = out.splitlines()[-1].strip() if out else ""
+                patch_ticket(ticket_id, {"status": "triaged", "triage_notes": f"Escalated to GitHub issue: {issue_url}"})
+                status_line = f"Escalated to GitHub issue: {issue_url}"
+            else:
+                status_line = f"Issue creation failed: {out[:200]}"
+        tg("answerCallbackQuery", {"callback_query_id": cb_id, "text": status_line[:180]})
+        if chat_id and msg_id:
+            tg("editMessageText", {
+                "chat_id": chat_id,
+                "message_id": msg_id,
+                "text": f"{orig_text}\n\nDecision: {status_line}",
+            })
+        return
+
     m = TRIAGE_CB_RE.match(data)
     if not m:
         tg("answerCallbackQuery", {"callback_query_id": cb_id, "text": "Unrecognised action"})
