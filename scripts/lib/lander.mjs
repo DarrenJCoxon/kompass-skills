@@ -68,6 +68,14 @@ const oldest = (a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.
  *   ci         checks running, queued or not started
  *   ready      green (a records-only one need not wait for CI or for the units in flight) */
 export function classify(p, seen, memory, now = Date.now()) {
+  const pullByNum = new Map(seen.pulls.map((pr) => [pr.number, pr]));
+  // Only PRs the lander will actually land (unit PRs or auto-merge-armed PRs) can block later PRs via file overlap;
+  // an unmanaged `person` PR (e.g. a stale human draft/fix PR) is left alone by the lander and must never stall units.
+  const landingUnits = seen.units.filter((u) => {
+    if (isUnit(u.branch)) return true;
+    const other = u.pr ? pullByNum.get(u.pr) : null;
+    return !other || !!other.autoMergeRequest;
+  });
   return [...seen.pulls].sort(oldest).map((pr) => {
     const unit = seen.units.find((u) => u.pr === pr.number);
     const records = !!unit?.changed.length && unit.changed.every((f) => f.startsWith(`${p.prefix}/`));
@@ -90,7 +98,7 @@ export function classify(p, seen, memory, now = Date.now()) {
     if (memory.left[pr.number]?.why === 'checks failed' && newest.id > (memory.left[pr.number].run ?? -1)) delete memory.left[pr.number];
     const justFailed = checks === 'failed' && now - Date.parse(newest.updated_at ?? newest.created_at) < LIMITS.failedGrace;
     const left = memory.left[pr.number];
-    const wait = records ? [] : checkPushed(seen.units, pr.headRefName).wait;
+    const wait = records ? [] : checkPushed(landingUnits, pr.headRefName).wait;
     if (left?.sha === pr.headRefOid) Object.assign(it, { state: 'left', why: left.why });
     else if (pr.isDraft || /: building$/.test(pr.title)) it.state = 'building';
     else if (!it.unit && !pr.autoMergeRequest) it.state = 'person';
