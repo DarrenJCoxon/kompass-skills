@@ -7,6 +7,8 @@ import {
   filterCandidates,
   formatTelegramApprovalCard,
   formatTelegramEscalation,
+  formatTelegramEscalationCard,
+  parseTicketCallback,
   freshLedger,
   hotfixBranchName,
   isNoise,
@@ -136,6 +138,13 @@ test('hotfixBranchName, escalation, and prompts format cleanly', () => {
   const item = normalizeSupportTicket({ id: 42, sanitised_brief: 'Drawer stuck', route_pattern: '/pupils/[id]' });
   assert.equal(hotfixBranchName(item), 'kompass/FIX-ticket-42');
   assert.match(formatTelegramEscalation({ item, reason: 'Cannot reproduce on seed data', evidence: 'Checked route' }), /Needs your look: TICKET-42/);
+  const escCard = formatTelegramEscalationCard({ item, reason: 'Cannot reproduce on seed data', evidence: 'Checked route' });
+  assert.equal(escCard.reply_markup.inline_keyboard[0].length, 2);
+  assert.deepEqual(parseTicketCallback(escCard.reply_markup.inline_keyboard[0][0].callback_data), { action: 'dismiss', ticketId: '42' });
+  assert.deepEqual(parseTicketCallback(escCard.reply_markup.inline_keyboard[0][1].callback_data), { action: 'issue', ticketId: '42' });
+  assert.equal(parseTicketCallback('ticket:dismiss:dc143cf3-7336-49ef-8a7d-4c431bd1aabf')?.ticketId, 'dc143cf3-7336-49ef-8a7d-4c431bd1aabf');
+  assert.equal(parseTicketCallback('ticket:dismiss:bad;rm -rf /'), null);
+  assert.equal(formatTelegramEscalationCard({ item: normalizeSentryIssue({ id: '55', shortId: 'TERTIA-55', title: 'Boom' }), reason: 'Transient' }).reply_markup, undefined);
   assert.match(buildTriagePrompt(item, 'DarrenJCoxon/tertia'), /read-only Kompass triage agent/);
   assert.match(buildHotfixPrompt(item, { summary: 'Fix modal close', suspectedFiles: ['src/a.tsx'] }, 'kompass/FIX-ticket-42'), /failing test that reproduces the defect FIRST/i);
 });
